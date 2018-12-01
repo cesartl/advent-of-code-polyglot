@@ -8,5 +8,5 @@ object InputUtils {
 
     fun getString(year: String, name: String): String = getStream(year, name).bufferedReader().use { it.readText() }
 
-    fun getLines(year: String, name: String): List<String> = getStream(year, name).bufferedReader().use { it.readLines() }
+    fun getLines(year: String, name: String): Sequence<String> = getStream(year, name).bufferedReader().use { it.readLines().asSequence() }
 }

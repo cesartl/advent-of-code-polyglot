@@ -1,7 +1,7 @@
 package com.ctl.aoc.kotlin.y2018
 
 object Day1p2 {
-    fun solve(input: List<Int>): Int  {
+    fun solve(input: Sequence<Int>): Int  {
         val seq = generateSequence(input) { input }
         var ints = seq.flatMap { it.asSequence() }
 
