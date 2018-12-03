@@ -4,18 +4,16 @@ object Day2p2 {
 
     fun solve(input: Sequence<String>): String {
         val list = input.toList()
-        val candidates = mutableListOf<String>()
         var id: String?
         for (i in list.indices) {
             for (j in i + 1 until list.size) {
                 id = findDifference(list[i], list[j])
                 if (id != null) {
-                    candidates.add(id)
+                    return id
                 }
             }
         }
-        if (candidates.size != 1) throw IllegalAccessException(candidates.joinToString())
-        return candidates.first()
+        throw IllegalAccessException("Not found")
     }
 
     fun findDifference(s1: String, s2: String): String? {
