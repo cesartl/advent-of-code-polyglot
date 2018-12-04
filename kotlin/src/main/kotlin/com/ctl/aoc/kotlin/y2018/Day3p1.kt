@@ -5,7 +5,9 @@ import java.util.regex.Pattern
 
 val pattern = Pattern.compile("#([\\w]+) @ ([\\d]+),([\\d]+): ([\\d]+)x([\\d]+)")
 
-data class Claim(val id: String, val left: Int, val top: Int, val width: Int, val height: Int)
+data class Claim(val id: String, val left: Int, val top: Int, val width: Int, val height: Int){
+    val size: Int = width * height
+}
 
 typealias Position = Pair<Int, Int>
 
@@ -38,8 +40,10 @@ object Day3p1 {
         // todo write more efficiently
         val area1 = cache.computeIfAbsent(c1) { coveredAreas(it) }
         val area2 = cache.computeIfAbsent(c2) { coveredAreas(it) }
-        val both = area1 + area2
-        return both.size != both.distinct().size
+        val both = mutableSetOf<Position>()
+        both.addAll(area1)
+        both.addAll(area2)
+        return both.size != c1.size + c2.size
     }
 
     fun solve(lines: Sequence<String>): Int {
