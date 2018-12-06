@@ -3,6 +3,7 @@ package com.ctl.aoc.kotlin.y2018
 import com.ctl.aoc.kotlin.utils.InputUtils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import javax.sound.midi.SysexMessage
 
 internal class Day4Test{
 
@@ -42,6 +43,9 @@ internal class Day4Test{
     internal fun solve2() {
         val lines =InputUtils.getLines("2018", "day4.txt")
         println(Day4.solve2(example))
+        val t1 = System.currentTimeMillis()
         println(Day4.solve2(lines)) //17212
+        val t2 = System.currentTimeMillis();
+        println(t2 - t1)
     }
 }
