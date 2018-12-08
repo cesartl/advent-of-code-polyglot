@@ -80,9 +80,9 @@ object BuildOrder {
 
             currentTime = Math.max(workers.filter { it.freeAt > 0 }.first().freeAt, currentTime + 1)
 
-//            if (other.size >= remaining.size) {
-//                throw IllegalAccessException("cyclical")
-//            }
+            if (other.size >= remaining.size + workInProgress.size) {
+                throw IllegalAccessException("cyclical")
+            }
         }
 
 //        println(result.toList())
