@@ -33,13 +33,17 @@ internal class Day9Test{
 
     @Test
     internal fun testPart2() {
-//        assertEquals(32, Day9p2.solve(9, 25))
-//        assertEquals(8317,Day9p2.solve(10, 1618))
-//        assertEquals(146373, Day9p2.solve(13, 7999))
-//        assertEquals(2764, Day9p2.solve(17, 1104))
-//        assertEquals(54718, Day9p2.solve(21, 6111))
-//        assertEquals(37305, Day9p2.solve(30, 5807))
+        assertEquals(32, Day9p2Bis.solve(9, 25))
+        assertEquals(8317,Day9p2Bis.solve(10, 1618))
+        assertEquals(146373, Day9p2Bis.solve(13, 7999))
+        assertEquals(2764, Day9p2Bis.solve(17, 1104))
+        assertEquals(54718, Day9p2Bis.solve(21, 6111))
+        assertEquals(37305, Day9p2Bis.solve(30, 5807))
 
-        println(Day9.solve2(input.first, input.second * 100))
+        for (i in 0..7){
+            println(i)
+        }
+
+        println(Day9p2Bis.solve(input.first, input.second * 100))
     }
 }
