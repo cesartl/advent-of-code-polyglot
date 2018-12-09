@@ -1,34 +1,70 @@
 package com.ctl.aoc.kotlin.utils
 
+import java.lang.StringBuilder
+
 
 data class CircularLinkedList<T>(val value: T, private var previous: CircularLinkedList<T>?, private var next: CircularLinkedList<T>?) {
 
-    val previousNode = previous ?: this
-    val nextNode = next ?: this
 
-    fun insert(value: T) {
+    fun previousNode(): CircularLinkedList<T> =  previous ?: this
+    fun nextNode(): CircularLinkedList<T> =  next ?: this
+
+    fun previousNode(n: Int): CircularLinkedList<T> {
+        var current = this
+        for (i in 1..n) {
+            current = current.previousNode()
+        }
+        return current
+    }
+
+
+    fun nextNode(n: Int): CircularLinkedList<T> {
+        var current = this
+        for (i in 1..n) {
+            current = current.nextNode()
+        }
+        return current
+    }
+
+    fun insert(value: T): CircularLinkedList<T> {
         val node = of(value)
-        val next = this.nextNode
+        val next = this.nextNode()
         this.next = node
         node.previous = this
         node.next = next
         next.previous = node
+        return node
     }
 
     fun removeNext(): T {
-        val next = this.nextNode
-        this.next = next.nextNode
-        this.nextNode.previous = this
+        val next = this.nextNode()
+        this.next = next.nextNode()
+        this.nextNode().previous = this
         return next.value
     }
 
     fun removePrevious(): T {
-        val previous = this.previousNode
-        this.previous = previous.previousNode
-        this.previousNode.previous = this
+        val previous = this.previousNode()
+        this.previous = previous.previousNode()
+        this.previousNode().previous = this
         return previous.value
 
     }
+
+    fun print(): String {
+        val builder = StringBuilder()
+        var current = this
+        while (builder.isEmpty() || current != this) {
+            builder.append(" ${current.value} ")
+            current = current.nextNode()
+        }
+        return builder.toString()
+    }
+
+    override fun toString(): String {
+        return "$value"
+    }
+
 
     companion object {
         fun <T> of(value: T): CircularLinkedList<T> = CircularLinkedList(value, null, null)

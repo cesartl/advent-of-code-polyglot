@@ -40,10 +40,6 @@ internal class Day9Test{
         assertEquals(54718, Day9p2Bis.solve(21, 6111))
         assertEquals(37305, Day9p2Bis.solve(30, 5807))
 
-        for (i in 0..7){
-            println(i)
-        }
-
-        println(Day9p2Bis.solve(input.first, input.second * 100))
+        println(Day9p2Bis.solve(input.first, input.second * 100)) //3505711612
     }
 }
