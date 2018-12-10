@@ -12,50 +12,46 @@ object Day10 {
 
     val pattern = Pattern.compile("position=<([- \\d]+),([- \\d]+)> velocity=<([- \\d]+), ([- \\d]+)>")
 
-    data class Grid(val points: Sequence<Point>, val time: Int, val xMax: Int, val yMax: Int) {
-        fun incrementTime(): Grid {
-            val result = points.fold(sequenceOf<Point>() to (0 to 0)) { acc, point ->
-                val newPoint = point.move()
-                (acc.first + sequenceOf(newPoint)) to (Math.max(acc.second.first, newPoint.x) to Math.max(acc.second.second, newPoint.y))
-            }
-            return Grid(result.first, time + 1, result.second.first, result.second.second)
-        }
-    }
-
-    fun pointsToMap(points: Sequence<Point>): Map<Int, Map<Int, Boolean>> {
-        val map = mutableMapOf<Int, MutableMap<Int, Boolean>>()
+    fun pointsToMap(points: Sequence<Point>): MutableMap<Int, MutableMap<Int, List<Point>>> {
+        val map = mutableMapOf<Int, MutableMap<Int, List<Point>>>()
         points.forEach {
             val row = map.computeIfAbsent(it.x) { mutableMapOf() }
-            row[it.y] = true
+            row.merge(it.y, listOf(it)){ l, x -> l + x}
         }
-        return map.toMap()
+        return map
     }
 
-    data class Board(val points: Sequence<Point>, val map: Map<Int, Map<Int, Boolean>>, val time: Int) {
+    data class Board(val map: MutableMap<Int, MutableMap<Int, List<Point>>>, val time: Int) {
 
         val maxX = map.keys.max() ?: 0
         val minX = map.keys.min() ?: 0
         val maxY = map.values.flatMap { it.keys }.max() ?: 0
         val minY = map.values.flatMap { it.keys }.min() ?: 0
 
+        val width = maxX - minX
+        val height = maxY - minY
+
         fun incrementTime(): Board {
-            val newPoints = points.map { it.move() }
-            return Board(newPoints, pointsToMap(newPoints), time + 1)
+            val newPoints = map.values.asSequence().flatMap { it.values.asSequence() }.flatten().map { it.move() }
+            return Board(pointsToMap(newPoints), time + 1)
         }
 
-        fun avgPerRow(): Double {
-            return map.values.map { row -> row.count { it.value } }.average()
-        }
+//        fun avgPerRow(): Double {
+//            return map.values.map { row -> row.count { it.value } }.average()
+//        }
     }
 
     fun print(board: Board): String {
         val builder = StringBuilder()
 
-        for (x in board.minX..board.maxX) {
+        val min = Math.min(board.minX, board.minY)
+        val max = Math.max(board.maxX, board.maxY)
+
+        for (x in min..board.maxX) {
             val row = board.map[x]
 
-            for (y in board.minY..board.maxY) {
-                if (row?.get(y) == true) {
+            for (y in (board.maxY + 1) downTo  (min -1)) {
+                if (row?.get(y)?.isNotEmpty() == true) {
                     builder.append("#")
                 } else {
                     builder.append(".")
@@ -75,19 +71,22 @@ object Day10 {
         throw IllegalArgumentException(line)
     }
 
-    fun solve1(lines: Sequence<String>, iterations: Int, maxX: Int, maxY: Int): Board? {
+    fun solve1(lines: Sequence<String>, iterations: Int, maxHeight: Int): Board? {
         val points = lines.map { parse(it) }
-        var board = Board(points, pointsToMap(points), 0)
+        var board = Board(pointsToMap(points), 0)
 
         var maxBoard = board
+        var width = Int.MAX_VALUE
+        var height = Int.MAX_VALUE
         for (i in 1..iterations) {
-//            if (board.avgPerRow() > maxBoard.avgPerRow()) {
-//                maxBoard = board
-//            }
-            board = board.incrementTime()
-            if (board.maxX <= maxX && board.maxY <= maxY){
+            if(board.height < height){
+                height = board.height
+//                println("height $height")
+            }
+            if (board.height < maxHeight) {
                 return board
             }
+            board = board.incrementTime()
         }
         return null
     }

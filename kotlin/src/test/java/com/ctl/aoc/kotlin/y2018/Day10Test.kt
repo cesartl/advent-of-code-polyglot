@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day10Test{
@@ -41,7 +42,14 @@ position=<-3,  6> velocity=< 2, -1>""".split("\n").asSequence()
 
     @Test
     internal fun testPart1() {
-//        println(Day10.solve1(example, 10, 9, Int.MAX_VALUE)?.let { Day10.print(it) } ?: "not found")
-        println(Day10.solve1(input, 10000, 10, Int.MAX_VALUE)?.let { Day10.print(it) } ?: "not found")
+        println(Day10.solve1(example, 10, 9)?.let { Day10.print(it) } ?: "not found")
+        println(Day10.solve1(input, 1000000, 12)?.let { Day10.print(it) } ?: "not found")
+        // PHFZCEZX
+    }
+
+    @Test
+    internal fun testPart2() {
+        assertEquals(3, Day10.solve1(example, 10, 9)?.time)
+        println(Day10.solve1(input, 1000000, 12)?.time)
     }
 }
