@@ -1,6 +1,6 @@
 package com.ctl.aoc.kotlin.y2018
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day9Test{
@@ -17,18 +17,6 @@ internal class Day9Test{
         assertEquals(37305, Day9.solve1(30, 5807))
 
         println(Day9.solve1(input.first, input.second))
-    }
-
-    @Test
-    internal fun testLinkedList() {
-        val head = Day9p2.Node(1, null)
-        head.append(2)
-        head.append(3).append(4)
-
-        println(head)
-        println("get")
-//        println(head.insertAt(10, 9))
-        println(head.remove(2))
     }
 
     @Test
