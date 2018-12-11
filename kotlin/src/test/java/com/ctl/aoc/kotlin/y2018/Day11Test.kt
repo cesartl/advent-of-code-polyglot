@@ -23,8 +23,11 @@ internal class Day11Test{
 
     @Test
     internal fun solve2() {
-//        assertEquals(Day11.Area(90,269, 16), Day11.solve2(18))
-//        assertEquals(Day11.Area(232,251, 12), Day11.solve2(43))
-        println(Day11.solve2(input)) //233,40,13
+        assertEquals(Day11.Area(90,269, 16), Day11.solve3(18))
+//        assertEquals(Day11.Area(232,251, 12), Day11.solve3(43))
+        val start = System.currentTimeMillis()
+        println(Day11.solve3(input)) //233,40,13
+        val end = System.currentTimeMillis()
+        println(end - start)
     }
 }

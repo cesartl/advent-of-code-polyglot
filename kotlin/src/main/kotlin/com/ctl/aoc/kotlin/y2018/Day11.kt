@@ -6,8 +6,8 @@ object Day11 {
         val rackId: Int = x + 10
 
         fun powerLevel(serialNumber: Int): Int {
-            val x = ((rackId * y + serialNumber) * rackId).toString()
-            return x[x.length - 3] - '0' - 5
+            val x = (rackId * y + serialNumber) * rackId
+            return x / 100 % 10 - 5
         }
     }
 
@@ -66,4 +66,33 @@ object Day11 {
         return power
     }
 
+    fun solve3(serialNumber: Int): Area? {
+        val map = mutableMapOf<Int, MutableMap<Int, Int>>()
+        for (y in 1..300) {
+            for (x in 1..300) {
+                val col = map.computeIfAbsent(y) { mutableMapOf() }
+                col[x] = Cell(x, y).powerLevel(serialNumber) + (map[y - 1]?.get(x) ?: 0) + (map[y]?.get(x - 1)
+                        ?: 0) - (map[y - 1]?.get(x - 1) ?: 0)
+            }
+        }
+
+        var result: Area? = null
+        var max = Int.MIN_VALUE
+        var total: Int
+        for (size in 1..300) {
+//            println("size $size")
+            for (y in size..300) {
+                for (x in size..300) {
+                    total = (map[y]?.get(x) ?: 0) - (map[y - size]?.get(x) ?: 0) - (map[y]?.get(x - size)
+                            ?: 0) + (map[y - size]?.get(x - size) ?: 0)
+                    if(total > max){
+                        result = Area(x - size + 1, y - size +1, size)
+                        max = total
+                    }
+                }
+            }
+        }
+
+        return result
+    }
 }
