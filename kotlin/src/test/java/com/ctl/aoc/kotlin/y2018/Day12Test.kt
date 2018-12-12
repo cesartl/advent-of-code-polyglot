@@ -46,7 +46,7 @@ internal class Day12Test {
 
     @Test
     internal fun testPart2() {
-//        println(Day12.solve1(initial, input, 200))
+        println(Day12.solve1(initial, input, 200))
         assertEquals(739, Day12.solve2(104))
         assertEquals(1214, Day12.solve2(199))
         println(Day12.solve2(50000000000))

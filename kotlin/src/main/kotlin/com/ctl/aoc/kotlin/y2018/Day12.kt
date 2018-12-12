@@ -59,6 +59,8 @@ object Day12 {
         var rules = rulesLines.map { parseRule(it) }
         for (i in 0 until generations) {
             println("count ${state.count()} generation: $i")
+            println(state.print())
+            println()
             state = nextGeneration(state, rules)
         }
         return state.count()
