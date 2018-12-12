@@ -7,7 +7,7 @@ object Day12 {
 
     data class Rule(val offsets: List<Pair<Long, Boolean>>, val result: Boolean)
 
-    data class State(val plants: Map<Long, Boolean>) {
+    data class State(val plants: MutableMap<Long, Boolean>) {
         fun plantAt(i: Long): Boolean = plants[i] ?: false
         fun ruleMatched(position: Long, rule: Rule): Boolean {
             return rule.offsets.all { this.plantAt(position + it.first) == it.second }
@@ -23,7 +23,7 @@ object Day12 {
     }
 
     fun parseState(string: String): State {
-        return State(string.mapIndexed { index, c -> index.toLong() to (c == '#') }.toMap())
+        return State(string.mapIndexed { index, c -> index.toLong() to (c == '#') }.toMap().toMutableMap())
     }
 
 
@@ -51,19 +51,18 @@ object Day12 {
 //                map[p] = state.plantAt(p)
             }
         }
-        return State(map.toMap())
+        return State(map)
     }
 
     fun solve1(initialState: String, rulesLines: Sequence<String>, generations: Long): Long {
         var state = parseState(initialState)
         var rules = rulesLines.map { parseRule(it) }
         for (i in 0 until generations) {
-            if (i % 5000000L  == 0L) {
-                println("${i * 100 / generations}%")
-            }
+            println("count ${state.count()} generation: $i")
             state = nextGeneration(state, rules)
-//            println(state.print())
         }
         return state.count()
     }
+
+    fun solve2(generations: Long): Long = 724 + (generations - 101) * 5
 }
