@@ -10,12 +10,12 @@ data class IntegralTable(val sumMap: Map<Int, Map<Int, Long>>) {
 
 fun buildIntegralTable(minX: Int = 0, maxX: Int, minY: Int, maxY: Int, valueFunction: (Pair<Int, Int>) -> Long): IntegralTable {
     val map = mutableMapOf<Int, MutableMap<Int, Long>>()
+    println("minX $minX")
     for (y in minY..maxY) {
         val row = map.computeIfAbsent(y) { mutableMapOf() }
         for (x in minX..maxX) {
-            row[x] = valueFunction(x to y)
-            +(map[y - 1]?.get(x) ?: 0L) + (map[y]?.get(x - 1) ?: 0L)
-            -(map[y - 1]?.get(x - 1) ?: 0L)
+            row[x] = valueFunction(x to y) + (map[y - 1]?.get(x) ?: 0) + (map[y]?.get(x - 1)
+                    ?: 0) - (map[y - 1]?.get(x - 1) ?: 0)
         }
     }
     return IntegralTable(map.toMap())

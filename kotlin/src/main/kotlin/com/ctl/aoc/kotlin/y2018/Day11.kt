@@ -1,5 +1,7 @@
 package com.ctl.aoc.kotlin.y2018
 
+import com.ctl.aoc.kotlin.utils.buildIntegralTable
+
 object Day11 {
 
     data class Cell(val x: Int, val y: Int) {
@@ -76,18 +78,21 @@ object Day11 {
             }
         }
 
+        val gridSize = 300
+        val table = buildIntegralTable(1, gridSize, 1, gridSize) { (x, y) -> Cell(x, y).powerLevel(serialNumber).toLong() }
+
         var result: Area? = null
-        var max = Int.MIN_VALUE
-        var total: Int
+        var max = Long.MIN_VALUE
+        var total: Long
         for (size in 1..300) {
 //            println("size $size")
             for (y in size..300) {
                 for (x in size..300) {
-                    total = (map[y]?.get(x) ?: 0) - (map[y - size]?.get(x) ?: 0) - (map[y]?.get(x - size)
-                            ?: 0) + (map[y - size]?.get(x - size) ?: 0)
-                    if(total > max){
-                        result = Area(x - size + 1, y - size +1, size)
+                    total = table.areaValue(x-size, x, y - size, y)
+                    if (total > max) {
+                        result = Area(x - size + 1, y - size + 1, size)
                         max = total
+//                        println(total)
                     }
                 }
             }
