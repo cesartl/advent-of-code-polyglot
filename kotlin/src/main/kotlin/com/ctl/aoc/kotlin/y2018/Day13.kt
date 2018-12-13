@@ -153,42 +153,34 @@ object Day13 {
     data class State(val track: Track, val carts: MutableMap<Int, MutableMap<Int, Cart>>, val tick: Int) {
         fun nextTick(destroyCart: Boolean = false): State {
 //            println("next tick")
-            val crashed = mutableSetOf<Int>()
             val newMap = mutableMapOf<Int, MutableMap<Int, Cart>>()
+            //filling new map with old value
+            carts.forEach { y, row -> row.forEach { x, c -> newMap.computeIfAbsent(y) { mutableMapOf() }[x] = c } }
             var size = this.getCarts().size
+            val crashed = mutableSetOf<Int>()
             carts.entries.sortedBy { it.key }.forEach { (y, row) ->
                 //                println("starting row $y")
                 row.entries.sortedBy { it.key }.forEach { (x, cart) ->
-                    //                    println("x: $x y: $y")
                     if (!crashed.contains(cart.id)) {
+                        newMap[y]?.remove(x) //remove from old map
                         val newPosition = cart.direction.move(Position(x, y))
                         val trackElement = track.trackElement(newPosition.x, newPosition.y)
                                 ?: throw IllegalArgumentException("no track at $newPosition")
                         val newCart = trackElement.rotateChart(cart)
 
+                        val crash = newMap[newPosition.y]?.get(newPosition.x)
 
-                        val existingCart = carts[newPosition.y]?.get(newPosition.x)
-
-                        val crash1 = existingCart?.let { !crashed.contains(it.id)} ?: false
-                        val crash2 = newMap[newPosition.y]?.get(newPosition.x) != null
-
-                        if (crash1 || crash2) {
+                        if (crash != null) {
+                            println("crash")
                             if (!destroyCart) {
                                 throw IllegalArgumentException("Collision $newPosition at $tick")
                             }
-                            if (crash1) {
-                                println("crash1")
-                                crashed.add(existingCart!!.id)
-                                crashed.add(cart.id)
-                            }
-                            else if (crash2) {
-                                println("crash2")
-//                                crashed.add(newPosition)
-                                newMap[newPosition.y]?.remove(newPosition.x)
-                            }
+                            newMap[newPosition.y]?.remove(newPosition.x)
+                            crashed.add(crash.id)
                         } else {
                             newMap.computeIfAbsent(newPosition.y) { mutableMapOf() }[newPosition.x] = newCart
                         }
+                        //removing cart from old position
                     }
                 }
             }
@@ -243,7 +235,7 @@ object Day13 {
 //            println(state.getCarts().size)
 //            println(state.print())
             newSize = state.getCarts().size
-            if(newSize != size){
+            if (newSize != size) {
                 println("size $newSize")
                 size = newSize
             }
