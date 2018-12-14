@@ -1,7 +1,6 @@
 package com.ctl.aoc.kotlin.y2018
 
-import com.ctl.aoc.kotlin.utils.InputUtils
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day14Test {
