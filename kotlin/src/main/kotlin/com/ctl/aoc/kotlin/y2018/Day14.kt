@@ -86,13 +86,15 @@ object Day14 {
         var elf1 = CircularLinkedList.of(3)
         var elf2 = elf1.insert(7)
         val r = Recicies(elf1, elf2, elf2, 2)
-        while (r.last(input.length).joinToString(separator = "") != input && r.last(input.length + 1).take(input.length).joinToString(separator = "") != input) {
+        var last = ""
+        while (!last.contains(input)) {
             r.next()
             if (r.size % 1000000 == 0) {
                 println(MessageFormat.format("{0}", r.size))
             }
+            last = r.last(input.length+1).joinToString(separator = "")
         }
-        val offset = if (r.last(input.length + 1).take(input.length).joinToString(separator = "") == input) 1 else 0
+        val offset = if(last.startsWith(input)) 1 else 0
         return r.size - input.length - offset
     }
 }
