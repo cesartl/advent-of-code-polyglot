@@ -29,6 +29,7 @@ internal class Day14Test {
         assertEquals(5, Day14.solve2("01245"))
         assertEquals(18, Day14.solve2("92510"))
         assertEquals(2018, Day14.solve2("59414"))
-        println(Day14.solve2(input.toString()))
+        assertEquals(2018, Day14.solve2("920831"))
+//        println(Day14.solve2(input.toString()))
     }
 }
