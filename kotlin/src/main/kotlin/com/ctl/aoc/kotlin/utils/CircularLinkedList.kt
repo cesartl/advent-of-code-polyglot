@@ -6,8 +6,8 @@ import java.lang.StringBuilder
 data class CircularLinkedList<T>(val value: T, private var previous: CircularLinkedList<T>?, private var next: CircularLinkedList<T>?) {
 
 
-    fun previousNode(): CircularLinkedList<T> =  previous ?: this
-    fun nextNode(): CircularLinkedList<T> =  next ?: this
+    fun previousNode(): CircularLinkedList<T> = previous ?: this
+    fun nextNode(): CircularLinkedList<T> = next ?: this
 
     fun previousNode(n: Int): CircularLinkedList<T> {
         var current = this
@@ -51,11 +51,11 @@ data class CircularLinkedList<T>(val value: T, private var previous: CircularLin
 
     }
 
-    fun print(): String {
+    fun print(f: (CircularLinkedList<T>) -> String = { " ${it.value.toString()} " }): String {
         val builder = StringBuilder()
         var current = this
         while (builder.isEmpty() || current != this) {
-            builder.append(" ${current.value} ")
+            builder.append(f(current))
             current = current.nextNode()
         }
         return builder.toString()
