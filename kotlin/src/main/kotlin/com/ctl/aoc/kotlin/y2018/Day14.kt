@@ -1,7 +1,6 @@
 package com.ctl.aoc.kotlin.y2018
 
 import java.lang.StringBuilder
-import java.util.*
 
 object Day14 {
 
@@ -13,13 +12,18 @@ object Day14 {
     }
 
     data class Recicies(var idx1: Int, var idx2: Int, val recipies: MutableList<Int>) {
-        fun next() {
+        fun next(): List<Int> {
             val newScore = recipies[idx1] + recipies[idx2]
-            val newRecipies = digits(newScore).reversed()
+            val newRecipies =
+                    when (newScore) {
+                        0 -> listOf(0)
+                        else -> digits(newScore).reversed()
+                    }
             recipies.addAll(newRecipies)
             idx1 = (idx1 + 1 + recipies[idx1]) % recipies.size
             idx2 = (idx2 + 1 + recipies[idx2]) % recipies.size
 //            println("1: $idx1 2: $idx2 size: ${recipies.size}")
+            return newRecipies
         }
 
         fun print(): String {
@@ -37,20 +41,41 @@ object Day14 {
 
 
     fun solve1(input: Int, debug: Boolean = false): String {
-        var r = Recicies(0, 1, mutableListOf())
+        val r = Recicies(0, 1, mutableListOf())
         r.recipies.add(3)
         r.recipies.add(7)
 
         while (r.recipies.size < input + 11) {
-            if(debug){
+            if (debug) {
                 println(r.print())
             }
 //            println(r.recipies.size)
             r.next()
         }
-        if(debug){
+        if (debug) {
             println(r.print())
         }
-        return r.recipies.subList(input, input + 10).joinToString (separator = "")
+        return r.recipies.subList(input, input + 10).joinToString(separator = "")
+    }
+
+    fun solve2(input: String): Int {
+        println("input: $input")
+        val r = Recicies(0, 1, mutableListOf())
+        r.recipies.add(3)
+        r.recipies.add(7)
+        var str = ""
+        var count = 2
+        while (!str.startsWith(input)) {
+            val next = r.next()
+            next.forEach { i ->
+                str += i
+                if (!input.startsWith(str)) {
+                    str = i.toString()
+                }
+                count += 1
+            }
+        }
+        println("str: $str count: $count")
+        return count - input.length
     }
 }
