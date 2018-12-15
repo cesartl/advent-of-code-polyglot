@@ -17,7 +17,7 @@ internal class Day15Test {
 
     @Test
     internal fun testPart1() {
-//        assertEquals(27730, Day15.solve1(outcomeExample))
+        assertEquals(27730, Day15.solve1(outcomeExample))
         assertEquals(36334, Day15.solve1(example1))
         assertEquals(39514, Day15.solve1(example2))
         assertEquals(27755, Day15.solve1(example3))
@@ -25,5 +25,16 @@ internal class Day15Test {
         assertEquals(18740, Day15.solve1(example5))
 
         println(Day15.solve1(input))
+    }
+
+    @Test
+    internal fun testPart2() {
+//        assertEquals(4988, Day15.solve2(outcomeExample))
+//        assertEquals(31284, Day15.solve2(example2))
+//        assertEquals(3478, Day15.solve2(example3))
+//        assertEquals(6474, Day15.solve2(example4))
+//        assertEquals(1140, Day15.solve2(example5))
+
+        println(Day15.solve2(input)) //not 48873 47392
     }
 }

@@ -76,22 +76,34 @@ data class Battleground(val table: MutableTable<BattleElement>) {
 
     var dead = mutableSetOf<Int>()
 
-    fun doRound() {
+    fun clone(f: (BattleElement) -> BattleElement): Battleground {
+        val newTable = MutableTable.mutableTable<BattleElement>()
+        table.map.forEach { y, row -> row.forEach { x, e -> newTable.put(x, y, f(e)) } }
+        return this.copy(table = newTable)
+    }
+
+    fun isBattleOver(): Boolean = teams().size == 1
+
+
+    fun doRound(): Boolean {
         val roundOrder = table.map.entries.flatMap { (y, row) -> row.entries.filter { it.value is NonWall }.map { (x, e) -> Pathing(e as NonWall, x, y) } }
 //        println(roundOrder.filter { it.nonWall is BattleUnit })
         roundOrder.forEach { e ->
             if (e.nonWall is BattleUnit) {
-                val unit = e.nonWall as BattleUnit
+                val unit = e.nonWall
                 if (!dead.contains(unit.id)) {
-                    doUnitRound(e)
+                    if (doUnitRound(e)) {
+                        return true
+                    }
                 }
             }
         }
+        return false
     }
 
     fun teams() = table.all().filter { it is BattleUnit }.groupBy { it.javaClass.kotlin }
 
-    private fun doUnitRound(currentUnit: Pathing, attackOnly: Boolean = false) {
+    private fun doUnitRound(currentUnit: Pathing, attackOnly: Boolean = false): Boolean {
         val pathingResult = Dijkstra.traverse(currentUnit, null, { generateNeighbours(currentUnit, it) }, { _, to -> distance(to) }, emptyList())
 
 
@@ -102,12 +114,12 @@ data class Battleground(val table: MutableTable<BattleElement>) {
 
         if (firstEnemy != null) {
             if (firstEnemy.value < 2 * baseDistance) {
-                println("doing attack $currentUnit -> ${firstEnemy.key}")
+//                println("doing attack $currentUnit -> ${firstEnemy.key}")
                 val e = (firstEnemy.key.nonWall as BattleUnit).receiveAttack(currentUnit.nonWall as BattleUnit)
                 if (e != null) {
                     table.put(firstEnemy.key.x, firstEnemy.key.y, e)
                 } else {
-                    println("Death of ${firstEnemy.key}")
+//                    println("Death of ${firstEnemy.key}")
                     dead.add((firstEnemy.key.nonWall as BattleUnit).id)
                     table.put(firstEnemy.key.x, firstEnemy.key.y, Empty)
                 }
@@ -121,7 +133,10 @@ data class Battleground(val table: MutableTable<BattleElement>) {
                 table.put(newPosition.x, newPosition.y, currentUnit.nonWall)
                 doUnitRound(Pathing(currentUnit.nonWall, newPosition.x, newPosition.y), true)
             }
+        } else if (table.all().filterIsInstance(BattleUnit::class.java).filter { it.isEnemyWith(currentUnit.nonWall as BattleUnit) }.isEmpty()) {
+            return true
         }
+        return false
     }
 
     private fun distance(to: Pathing): Long = to.y * 33L + to.x + baseDistance
@@ -184,22 +199,54 @@ object Day15 {
 
     fun solve1(lines: List<String>): Long {
         var b = parse(lines)
+        println()
+        println("solve1")
         println(b.print())
+        return battleOutcome(b)
+    }
+
+    fun battleOutcome(b: Battleground): Long {
         var n = 0L
+
         while (true) {
-            val teams = b.teams()
-            if (teams.size == 1) {
+            var finishEarly = b.doRound()
+            if (finishEarly) {
+                println("finish early")
                 break
             }
-            b.doRound()
             n += 1
         }
         val remainers = b.table.all().filterIsInstance(BattleUnit::class.java)
         val totalHp = remainers.map { it.hp }.sum()
-        println("remainers $remainers")
+//        println("remainers $remainers")
         println("totalHp $totalHp")
         println("n: $n")
-        println(b.print())
-        return (n-1) * totalHp
+        println("remaining: ${remainers.size}")
+//        println(b.print())
+        return (n) * totalHp
+    }
+
+    fun solve2(lines: List<String>): Long {
+        println()
+        println("solve2")
+        val orginal = parse(lines)
+        val elfs = orginal.table.all().filterIsInstance(Elf::class.java).count()
+        var powerOffset = 1
+        while (true) {
+            println("power offset: $powerOffset")
+            val b = orginal.clone {
+                when (it) {
+                    is Elf -> it.copy(power = it.power + powerOffset)
+                    else -> it
+                }
+            }
+            val outcome = battleOutcome(b)
+            val remainingElf = b.table.all().filterIsInstance(Elf::class.java).count()
+            if (remainingElf == elfs) {
+                println(b.print())
+                return outcome
+            }
+            powerOffset += 1
+        }
     }
 }
