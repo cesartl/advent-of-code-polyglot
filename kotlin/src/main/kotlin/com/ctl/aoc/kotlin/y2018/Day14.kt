@@ -1,23 +1,25 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.CircularLinkedList
+import com.ctl.aoc.kotlin.utils.Sequences
+import com.ctl.aoc.kotlin.utils.startWith
 import java.text.MessageFormat
 
 object Day14 {
 
-    fun digits(n: Int): List<Int> {
-        return if (n == 0) listOf()
+    fun digits(n: Byte): List<Byte> {
+        return if (n == 0.toByte()) listOf()
         else {
-            listOf(n % 10) + digits(n / 10)
+            listOf((n % 10).toByte()) + digits((n / 10).toByte())
         }
     }
 
-    data class Recipes(var elf1: CircularLinkedList<Int>, var elf2: CircularLinkedList<Int>, var end: CircularLinkedList<Int>, var size: Int) {
-        fun next(): List<Int> {
-            val newScore = elf1.value + elf2.value
+    data class Recipes(var elf1: CircularLinkedList<Byte>, var elf2: CircularLinkedList<Byte>, var end: CircularLinkedList<Byte>, var size: Int) {
+        fun next(): List<Byte> {
+            val newScore: Byte = (elf1.value + elf2.value).toByte()
             val newRecipes =
                     when (newScore) {
-                        0 -> listOf(0)
+                        0.toByte() -> listOf(0.toByte())
                         else -> digits(newScore).reversed()
                     }
 
@@ -30,14 +32,14 @@ object Day14 {
             return newRecipes
         }
 
-        fun last(n: Int): List<Int> {
-            val l = mutableListOf<Int>()
-            var current = end
-            for (i in 1..Math.min(size, n)) {
-                l.add(current.value)
-                current = current.previousNode()
+        fun last(n: Int): Sequence<Byte> {
+            return sequence {
+                var current = end
+                for (i in 1..Math.min(size, n)) {
+                    yield(current.value)
+                    current = current.previousNode()
+                }
             }
-            return l.reversed()
         }
 
         fun print(): String {
@@ -54,8 +56,8 @@ object Day14 {
 
 
     fun solve1(input: Int, debug: Boolean = false): String {
-        var elf1 = CircularLinkedList.of(3)
-        var elf2 = elf1.insert(7)
+        var elf1 = CircularLinkedList.of(3.toByte())
+        var elf2 = elf1.insert(7.toByte())
         val r = Recipes(elf1, elf2, elf2, 2)
         while (r.size < input + 10) {
             if (debug) {
@@ -67,7 +69,7 @@ object Day14 {
             println(r.print())
         }
 
-        val buffer = mutableListOf<Int>()
+        val buffer = mutableListOf<Byte>()
         var current = r.end.previousNode(r.size - input - 10)
         for (i in 1..10) {
             buffer.add(current.value)
@@ -78,18 +80,20 @@ object Day14 {
 
     fun solve2(input: String): Int {
         println("input: $input")
-        var elf1 = CircularLinkedList.of(3)
-        var elf2 = elf1.insert(7)
+        var elf1 = CircularLinkedList.of(3.toByte())
+        var elf2 = elf1.insert(7.toByte())
         val r = Recipes(elf1, elf2, elf2, 2)
-        var last = ""
-        while (!last.contains(input)) {
+        var last: Sequence<Byte> = sequenceOf()
+        val reverseInput = input.map { (it - '0').toByte() }.reversed().asSequence()
+        while (last.none() || !(last.drop(1).startWith(reverseInput) || last.startWith(reverseInput))) {
             r.next()
             if (r.size % 1000000 == 0) {
                 println(MessageFormat.format("{0}", r.size))
             }
-            last = r.last(input.length+1).joinToString(separator = "")
+            last = r.last(input.length + 1)
         }
-        val offset = if(last.startsWith(input)) 1 else 0
+
+        val offset = if(last.first() == reverseInput.first()) 0 else 1
         return r.size - input.length - offset
     }
 }

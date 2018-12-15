@@ -36,6 +36,23 @@ class Queue<T> : Storage<T> {
 
 }
 
+fun <T> traversal(startNode: T, storage: Storage<T>, index: (node: T) -> String = { it.toString() }, nodeGenerator: NodeGenerator<T>): Sequence<T> {
+    storage.push(startNode)
+    val visited = mutableSetOf<String>()
+    return sequence {
+        var current: T
+        while (storage.hasNext()) {
+            current = storage.pop()
+            if (!visited.contains(index(current))) {
+//                println("Doing $current")
+                yield(current)
+                visited.add(index(current))
+                nodeGenerator(current).forEach { storage.push(it) }
+            }
+        }
+    }
+}
+
 class Graph<T> {
     private val adjacencyMap: HashMap<T, HashSet<T>> = HashMap()
     private val incomingMap: HashMap<T, HashSet<T>> = HashMap()
@@ -75,23 +92,12 @@ class Graph<T> {
     }.toString()
 
     fun traversal(startNode: T, storage: Storage<T>, index: (node: T) -> String = { it.toString() }): Sequence<T> {
-        storage.push(startNode)
-        val visited = mutableSetOf<String>()
-        return sequence {
-            var current: T
-            while (storage.hasNext()) {
-                current = storage.pop()
-                if (!visited.contains(index(current))) {
-                    println("Doing $current")
-                    yield(current)
-                    visited.add(index(current))
-                    adjacencyMap[current]?.forEach { storage.push(it) }
-                }
-            }
-        }
+        return traversal(startNode, storage, index, { adjacencyMap[it]?.asSequence() ?: emptySequence() })
     }
 
     fun bfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Queue())
     fun dfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Stack())
 }
+
+
 
