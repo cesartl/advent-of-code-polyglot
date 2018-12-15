@@ -70,16 +70,21 @@ data class Battleground(val table: MutableTable<BattleElement>) {
 
     private val baseDistance = 100000
 
-    private val comparator = compareBy<Map.Entry<Pathing, Long>>({ it.value  }, { it.key.y }, { it.key.y })
-    private val battleComparator = compareBy<Map.Entry<Pathing, Long>>({ it.value / baseDistance }, { (it.key.nonWall as BattleUnit).hp }, { it.key.y }, { it.key.y })
+    private val comparator = compareBy<Map.Entry<Pathing, Long>>({ it.value / baseDistance }, { it.key.y }, { it.key.x })
+    private val battleComparator = compareBy<Map.Entry<Pathing, Long>>({ it.value / baseDistance }, { (it.key.nonWall as BattleUnit).hp }, { it.key.y }, { it.key.x })
 
+
+    var dead = mutableSetOf<Int>()
 
     fun doRound() {
         val roundOrder = table.map.entries.flatMap { (y, row) -> row.entries.filter { it.value is NonWall }.map { (x, e) -> Pathing(e as NonWall, x, y) } }
 //        println(roundOrder.filter { it.nonWall is BattleUnit })
         roundOrder.forEach { e ->
             if (e.nonWall is BattleUnit) {
-                doUnitRound(e)
+                val unit = e.nonWall as BattleUnit
+                if (!dead.contains(unit.id)) {
+                    doUnitRound(e)
+                }
             }
         }
     }
@@ -102,6 +107,8 @@ data class Battleground(val table: MutableTable<BattleElement>) {
                 if (e != null) {
                     table.put(firstEnemy.key.x, firstEnemy.key.y, e)
                 } else {
+                    println("Death of ${firstEnemy.key}")
+                    dead.add((firstEnemy.key.nonWall as BattleUnit).id)
                     table.put(firstEnemy.key.x, firstEnemy.key.y, Empty)
                 }
             } else if (!attackOnly) {
@@ -193,6 +200,6 @@ object Day15 {
         println("totalHp $totalHp")
         println("n: $n")
         println(b.print())
-        return n * totalHp
+        return (n-1) * totalHp
     }
 }

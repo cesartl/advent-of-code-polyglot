@@ -17,11 +17,13 @@ internal class Day15Test {
 
     @Test
     internal fun testPart1() {
-        assertEquals(27730, Day15.solve1(outcomeExample))
+//        assertEquals(27730, Day15.solve1(outcomeExample))
         assertEquals(36334, Day15.solve1(example1))
-//        assertEquals(39514, Day15.solve1(example2))
-//        assertEquals(27755, Day15.solve1(example3))
-//        assertEquals(28944, Day15.solve1(example4))
+        assertEquals(39514, Day15.solve1(example2))
+        assertEquals(27755, Day15.solve1(example3))
+        assertEquals(28944, Day15.solve1(example4))
         assertEquals(18740, Day15.solve1(example5))
+
+        println(Day15.solve1(input))
     }
 }
