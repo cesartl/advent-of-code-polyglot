@@ -3,7 +3,6 @@ package com.ctl.aoc.kotlin.y2018
 import com.ctl.aoc.kotlin.y2018.Day16.Opcode.*
 import com.ctl.aoc.kotlin.y2018.Day16.Value.Immediate
 import com.ctl.aoc.kotlin.y2018.Day16.Value.Register
-import java.util.regex.Pattern
 
 object Day16 {
 
@@ -26,6 +25,8 @@ object Day16 {
     }
 
     sealed class Opcode {
+
+        override fun toString(): String = this.javaClass.simpleName
 
         open fun aValue(a: Int): Value = Register(a)
 
@@ -152,10 +153,9 @@ object Day16 {
 
     data class TestSpec(val opCode: Int, val a: Int, val b: Int, val c: Int, val before: State, val after: State)
 
-    val beforePattern = Pattern.compile("Before: \\[(.+)\\]")
-    val afterPattern = Pattern.compile("After: \\[(.+)\\]")
+    data class Instruction(val opCode: Int, val a: Int, val b: Int, val c: Int)
 
-    fun parseState(s: String): State {
+    private fun parseState(s: String): State {
         val registers = s.split(",").map { it.trim() }.mapIndexed { index, s -> index to s.toInt() }.toMap()
         return State(registers)
     }
@@ -167,14 +167,14 @@ object Day16 {
         return TestSpec(opCode = op[0], a = op[1], b = op[2], c = op[3], before = before, after = after)
     }
 
-    fun matchSpec(opcode: Opcode, spec: TestSpec): Boolean {
+    private fun matchSpec(opcode: Opcode, spec: TestSpec): Boolean {
         val exec = opcode.exec(spec.a, spec.b, spec.c)
         return exec(spec.before) == spec.after
     }
 
     fun matchForSpec(spec: TestSpec): List<Opcode> = opcodes.filter { matchSpec(it, spec) }
 
-    fun allSpecs(lines: List<String>): List<TestSpec> {
+    private fun allSpecs(lines: List<String>): List<TestSpec> {
         val l = mutableListOf<TestSpec>()
         var i = 0
         while (i < lines.size) {
@@ -187,6 +187,43 @@ object Day16 {
     fun solve1(input: List<String>): Int {
         val specs = allSpecs(input)
         return specs.map { matchForSpec(it).size }.count { it >= 3 }
+    }
+
+    private tailrec fun inferCorrespondance(candidates: Map<Int, Set<Opcode>>, map: Map<Int, Opcode>): Map<Int, Opcode> {
+        val c = candidates.entries.sortedBy { it.value.size }.fold(map) { acc, entry ->
+            val foo = entry.value.minus(acc.values)
+            if (foo.size == 1) {
+                acc + (entry.key to foo.first())
+            } else {
+                acc
+            }
+        }
+        return if (map.size == candidates.size) {
+            map
+        } else {
+            inferCorrespondance(candidates, c)
+        }
+    }
+
+    private fun buildCorrespondance(samples: List<String>): Map<Int, Opcode> {
+        val specs = allSpecs(samples)
+        val candidates = specs.map { it.opCode to matchForSpec(it).toSet() }.groupBy { it.first }.mapValues { entry -> entry.value.map { it.second }.reduce { s1, s2 -> s1.intersect(s2) } }
+        return inferCorrespondance(candidates, mapOf())
+    }
+
+    private fun runProgram(instructions: Sequence<Instruction>, map: Map<Int, Opcode>): (State) -> State = { initialState ->
+        instructions.map { map[it.opCode]!!.exec(it.a, it.b, it.c) }.fold(initialState) { state, exec -> exec(state) }
+    }
+
+    fun solve2(samples: List<String>, programInput: Sequence<String>): Int {
+        val correspondance = buildCorrespondance(samples)
+        val run = runProgram(programInput.map { string ->
+            val parts = string.split(" ").map { it.toInt() }
+            Instruction(parts[0], parts[1], parts[2], parts[3])
+        }, correspondance)
+
+        val finalState = run(State(mapOf()))
+        return finalState.registers[0] ?: 0
     }
 
 }

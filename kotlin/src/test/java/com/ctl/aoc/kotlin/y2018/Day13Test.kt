@@ -1,7 +1,6 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.InputUtils
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class Day13Test{
@@ -17,7 +16,7 @@ internal class Day13Test{
     internal fun solve1() {
         var s = Day13.solve1(example)
         println()
-//        assertEquals("", Day13.solve1(input))
+//        assertEquals("", Day13.solve1(sample))
     }
 
     @Test

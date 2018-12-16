@@ -5,7 +5,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day16Test{
-    val input = InputUtils.getLines("2018", "day16_1.txt").toList()
+    val sample = InputUtils.getLines("2018", "day16_1.txt").toList()
+    val prgm = InputUtils.getLines("2018", "day16_2.txt")
     val spec1 = """Before: [3, 2, 1, 1]
 9 2 1 2
 After:  [3, 2, 2, 1]
@@ -21,6 +22,11 @@ After:  [3, 2, 2, 1]
 
     @Test
     internal fun testPart1() {
-        println(Day16.solve1(input))
+        println(Day16.solve1(sample)) //500
+    }
+
+    @Test
+    internal fun testPart2() {
+        println(Day16.solve2(sample, prgm)) //553
     }
 }
