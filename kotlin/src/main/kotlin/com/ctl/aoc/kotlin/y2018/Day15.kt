@@ -92,7 +92,7 @@ data class Battleground(val table: MutableTable<BattleElement>) {
             if (e.nonWall is BattleUnit) {
                 val unit = e.nonWall
                 if (!dead.contains(unit.id)) {
-                    if (doUnitRound(e)) {
+                    if (doUnitRound(e.copy(nonWall = table.get(e.x, e.y) as NonWall))) {
                         return true
                     }
                 }
