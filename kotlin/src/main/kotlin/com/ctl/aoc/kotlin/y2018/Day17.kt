@@ -56,6 +56,7 @@ object Day17 {
         val minX = map.values.flatMap { it.keys }.min() ?: 0
         val maxX = map.values.flatMap { it.keys }.max() ?: 0
         val maxY = map.keys.max() ?: 0
+        val minY = map.keys.min() ?: 0
 
 
         fun print(): String {
@@ -87,7 +88,7 @@ object Day17 {
     }
 
     fun flowWaterDown(p: Position, ground: Ground) {
-        println("flowdown at x=${p.x} y=${p.y}")
+//        println("flowdown at x=${p.x} y=${p.y}")
         val down = p.down()
         if (down.y <= ground.maxY && ground.at(down) == null) {
             // case 1 water falls down
@@ -102,16 +103,16 @@ object Day17 {
         if (ground.at(p.right()) == FallingWater && ground.at(p.left()) == FallingWater) {
             return
         }
-        println()
-        println("flowWaterHorizontal $p")
+//        println()
+//        println("flowWaterHorizontal $p")
 //        println(ground.print())
-        println()
+//        println()
         val row = ground.row(p.y)
         val below = ground.row(p.y + 1)
 
         var left: Int? = null
         var right: Int? = null
-        for (x in p.x downTo ground.minX -1) {
+        for (x in p.x downTo ground.minX - 1) {
             if (below[x] != Clay && below[x] != RestWater) {
                 break
             }
@@ -129,11 +130,11 @@ object Day17 {
                 break
             }
         }
-        println("left: $left right: $right")
+//        println("left: $left right: $right")
         if (left != null && right != null) {
             // we are surrounded by clay, we fill the gap
             for (x in (left + 1) until right) {
-                println("rest water at x=$x y=${p.y}")
+//                println("rest water at x=$x y=${p.y}")
                 ground.set(Position(x, p.y), RestWater)
             }
             // then we need to flow down from one above
@@ -144,7 +145,7 @@ object Day17 {
             var belowRight: Int? = null
 
 
-            for (x in p.x downTo ground.minX -1) {
+            for (x in p.x downTo ground.minX - 1) {
                 if (below[x] == FallingWater) {
                     break
                 }
@@ -153,7 +154,7 @@ object Day17 {
                     break
                 }
             }
-            for (x in p.x..ground.maxX +1) {
+            for (x in p.x..ground.maxX + 1) {
                 if (below[x] == FallingWater) {
                     break
                 }
@@ -172,13 +173,13 @@ object Day17 {
 
 
             if (left == null && belowLeft != null) {
-                println("belowLeft $belowLeft")
+//                println("belowLeft $belowLeft")
                 ground.set(Position(belowLeft, p.y), FallingWater)
                 flowWaterDown(Position(belowLeft, p.y), ground)
             }
 
             if (right == null && belowRight != null) {
-                println("belowRight $belowRight")
+//                println("belowRight $belowRight")
                 ground.set(Position(belowRight, p.y), FallingWater)
                 flowWaterDown(Position(belowRight, p.y), ground)
             }
@@ -187,11 +188,28 @@ object Day17 {
 
     fun solve1(lines: Sequence<String>, start: Position = Position(500, 0)): Int {
         val ground = Ground(buildMap(lines))
-        println(ground.print())
-        flowWaterDown(start, ground)
-        println(ground.print())
+        val minY = ground.minY
+        val maxY = ground.maxY
 
-        return ground.all().count {
+        val originalClay = ground.all().filterIsInstance(Clay.javaClass).count()
+
+//        println(ground.print())
+        flowWaterDown(start, ground)
+//        println(ground.print())
+
+//        File("day17.txt").writeText(ground.print())
+
+        val finalClay = ground.all().filterIsInstance(Clay.javaClass).count()
+        if (originalClay != finalClay) {
+            throw java.lang.IllegalArgumentException("$originalClay $finalClay")
+        }
+
+        val all = ground.map.entries.filter { it.key in minY..maxY }.flatMap { it.value.values }
+
+        println("falling " + all.filterIsInstance(FallingWater.javaClass).count())
+        println("rest " + all.filterIsInstance(RestWater.javaClass).count())
+
+        return all.count {
             when (it) {
                 is FallingWater, RestWater -> true
                 else -> false

@@ -1,7 +1,6 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.InputUtils
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day17Test {
@@ -25,12 +24,18 @@ x=15, y=0..1""".split("\n").asSequence()
 
     @Test
     fun solve1() {
-        assertEquals(57, Day17.solve1(example))
-//        println(Day17.solve1(input)) //not 40136, not 39589 not 39624 not 39641
+//        assertEquals(57, Day17.solve1(example))
+        println(Day17.solve1(input)) //not 40136, not 39589 not 39624 not 39641, not 39636 39649
     }
 
     @Test
     internal fun debug() {
         println(Day17.solve1(debug, Day17.Position(3, 1)))
+    }
+
+    @Test
+    internal fun range() {
+        println(1 in 1..2)
+        println(2 in 1..2)
     }
 }
