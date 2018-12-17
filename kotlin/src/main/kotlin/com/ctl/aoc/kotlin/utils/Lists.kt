@@ -1,5 +1,7 @@
 package com.ctl.aoc.kotlin.utils
 
+import java.lang.IllegalArgumentException
+
 val <T> List<T>.tail: List<T>
     get() = drop(1)
 
@@ -15,5 +17,31 @@ object Lists {
             return listOf(prefix + first)
         }
         return weave(first.tail, second, prefix + first.head) + weave(first, second.tail, prefix + second.head)
+    }
+
+    fun <T> powerSet(list: List<T>): List<List<T>> {
+        if (list.size > Int.SIZE_BITS) {
+            throw IllegalArgumentException("power set too big")
+        }
+        val total = 1 shl list.size // 2^ n
+        val powerSet = mutableListOf<List<T>>()
+        for (i in 0 until total) {
+            powerSet.add(intToSet(i, list))
+        }
+        return powerSet
+    }
+
+    private fun <T> intToSet(x: Int, list: List<T>): List<T> {
+        var k = x
+        var idx = 0
+        val result = mutableListOf<T>()
+        while (k > 0) {
+            if (k and 1 == 1) {
+                result.add(list[idx])
+            }
+            k = k shr 1
+            idx++
+        }
+        return result
     }
 }
