@@ -1,8 +1,6 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.y2018.Day17.Terrain.*
-import java.lang.IllegalArgumentException
-import java.lang.StringBuilder
 import java.util.regex.Pattern
 
 object Day17 {
@@ -13,6 +11,8 @@ object Day17 {
     data class Position(val x: Int, val y: Int) {
         fun down() = copy(x = x, y = y + 1)
         fun up() = copy(x = x, y = y - 1)
+        fun left() = copy(x = x - 1, y = y)
+        fun right() = copy(x = x + 1, y = y)
     }
 
     sealed class Terrain {
@@ -60,8 +60,8 @@ object Day17 {
 
         fun print(): String {
             val buider = StringBuilder()
-            for (y in 0..maxY) {
-                for (x in minX..maxX) {
+            for (y in 0..maxY + 1) {
+                for (x in minX-1..maxX + 1) {
                     val terrain = map[y]?.get(x)
                     val s = when (terrain) {
                         is Clay -> "#"
@@ -93,14 +93,17 @@ object Day17 {
             // case 1 water falls down
             ground.set(down, FallingWater)
             flowWaterDown(down, ground)
-        } else if (ground.at(down) == Clay || ground.at(down) == RestWater) {
+        } else if ((ground.at(down) == Clay || ground.at(down) == RestWater)) {
             flowWaterHorizontal(p, ground)
         }
     }
 
     fun flowWaterHorizontal(p: Position, ground: Ground) {
+        if (ground.at(p.right()) == FallingWater && ground.at(p.left()) == FallingWater) {
+            return
+        }
         println()
-        println("flowWaterHorizontal")
+        println("flowWaterHorizontal $p")
 //        println(ground.print())
         println()
         val row = ground.row(p.y)
@@ -108,7 +111,7 @@ object Day17 {
 
         var left: Int? = null
         var right: Int? = null
-        for (x in p.x downTo 0) {
+        for (x in p.x downTo ground.minX -1) {
             if (below[x] != Clay && below[x] != RestWater) {
                 break
             }
@@ -117,7 +120,7 @@ object Day17 {
                 break
             }
         }
-        for (x in p.x..ground.maxX) {
+        for (x in p.x..ground.maxX + 1) {
             if (below[x] != Clay && below[x] != RestWater) {
                 break
             }
@@ -141,25 +144,32 @@ object Day17 {
             var belowRight: Int? = null
 
 
-            for (x in p.x downTo 0) {
+            for (x in p.x downTo ground.minX -1) {
+                if (below[x] == FallingWater) {
+                    break
+                }
                 if (below[x] == null) {
                     belowLeft = x
                     break
                 }
             }
-            for (x in p.x..ground.maxX) {
+            for (x in p.x..ground.maxX +1) {
+                if (below[x] == FallingWater) {
+                    break
+                }
                 if (below[x] == null) {
                     belowRight = x
                     break
                 }
             }
 
-            val leftLimit = left ?: belowLeft!!
-            val rightLimit = right ?: belowRight!!
+            val leftLimit = left?.let { it + 1 } ?: belowLeft ?: p.x
+            val rightLimit = right?.let { it - 1 } ?: belowRight ?: p.x
 
-            for (x in (leftLimit + 1)..(rightLimit - 1)) {
+            for (x in (leftLimit)..(rightLimit)) {
                 ground.set(Position(x, p.y), FallingWater)
             }
+
 
             if (left == null && belowLeft != null) {
                 println("belowLeft $belowLeft")
@@ -175,10 +185,10 @@ object Day17 {
         }
     }
 
-    fun solve1(lines: Sequence<String>): Int {
+    fun solve1(lines: Sequence<String>, start: Position = Position(500, 0)): Int {
         val ground = Ground(buildMap(lines))
         println(ground.print())
-        flowWaterDown(Position(500, 0), ground)
+        flowWaterDown(start, ground)
         println(ground.print())
 
         return ground.all().count {
