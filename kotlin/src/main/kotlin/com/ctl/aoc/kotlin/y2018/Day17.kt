@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.y2018.Day17.Terrain.*
+import java.io.File
 import java.util.regex.Pattern
 
 object Day17 {
@@ -193,11 +194,14 @@ object Day17 {
 
         val originalClay = ground.all().filterIsInstance(Clay.javaClass).count()
 
-//        println(ground.print())
+        println(ground.print())
         flowWaterDown(start, ground)
-//        println(ground.print())
+        println(ground.print())
 
-//        File("day17.txt").writeText(ground.print())
+        File("day17.txt").writeText(ground.print())
+
+        println("minX: " +ground .minX)
+        println("maxX: " +ground .maxX)
 
         val finalClay = ground.all().filterIsInstance(Clay.javaClass).count()
         if (originalClay != finalClay) {
@@ -215,6 +219,27 @@ object Day17 {
                 else -> false
             }
         }
+    }
+
+    fun solve2(lines: Sequence<String>, start: Position = Position(500, 0)): Int {
+        val ground = Ground(buildMap(lines))
+        val minY = ground.minY
+        val maxY = ground.maxY
+
+        val originalClay = ground.all().filterIsInstance(Clay.javaClass).count()
+
+        println(ground.print())
+        flowWaterDown(start, ground)
+        println(ground.print())
+
+        val finalClay = ground.all().filterIsInstance(Clay.javaClass).count()
+        if (originalClay != finalClay) {
+            throw java.lang.IllegalArgumentException("$originalClay $finalClay")
+        }
+
+        val all = ground.map.entries.filter { it.key in minY..maxY }.flatMap { it.value.values }
+
+        return all.filterIsInstance(RestWater.javaClass).count()
     }
 
 }

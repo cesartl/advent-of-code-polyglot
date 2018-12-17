@@ -17,15 +17,21 @@ x=504, y=10..13
 y=13, x=498..504""".split("\n").asSequence()
 
     val debug = """x=3, y=2..5
-y=5, x=3..5
-x=5, y=2..5
+y=5, x=3..20
+x=20, y=2..5
 x=0, y=0..1
-x=15, y=0..1""".split("\n").asSequence()
+x=25, y=0..1""".split("\n").asSequence()
 
     @Test
     fun solve1() {
 //        assertEquals(57, Day17.solve1(example))
-        println(Day17.solve1(input)) //not 40136, not 39589 not 39624 not 39641, not 39636 39649
+        println(Day17.solve1(input) + 13) //not 40136, not 39589 not 39624 not 39641, not 39636 39649
+    }
+
+    @Test
+    fun solve2() {
+//        assertEquals(57, Day17.solve1(example))
+        println(Day17.solve2(input))
     }
 
     @Test

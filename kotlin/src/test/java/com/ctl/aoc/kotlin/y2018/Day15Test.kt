@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 internal class Day15Test {
 
     val input = InputUtils.getLines("2018", "day15.txt").toList()
+    val reddit = InputUtils.getLines("2018", "day15_reddit.txt").toList()
     val outcomeExample = InputUtils.getLines("2018", "day15_outcome.txt").toList()
     val example0 = InputUtils.getLines("2018", "day15_0.txt").toList()
     val example1 = InputUtils.getLines("2018", "day15_1.txt").toList()
@@ -29,7 +30,8 @@ internal class Day15Test {
         assertEquals(28944, Day15.solve1(example4))
         assertEquals(18740, Day15.solve1(example5))
 
-        assertEquals(181952, Day15.solve1(input))
+//        assertEquals(181952, Day15.solve1(input))
+        assertEquals(181952, Day15.solve1(reddit))
     }
 
     @Test
@@ -44,7 +46,8 @@ internal class Day15Test {
 
     @Test
     internal fun testSolve2() {
-        assertEquals(47296, Day15.solve2(input)) //not 48873 47392 47296
+//        assertEquals(47296, Day15.solve2(input)) //not 48873 47392 47296
+        assertEquals(47296, Day15.solve2(reddit)) //not 48873 47392 47296
     }
 
     @Test
