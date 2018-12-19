@@ -8,6 +8,18 @@ object Day16 {
 
     data class State(val registers: Map<Int, Int>) {
         fun getValue(value: Value): Int = value.getValue(this)
+        fun incrementRegister(register: Int): State {
+            val oldValue = registers[register] ?: 0
+            return copy(registers = registers + (register to oldValue + 1))
+        }
+        fun print(n: Int): String{
+            val builder = StringBuilder()
+            val l = mutableListOf<Int>()
+            for (i in 0 until n){
+                l.add(registers[i]?:0)
+            }
+            return l.joinToString(prefix = "[", separator = ", ", postfix = "]")
+        }
     }
 
     sealed class Value {
@@ -150,6 +162,7 @@ object Day16 {
     }
 
     val opcodes = listOf(addr, addi, mulr, muli, banr, bani, borr, bori, gtir, gtri, gtrr, eqir, eqri, eqrr, setr, seti)
+    val opCodesByName = opcodes.map { it.toString() to it }.toMap()
 
     data class TestSpec(val opCode: Int, val a: Int, val b: Int, val c: Int, val before: State, val after: State)
 
