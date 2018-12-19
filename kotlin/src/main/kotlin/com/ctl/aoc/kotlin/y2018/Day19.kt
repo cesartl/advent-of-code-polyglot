@@ -60,22 +60,17 @@ object Day19 {
         fun opt2(state: State): State {
             println("opt2")
             var r4 = 1
-
             var r2 = state.getValue(Register(2))
             var r0 = state.getValue(Register(0))
-            var r5: Int
             do {
-                do {
-                    r5 = 1
-                    if (r4 * r5 == r2) {
-                        r0 += r4
-                        println("r0 $r0")
-                    }
-                    r5 += 1
-                } while (r5 <= r2)
+                if(r2 % r4 == 0){
+                    r0 += r4
+                    r0 += r2 / r4
+                    println("r0 $r0")
+                }
                 r4 += 1
-            } while (r4 <= r2)
-            val registers = state.registers + (0 to r0) + (1 to 1) + (5 to r5) + (4 to r4) + (ip to 16)
+            } while (r4 * r4 <= r2 )
+            val registers = state.registers + (0 to r0) + (1 to 1) + (5 to 1) + (4 to r4) + (ip to 16)
             println(registers)
             return state.copy(registers = registers)
         }
