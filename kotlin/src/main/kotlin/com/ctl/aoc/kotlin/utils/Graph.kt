@@ -9,10 +9,12 @@ interface Storage<T> {
     fun hasNext(): Boolean
     fun pop(): T
     fun push(t: T)
+    fun peek(): T
 }
 
 
 class Stack<T> : Storage<T> {
+    override fun peek(): T = deque.peekFirst()
 
     private val deque: Deque<T> = ArrayDeque()
 
@@ -21,10 +23,11 @@ class Stack<T> : Storage<T> {
     override fun pop(): T = deque.pop()
 
     override fun push(t: T) = deque.push(t)
-
 }
 
 class Queue<T> : Storage<T> {
+
+    override fun peek(): T = deque.peekLast()
 
     private val deque: Deque<T> = ArrayDeque()
 

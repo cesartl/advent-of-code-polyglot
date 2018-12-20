@@ -1,12 +1,16 @@
 package com.ctl.aoc.kotlin.y2018
 
-import java.lang.IllegalArgumentException
+import com.ctl.aoc.kotlin.utils.Graph
+import com.ctl.aoc.kotlin.utils.Orientation
+import com.ctl.aoc.kotlin.utils.Position
+import java.util.*
 
 object Day20 {
 
     fun getPaths(regex: String, prefix: String): Sequence<String> {
 //        println()
 //        println("regex $regex prefix: $prefix")
+//        println("prefix: $prefix")
         if (regex.isEmpty() || regex.first() == '$') {
             return sequenceOf(prefix)
         }
@@ -14,7 +18,7 @@ object Day20 {
         while (i < regex.length && regex[i].isLetter()) {
             i++
         }
-        if(i == regex.length){
+        if (i == regex.length) {
             return sequenceOf(prefix + regex)
         }
         if (regex[i] == '$') {
@@ -45,6 +49,47 @@ object Day20 {
                 }
             }
         }
+    }
+
+    fun computePaths(regex: String, start: Position): Graph<Position> {
+        val graph = Graph<Position>()
+        var currentIdx = 0
+
+        val backtrack: Deque<List<Position>> = ArrayDeque()
+        val backLog: Deque<Position> = ArrayDeque() //queue
+        backLog.push(start)
+        //SSE(EE|N)NN
+
+        while (currentIdx < regex.length) {
+
+            when {
+                regex[currentIdx].isLetter() -> {
+                    val o = Orientation.parse(regex[currentIdx])
+                    var currentPosition: Position
+                    var newPosition: Position
+                    // we advanced all the backlog positions, taking from the end and adding to the top
+                    for (i in 0 until backLog.size) {
+                        currentPosition = backLog.removeLast()
+                        newPosition = o.move(currentPosition)
+                        backLog.addFirst(newPosition)
+                        graph.addEdge(currentPosition, newPosition)
+                    }
+                }
+                regex[currentIdx] == '(' -> {
+                    backtrack.push(backLog.toList()) // add back track checkpoint for all backlog element
+                }
+                regex[currentIdx] == '|' -> {
+                    // one option for the branch end
+                    // we add the backtrack checkpoint to the end of the list
+                    // we put backtrack positions at the end so we start from there
+                    backtrack.peekFirst().forEach { backLog.addLast(it) }
+                }
+                regex[currentIdx] == ')' -> // it's the end of the branch, we just remove the backtracking point
+                    backtrack.pop()
+            }
+            currentIdx++
+        }
+        return graph
     }
 
     fun solve1(regex: String): Int {
