@@ -1,9 +1,8 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.InputUtils
-import org.junit.jupiter.api.Test
-import com.ctl.aoc.kotlin.utils.Position
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 internal class Day20Test {
 
@@ -32,12 +31,17 @@ internal class Day20Test {
 
     @Test
     fun solve1() {
-//        assertEquals(3, Day20.solve1(example0))
-//        assertEquals(10, Day20.solve1(example1))
-//        assertEquals(18, Day20.solve1(example2))
-//        assertEquals(23, Day20.solve1(example3))
-//        assertEquals(31, Day20.solve1(example4))
+        assertEquals(3, Day20.solve1(example0))
+        assertEquals(10, Day20.solve1(example1))
+        assertEquals(18, Day20.solve1(example2))
+        assertEquals(23, Day20.solve1(example3))
+        assertEquals(31, Day20.solve1(example4))
 
         println(Day20.solve1(input))
+    }
+
+    @Test
+    internal fun solve2() {
+        println(Day20.solve2(input))
     }
 }
