@@ -7,9 +7,9 @@ data class Position(val x: Int, val y: Int)
 sealed class Orientation {
     fun move(p: Position): Position {
         return when (this) {
-            is N -> Position(p.x, p.y + 1)
+            is N -> Position(p.x, p.y - 1)
             is E -> Position(p.x + 1, p.y)
-            is S -> Position(p.x, p.y - 1)
+            is S -> Position(p.x, p.y + 1)
             is W -> Position(p.x - 1, p.y)
         }
     }

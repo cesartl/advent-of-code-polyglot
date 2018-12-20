@@ -3,6 +3,7 @@ package com.ctl.aoc.kotlin.y2018
 import com.ctl.aoc.kotlin.utils.InputUtils
 import org.junit.jupiter.api.Test
 import com.ctl.aoc.kotlin.utils.Position
+import org.junit.jupiter.api.Assertions.assertEquals
 
 internal class Day20Test {
 
@@ -26,11 +27,17 @@ internal class Day20Test {
     internal fun testComputePaths() {
 //        println(Day20.computePaths(example0, Position(0, 0)))
 //        println(Day20.computePaths(example1, Position(0, 0)))
-        println(Day20.computePaths(input, Position(0, 0)))
+//        println(Day20.computePaths(input, Position(0, 0)))
     }
 
     @Test
     fun solve1() {
-        println(Day20.getPaths(input.drop(1), "").take(10).toList())
+//        assertEquals(3, Day20.solve1(example0))
+//        assertEquals(10, Day20.solve1(example1))
+//        assertEquals(18, Day20.solve1(example2))
+//        assertEquals(23, Day20.solve1(example3))
+//        assertEquals(31, Day20.solve1(example4))
+
+        println(Day20.solve1(input))
     }
 }

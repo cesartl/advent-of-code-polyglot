@@ -3,6 +3,7 @@ package com.ctl.aoc.kotlin.y2018
 import com.ctl.aoc.kotlin.utils.Graph
 import com.ctl.aoc.kotlin.utils.Orientation
 import com.ctl.aoc.kotlin.utils.Position
+import com.ctl.aoc.kotlin.utils.dijkstra
 import java.util.*
 
 object Day20 {
@@ -56,12 +57,14 @@ object Day20 {
         var currentIdx = 0
 
         val backtrack: Deque<List<Position>> = ArrayDeque()
+        val hold: Deque<List<Position>> = ArrayDeque()
         val backLog: Deque<Position> = ArrayDeque() //queue
+        val branchCount = ArrayDeque<Int>()
         backLog.push(start)
         //SSE(EE|N)NN
 
         while (currentIdx < regex.length) {
-
+            println("graph: ${graph.outGoingSize()} idx: $currentIdx/${regex.length}")
             when {
                 regex[currentIdx].isLetter() -> {
                     val o = Orientation.parse(regex[currentIdx])
@@ -71,29 +74,51 @@ object Day20 {
                     for (i in 0 until backLog.size) {
                         currentPosition = backLog.removeLast()
                         newPosition = o.move(currentPosition)
-                        backLog.addFirst(newPosition)
-                        graph.addEdge(currentPosition, newPosition)
+                        if (graph.outgoingNodes(newPosition).size < 4) {
+                            backLog.addFirst(newPosition)
+                            graph.addEdge(currentPosition, newPosition)
+                        }
                     }
                 }
                 regex[currentIdx] == '(' -> {
                     backtrack.push(backLog.toList()) // add back track checkpoint for all backlog element
+                    branchCount.push(1) // we start counting the branches
                 }
                 regex[currentIdx] == '|' -> {
                     // one option for the branch end
+                    // we save all the current work to hold
+                    hold.push(backLog.toList())
+                    branchCount.push(branchCount.removeFirst() + 1) // we increase the branch count
+                    backLog.clear() // we clear the backlog
                     // we add the backtrack checkpoint to the end of the list
                     // we put backtrack positions at the end so we start from there
                     backtrack.peekFirst().forEach { backLog.addLast(it) }
                 }
-                regex[currentIdx] == ')' -> // it's the end of the branch, we just remove the backtracking point
+                regex[currentIdx] == ')' -> {
+                    // it's the end of the branch
+                    // we need to restore n elements from hold where n is the branch count
+                    // and clear the backtrack
+                    val nBranches = branchCount.removeFirst()
+                    for (i in 0 until nBranches - 1) { //-1 because the last branch is not in the hold
+                        hold.removeFirst().forEach { backLog.addLast(it) }
+                    }
                     backtrack.pop()
+                }
+
             }
             currentIdx++
         }
         return graph
     }
 
-    fun solve1(regex: String): Int {
-
-        return 0
+    fun solve1(regex: String): Long {
+        val start = Position(0, 0)
+        val graph = computePaths(regex, start)
+//        println(graph)
+        println("pathing")
+        val path = graph.dijkstra(start, null)
+        val max = path.steps.maxBy { it.value }
+        println("max ${max?.key}")
+        return max?.value ?: 0
     }
 }

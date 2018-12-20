@@ -60,6 +60,8 @@ class Graph<T> {
     private val adjacencyMap: HashMap<T, HashSet<T>> = HashMap()
     private val incomingMap: HashMap<T, HashSet<T>> = HashMap()
 
+    fun outGoingSize(): Int = adjacencyMap.size
+
     fun addEdge(source: T, dest: T) {
         addDirectedEdge(source, dest)
         addDirectedEdge(dest, source)
