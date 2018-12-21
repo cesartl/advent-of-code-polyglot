@@ -11,6 +11,8 @@ internal class Day20Test {
     val example2 = "^ENNWSWW(NEWS|)SSSEEN(WNSE|)EE(SWEN|)NNN\$"
     val example3 = "^ESSWWN(E|NNENN(EESS(WNSE|)SSS|WWWSSSSE(SW|NNNE)))\$"
     val example4 = "^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))\$"
+    val reddit1 = "^WWWW(SSSSS|)WWWWW\$"
+    val cesar = "^W(SN|)WWWWW\$"
     val input = InputUtils.getString("2018", "day20.txt")
 
     @Test
@@ -36,7 +38,6 @@ internal class Day20Test {
         assertEquals(18, Day20.solve1(example2))
         assertEquals(23, Day20.solve1(example3))
         assertEquals(31, Day20.solve1(example4))
-
         println(Day20.solve1(input))
     }
 

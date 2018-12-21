@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 internal class Day19Test {
 
     val input = InputUtils.getLines("2018", "day19.txt").toList()
+    val day21 = InputUtils.getLines("2018", "day21.txt").toList()
     val example = """#ip 0
 seti 5 0 1
 seti 6 0 2
@@ -25,5 +26,10 @@ seti 9 0 5""".split("\n")
     @Test
     internal fun solve2() {
         println(Day19.solve2(input)) //not 4
+    }
+
+    @Test
+    internal fun day21() {
+        Day19.solve1(day21)
     }
 }

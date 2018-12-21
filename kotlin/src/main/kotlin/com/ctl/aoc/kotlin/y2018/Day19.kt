@@ -26,7 +26,7 @@ object Day19 {
             if (ipValue >= instructions.size) {
                 return state
             }
-            if (ipValue == 1) return opt2(state)
+//            if (ipValue == 1) return opt2(state)
             instructionCount.merge(ipValue, 1L) { t, u -> t + u }
             val next = instructions[ipValue]
             val opCode = sourceCode.opcodes[ipValue]
