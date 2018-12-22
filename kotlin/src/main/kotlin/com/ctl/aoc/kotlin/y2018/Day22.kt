@@ -3,6 +3,7 @@ package com.ctl.aoc.kotlin.y2018
 import com.ctl.aoc.kotlin.utils.Dijkstra
 import com.ctl.aoc.kotlin.utils.Position
 import com.ctl.aoc.kotlin.y2018.Day22.Tool.*
+import com.ctl.aoc.util.JavaPriorityQueue
 
 object Day22 {
     sealed class Region {
@@ -140,7 +141,7 @@ object Day22 {
         val start = CaveExploration(Position(0, 0), Region.Rocky, Torch)
         val end = CaveExploration(target, Region.Rocky, Torch)
 
-        val pathing = Dijkstra.traverse(start, end, nodeGenerator = { explorationMoves(cave, it) }, distance = { from, to -> explorationTime(from, to) })
+        val pathing = Dijkstra.traverse(start, end, nodeGenerator = { explorationMoves(cave, it) }, distance = { from, to -> explorationTime(from, to) }, queue = JavaPriorityQueue())
 //        val path = pathing.findPath(end)
         return pathing.steps[end] ?: 0
     }
