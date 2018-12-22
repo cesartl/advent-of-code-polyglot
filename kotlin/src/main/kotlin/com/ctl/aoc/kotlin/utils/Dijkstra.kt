@@ -42,6 +42,7 @@ object Dijkstra {
         while (!queue.isEmpty && (end == null || current != end) && constraintsNotMet(current, steps, constraints)) {
             count + 1
             current = queue.extractMinimum()!!
+//            println("Current $current visited: ${visited.size}")
             nodeGenerator(current).filter { !visited.contains(it) }.forEach { n ->
                 if (!queue.contains(n)) {
                     queue.insert(n, Long.MAX_VALUE)

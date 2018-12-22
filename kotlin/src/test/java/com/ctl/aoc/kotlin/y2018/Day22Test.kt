@@ -18,5 +18,6 @@ internal class Day22Test {
     @Test
     internal fun solve2() {
         assertEquals(45, Day22.solve2(510, Position(10, 10)))
+        println(Day22.solve2(inputDepth, inputTarget, 50)) // not 1076, 1068
     }
 }

@@ -28,24 +28,24 @@ object Day22 {
         object Narrow : Region()
 
         companion object {
-            fun forErosion(erosion: Int): Region {
+            fun forErosion(erosion: Long): Region {
                 return when (erosion % 3) {
-                    0 -> Rocky
-                    1 -> Wet
-                    2 -> Narrow
+                    0L -> Rocky
+                    1L -> Wet
+                    2L -> Narrow
                     else -> TODO("erosion = $erosion")
                 }
             }
         }
     }
 
-    data class Cave(val target: Position, val depth: Int, val regionMap: MutableMap<Int, MutableMap<Int, Region>> = mutableMapOf(), val erosionMap: MutableMap<Int, MutableMap<Int, Int>> = mutableMapOf()) {
-        fun erosion(position: Position): Int {
+    data class Cave(val target: Position, val depth: Int, val regionMap: MutableMap<Int, MutableMap<Int, Region>> = mutableMapOf(), val erosionMap: MutableMap<Int, MutableMap<Int, Long>> = mutableMapOf(), val xCap: Int? = null) {
+        fun erosion(position: Position): Long {
             val (x, y) = position
-            val index = if (x == 0 && y == 0) 0
-            else if (position == target) 0
-            else if (y == 0) 16807 * x
-            else if (x == 0) 48271 * y
+            val index = if (x == 0 && y == 0) 0L
+            else if (position == target) 0L
+            else if (y == 0) 16807L * x
+            else if (x == 0) 48271L * y
             else {
                 val erosion = erosionMap.computeIfAbsent(y) { mutableMapOf() }[x]
                 if (erosion != null) return erosion
@@ -68,7 +68,7 @@ object Day22 {
         }
 
         fun exploreAround(position: Position) {
-            position.adjacents().map { it to regionAt(it) }.filter { it.second == null }.forEach {
+            position.adjacents().filter { it.x > 0 && it.y > 0 && (xCap == null || it.x < xCap) }.map { it to regionAt(it) }.filter { it.second == null }.forEach {
                 val (x, y) = it.first
                 val erosion = erosion(Position(x, y))
                 regionMap.computeIfAbsent(y) { mutableMapOf() }[x] = Region.forErosion(erosion)
@@ -122,30 +122,26 @@ object Day22 {
     fun explorationMoves(cave: Cave, caveExploration: CaveExploration): Sequence<CaveExploration> {
         val position = caveExploration.position
         cave.exploreAround(position)
-        val currentTool = caveExploration.tool
         val currentRegion = caveExploration.region
         val around = position.adjacents().map { it to cave.regionAt(it) }.filter { it.second != null }.map { it.first to it.second!! }
 
-        val withCurrentTool = around.filter { isMoveValid(currentTool, it.second) }.map { CaveExploration(it.first, it.second, currentTool) }
+        val tools = toolsForRegion(currentRegion).asSequence()
 
-        val newTools = toolsForRegion(currentRegion).asSequence().filter { it != currentTool }
-
-        val changingTool = newTools.flatMap { newTool -> around.filter { isMoveValid(newTool, it.second) }.map { CaveExploration(it.first, it.second, newTool) } }
-
-        return withCurrentTool + changingTool
+        return tools.flatMap { newTool -> around.filter { isMoveValid(newTool, it.second) }.map { CaveExploration(it.first, it.second, newTool) } }
     }
 
-    fun explorationTime(from: CaveExploration, to: CaveExploration): Long = if (from.tool == to.tool) 8 else 1
+    fun explorationTime(from: CaveExploration, to: CaveExploration): Long = if (from.tool != to.tool) 8 else 1
 
-    fun solve2(depth: Int, target: Position): Long {
-        val cave = Cave(target, depth)
+    fun solve2(depth: Int, target: Position, xCap: Int? = null): Long {
+        val cave = Cave(target, depth, xCap = xCap)
         cave.explore()
-        println(cave.print())
+//        println(cave.print())
 
         val start = CaveExploration(Position(0, 0), Region.Rocky, Torch)
         val end = CaveExploration(target, Region.Rocky, Torch)
 
         val pathing = Dijkstra.traverse(start, end, nodeGenerator = { explorationMoves(cave, it) }, distance = { from, to -> explorationTime(from, to) })
+//        val path = pathing.findPath(end)
         return pathing.steps[end] ?: 0
     }
 }
