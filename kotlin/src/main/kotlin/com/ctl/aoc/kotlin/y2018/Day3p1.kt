@@ -2,7 +2,6 @@ package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.Rectangle
 import com.ctl.aoc.kotlin.utils.overLapWith
-import java.lang.IllegalArgumentException
 import java.util.regex.Pattern
 
 val pattern = Pattern.compile("#([\\w]+) @ ([\\d]+),([\\d]+): ([\\d]+)x([\\d]+)")
@@ -15,8 +14,6 @@ data class Claim(val id: String, val left: Int, val top: Int, override val width
 
     val size: Int = width * height
 }
-
-typealias Position = Pair<Int, Int>
 
 object Day3p1 {
     fun parseClaim(s: String): Claim {
@@ -33,8 +30,8 @@ object Day3p1 {
         throw IllegalArgumentException(s)
     }
 
-    fun coveredAreas(claim: Claim): List<Position> {
-        val list = mutableListOf<Position>()
+    fun coveredAreas(claim: Claim): List<Pair<Int,Int>> {
+        val list = mutableListOf<Pair<Int,Int>>()
         for (i in claim.left until claim.left + claim.width) {
             for (j in claim.top until claim.top + claim.height) {
                 list.add(i to j)
@@ -43,11 +40,11 @@ object Day3p1 {
         return list
     }
 
-    fun intersect(c1: Claim, c2: Claim, cache: MutableMap<Claim, List<Position>> = mutableMapOf()): Boolean {
+    fun intersect(c1: Claim, c2: Claim, cache: MutableMap<Claim, List<Pair<Int,Int>>> = mutableMapOf()): Boolean {
         // todo write more efficiently
 //        val area1 = cache.computeIfAbsent(c1) { coveredAreas(it) }
 //        val area2 = cache.computeIfAbsent(c2) { coveredAreas(it) }
-//        val both = mutableSetOf<Position>()
+//        val both = mutableSetOf<Pair<Int,Int>>()
 //        both.addAll(area1)
 //        both.addAll(area2)
 //        return both.size != c1.size + c2.size
@@ -58,7 +55,7 @@ object Day3p1 {
     fun solve(lines: Sequence<String>): Int {
         val claims = lines.map { parseClaim(it) }
 //        claims.forEach { println("for $it ${coveredAreas(it)}") }
-        val map = mutableMapOf<Position, Int>()
+        val map = mutableMapOf<Pair<Int,Int>, Int>()
         val areas = claims.flatMap { coveredAreas(it).asSequence() }
 //        println(areas.toList())
         areas.forEach {
@@ -70,7 +67,7 @@ object Day3p1 {
 
     fun solve2(lines: Sequence<String>): String? {
         val claims = lines.map { parseClaim(it) }
-        val cache: MutableMap<Claim, List<Position>> = mutableMapOf()
+        val cache: MutableMap<Claim, List<Pair<Int,Int>>> = mutableMapOf()
         return claims.find { claim -> claims.filter { it.id != claim.id }.all { !intersect(claim, it, cache) } }?.id
 
     }

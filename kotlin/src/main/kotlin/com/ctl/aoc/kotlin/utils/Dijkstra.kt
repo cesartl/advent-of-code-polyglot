@@ -2,7 +2,6 @@ package com.ctl.aoc.kotlin.utils
 
 import com.ctl.aoc.util.FibonacciHeap
 import com.ctl.aoc.util.MinPriorityQueue
-import java.nio.file.Path
 
 typealias NodeGenerator<T> = (T) -> Sequence<T>
 typealias Distance<T> = (T, T) -> Long
@@ -28,7 +27,7 @@ fun <T> PathingResult<T>.findPath(end: T): List<T> = findPath(end, this.previous
 
 object Dijkstra {
 
-    fun <T> traverse(start: T, end: T?, nodeGenerator: NodeGenerator<T>, distance: Distance<T>, constraints: List<Constraint>, queue: MinPriorityQueue<T> = FibonacciHeap()): PathingResult<T> {
+    fun <T> traverse(start: T, end: T?, nodeGenerator: NodeGenerator<T>, distance: Distance<T>, constraints: List<Constraint> = listOf(), queue: MinPriorityQueue<T> = FibonacciHeap()): PathingResult<T> {
         var count = 0
         val steps = mutableMapOf<T, Long>()
         val prevs = mutableMapOf<T, T>()

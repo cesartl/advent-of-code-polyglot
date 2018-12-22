@@ -1,8 +1,8 @@
 package com.ctl.aoc.kotlin.utils
 
-import java.lang.IllegalArgumentException
-
-data class Position(val x: Int, val y: Int)
+data class Position(val x: Int, val y: Int) {
+    fun adjacents(): Sequence<Position> = sequenceOf(N, S, E, W).map { it.move(this) }
+}
 
 sealed class Orientation {
     fun move(p: Position): Position {
