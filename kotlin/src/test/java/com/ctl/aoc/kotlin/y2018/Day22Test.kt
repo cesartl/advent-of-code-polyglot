@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.Position
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day22Test {
@@ -16,7 +17,7 @@ internal class Day22Test {
 
     @Test
     internal fun solve2() {
-//        assertEquals(45, Day22.solve2(510, Position(10, 10)))
-        println(Day22.solve2(inputDepth, inputTarget, 100)) // not 1076, 1068
+        assertEquals(45, Day22.solve2(510, Position(10, 10)))
+        println(Day22.solve2(inputDepth, inputTarget, null)) // not 1076, 1068
     }
 }

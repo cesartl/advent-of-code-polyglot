@@ -2,8 +2,9 @@ package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.Dijkstra
 import com.ctl.aoc.kotlin.utils.Position
+import com.ctl.aoc.kotlin.utils.findPath
 import com.ctl.aoc.kotlin.y2018.Day22.Tool.*
-import com.ctl.aoc.util.JavaPriorityQueue
+import com.ctl.aoc.util.FibonacciHeap
 
 object Day22 {
     sealed class Region {
@@ -131,7 +132,9 @@ object Day22 {
         return tools.flatMap { newTool -> around.filter { isMoveValid(newTool, it.second) }.map { CaveExploration(it.first, it.second, newTool) } }
     }
 
-    fun explorationTime(from: CaveExploration, to: CaveExploration): Long = if (from.tool != to.tool) 8 else 1
+    fun explorationTime(from: CaveExploration, to: CaveExploration): Long = (if (from.tool != to.tool) 8 else 1)
+
+    fun heuristic(node: CaveExploration, target: Position): Long =  node.position.distance(target).toLong()
 
     fun solve2(depth: Int, target: Position, xCap: Int? = null): Long {
         val cave = Cave(target, depth, xCap = xCap)
@@ -141,8 +144,14 @@ object Day22 {
         val start = CaveExploration(Position(0, 0), Region.Rocky, Torch)
         val end = CaveExploration(target, Region.Rocky, Torch)
 
-        val pathing = Dijkstra.traverse(start, end, nodeGenerator = { explorationMoves(cave, it) }, distance = { from, to -> explorationTime(from, to) }, queue = JavaPriorityQueue())
+        val pathing = Dijkstra.traverse(start, end, nodeGenerator = { explorationMoves(cave, it) }, distance = { from, to -> explorationTime(from, to) }, queue = FibonacciHeap(), heuristic = { heuristic(it, target) })
 //        val path = pathing.findPath(end)
-        return pathing.steps[end] ?: 0
+        val p = pathing.findPath(end)
+
+        val result: Pair<Long, Tool> = pathing.findPath(end).drop(1).fold(0L to Torch as Tool) { (time, tool), exp ->
+            if (exp.tool != tool) (time + 8) to exp.tool
+            else (time + 1) to tool
+        }
+        return result.first
     }
 }

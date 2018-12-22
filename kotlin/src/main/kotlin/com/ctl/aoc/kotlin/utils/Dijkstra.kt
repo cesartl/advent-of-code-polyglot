@@ -27,7 +27,7 @@ fun <T> PathingResult<T>.findPath(end: T): List<T> = findPath(end, this.previous
 
 object Dijkstra {
 
-    fun <T> traverse(start: T, end: T?, nodeGenerator: NodeGenerator<T>, distance: Distance<T>, constraints: List<Constraint> = listOf(), queue: MinPriorityQueue<T> = FibonacciHeap()): PathingResult<T> {
+    fun <T> traverse(start: T, end: T?, nodeGenerator: NodeGenerator<T>, distance: Distance<T>, constraints: List<Constraint> = listOf(), queue: MinPriorityQueue<T> = FibonacciHeap(), heuristic: (T) -> Long = { 0 }): PathingResult<T> {
         var count = 0
         val steps = mutableMapOf<T, Long>()
         val prevs = mutableMapOf<T, T>()
@@ -42,7 +42,6 @@ object Dijkstra {
         while (!queue.isEmpty && (end == null || current != end) && constraintsNotMet(current, steps, constraints)) {
             count + 1
             current = queue.extractMinimum()!!
-//            println("Current $current visited: ${visited.size}")
             nodeGenerator(current).filter { !visited.contains(it) }.forEach { n ->
                 if (!queue.contains(n)) {
                     queue.insert(n, Long.MAX_VALUE)
@@ -53,7 +52,7 @@ object Dijkstra {
                     // the new distance is better
                     steps[n] = alt
                     prevs[n] = current
-                    queue.decreasePriority(n, alt)
+                    queue.decreasePriority(n, alt + heuristic(n))
                 }
             }
             visited.add(current)
