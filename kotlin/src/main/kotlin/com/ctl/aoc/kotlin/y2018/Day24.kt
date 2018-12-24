@@ -56,21 +56,21 @@ object Day24 {
         throw IllegalArgumentException(s)
     }
 
-    data class Targetting(val groupUsed: Set<String>, val targets: List<Pair<String, String>>)
+    data class Targeting(val groupUsed: Set<String>, val targets: List<Pair<String, String>>)
 
     data class Battlefield(val groups: List<FightingGroup>) {
         fun battleRound(): Battlefield {
             val groupById = groups.map { it.id to it }.toMap().toMutableMap()
 
-            val targetingOrder = groups.sortedWith(compareBy({ -it.effectivePower }, { -1 * it.initiative }))
+            val targetingOrder = groups.sortedWith(compareBy({ -it.effectivePower }, { -it.initiative }))
 
             val groupSequence = groups.asSequence()
 
-            val battlePlan = targetingOrder.fold(Targetting(setOf(), listOf())) { acc, fightingGroup ->
+            val battlePlan = targetingOrder.fold(Targeting(setOf(), listOf())) { acc, fightingGroup ->
 
-                val target = groupSequence.filter { !acc.groupUsed.contains(it.id) }.filter { it.team != fightingGroup.team }.sortedWith(compareBy({ -fightingGroup.damageTo(it) }, { -it.effectivePower }, { -it.initiative })).firstOrNull()
+                val target = groupSequence.filter { !acc.groupUsed.contains(it.id) }.filter { it.team != fightingGroup.team }.sortedWith(compareBy({ -fightingGroup.damageTo(it) }, { -it.effectivePower }, { -it.initiative })).filter { fightingGroup.damageTo(it) > 0 }.firstOrNull()
                 if (target != null) {
-                    Targetting(acc.groupUsed + target.id, acc.targets + (fightingGroup.id to target.id))
+                    Targeting(acc.groupUsed + target.id, acc.targets + (fightingGroup.id to target.id))
                 } else {
                     acc
                 }
@@ -95,6 +95,15 @@ object Day24 {
 
             return this.copy(groups = groupById.values.toList())
         }
+
+        fun boost(boost: Int): Battlefield {
+            return copy(groups = groups.map { group ->
+                when (group.team) {
+                    Team.IMMUNE_SYSTEM -> group.copy(attackPower = group.attackPower + boost)
+                    else -> group
+                }
+            })
+        }
     }
 
     fun parseInput(lines: Sequence<String>): Battlefield {
@@ -112,11 +121,50 @@ object Day24 {
 
     fun solve1(lines: Sequence<String>): Int {
         var battlefield = parseInput(lines)
+        println(immuneWins(battlefield))
         val all = battlefield.groups.flatMap { it.weakTo + it.immuneTo }.toSet()
-        println("")
         while (battlefield.groups.groupBy { it.team }.size > 1) {
             battlefield = battlefield.battleRound()
         }
         return battlefield.groups.map { it.size }.sum()
+    }
+
+    fun immuneWins(battlefield: Battlefield): Pair<Boolean, Battlefield>? {
+        var current = battlefield
+        var previous: Battlefield
+        while (current.groups.groupBy { it.team }.size > 1) {
+            previous = current
+            current = current.battleRound()
+            if (previous.groups.map { it.size }.sum() == current.groups.map { it.size }.sum()) {
+                break
+            }
+        }
+        val teams = current.groups.groupBy { it.team }
+        if (teams.size == 2) {
+            println("stalemate")
+            return null
+        }
+        return current.groups.any { it.team == Team.IMMUNE_SYSTEM } to current
+    }
+
+    fun solve3(lines: Sequence<String>): Int {
+        val original = parseInput(lines)
+
+        var min = 1L
+        var max = (Int.MAX_VALUE / 2).toLong()
+
+        var boost = 1
+        var immuneWins = false
+        var current: Battlefield = original
+        while (!immuneWins) {
+            var result = Day24.immuneWins(original.boost(boost))
+            if (result != null) {
+                current = result.second
+                immuneWins = result.first
+            }
+            println("boost $boost immuneWins: $immuneWins")
+            boost++
+        }
+        return current.groups.map { it.size }.sum()
     }
 }

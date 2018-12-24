@@ -23,4 +23,10 @@ Infection:
         println(Day24.solve1(input)) //> 19380
 
     }
+
+    @Test
+    internal fun solve2() {
+        println(Day24.solve3(input)) //< 6615
+
+    }
 }
