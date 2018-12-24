@@ -1,9 +1,8 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 
 internal class Day23Test {
 
@@ -36,5 +35,10 @@ pos=<10,10,10>, r=5""".split("\n").asSequence()
     fun solve2() {
 //        assertEquals(36,Day23.solve2(example2))
         println(Day23.solve2(input)) // > 55919980 < 255198677
+    }
+
+    @Test
+    internal fun solve2bis() {
+        println(Day23.solve2bis(input)) // > 55919980 < 255198677
     }
 }

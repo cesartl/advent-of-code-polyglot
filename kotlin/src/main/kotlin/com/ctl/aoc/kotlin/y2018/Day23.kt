@@ -1,6 +1,5 @@
 package com.ctl.aoc.kotlin.y2018
 
-import java.lang.IllegalArgumentException
 import java.util.regex.Pattern
 
 object Day23 {
@@ -12,6 +11,8 @@ object Day23 {
         fun distance(other: Nanobot): Long = Math.abs(x - other.x) + Math.abs(y - other.y) + Math.abs(z - other.z)
 
         fun plus(other: Nanobot) = copy(x = x + other.x, y = y + other.y, z = z + other.z)
+
+        fun intersect(other: Nanobot) = other.distance(this) <= other.r + r
     }
 
     fun parse(string: String): Nanobot {
@@ -75,7 +76,7 @@ object Day23 {
 
         val avg = sum.copy(x = sum.x / sumR, y = sum.y / sumR, z = sum.z / sumR)
 
-        var target = Nanobot(x=14977516, y=34183016, z=57162559, r = 0)
+        var target = Nanobot(x = 14977516, y = 34183016, z = 57162559, r = 0)
 
         val xRange = 50L
         val yRange = 50L
@@ -84,12 +85,12 @@ object Day23 {
         var maxCount = 0
         var bestDistance = Long.MAX_VALUE
         var count: Int
-        for (x in (target.x - xRange)..(target.x + xRange)){
-            for(y in (target.y - yRange)..(target.y + yRange)){
-                for(z in (target.z - zRange)..(target.z + zRange)){
+        for (x in (target.x - xRange)..(target.x + xRange)) {
+            for (y in (target.y - yRange)..(target.y + yRange)) {
+                for (z in (target.z - zRange)..(target.z + zRange)) {
                     current = Nanobot(x, y, z, 0)
                     count = bots.count { it.distance(current) <= it.r }
-                    if(count > maxCount || (count == maxCount && current.d0 < bestDistance)){
+                    if (count > maxCount || (count == maxCount && current.d0 < bestDistance)) {
                         bestDistance = current.d0
                         maxCount = count
                         println("max: $maxCount bestDistance: $bestDistance")
@@ -113,5 +114,13 @@ object Day23 {
 //            current = current.plus(vect)
 //        }
         return bestDistance
+    }
+
+    fun solve2bis(lines: Sequence<String>) {
+        val bots = lines.map { parse(it) }.toList()
+
+        val bestSet = bots.map { b -> bots.filter { it.intersect(b) } }.maxBy { it.size }!!
+        println(bestSet.size)
+        println(bestSet)
     }
 }
