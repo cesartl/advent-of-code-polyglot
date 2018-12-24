@@ -150,19 +150,29 @@ object Day24 {
     fun solve3(lines: Sequence<String>): Int {
         val original = parseInput(lines)
 
-        var min = 1L
-        var max = (Int.MAX_VALUE / 2).toLong()
+        var min = 1
+        var max = (Int.MAX_VALUE / 2)
 
-        var boost = 1
+        var boost = 1000000
         var immuneWins = false
         var current: Battlefield = original
-        while (!immuneWins) {
+        while (min < max) {
             var result = Day24.immuneWins(original.boost(boost))
+            println("min $min max $max boost $boost immnueWins: ${result?.first?.let { if (it) "yes" else "no" }
+                    ?: "stalemate"}")
             if (result != null) {
                 current = result.second
-                immuneWins = result.first
+                if (result.first) {
+                    max = boost - 1
+
+                } else {
+                    min = boost + 1
+                }
+                boost = (min + max) / 2
+            } else {
+                min++
+                boost = min
             }
-            println("boost $boost immuneWins: $immuneWins")
             boost++
         }
         return current.groups.map { it.size }.sum()
