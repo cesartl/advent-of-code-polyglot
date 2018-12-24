@@ -10,7 +10,7 @@ object Day24 {
     fun parseTeam(teamName: String): Team = Team.values().find { it.teamName == teamName }
             ?: throw IllegalArgumentException(teamName)
 
-    data class FightingGroup(val id: Int, val size: Int, val hp: Int, val attackPower: Int, val attackType: String, val initiative: Int, val weakTo: Set<String>, val immuneTo: Set<String>, val team: Team) {
+    data class FightingGroup(val id: String, val size: Int, val hp: Int, val attackPower: Int, val attackType: String, val initiative: Int, val weakTo: Set<String>, val immuneTo: Set<String>, val team: Team) {
         val effectivePower = size * attackPower
 
         fun damageTo(other: FightingGroup): Int {
@@ -28,7 +28,7 @@ object Day24 {
         }
     }
 
-    fun parse(s: String, team: Team, id: Int): FightingGroup {
+    fun parse(s: String, team: Team, id: String): FightingGroup {
         val m = groupPattern.matcher(s)
         if (m.matches()) {
             val size = m.group(1).toInt()
@@ -56,35 +56,39 @@ object Day24 {
         throw IllegalArgumentException(s)
     }
 
-    data class Targetting(val groupUsed: Set<Int>, val targets: List<Pair<Int, Int>>)
+    data class Targetting(val groupUsed: Set<String>, val targets: List<Pair<String, String>>)
 
     data class Battlefield(val groups: List<FightingGroup>) {
         fun battleRound(): Battlefield {
-            println("new round")
             val groupById = groups.map { it.id to it }.toMap().toMutableMap()
 
-            val targettingOrder = groups.sortedWith(compareBy({ -it.effectivePower }, { -1 * it.initiative }))
+            val targetingOrder = groups.sortedWith(compareBy({ -it.effectivePower }, { -1 * it.initiative }))
 
             val groupSequence = groups.asSequence()
 
-            val battlePlan = targettingOrder.fold(Targetting(setOf(), listOf())) { acc, fightingGroup ->
+            val battlePlan = targetingOrder.fold(Targetting(setOf(), listOf())) { acc, fightingGroup ->
+
                 val target = groupSequence.filter { !acc.groupUsed.contains(it.id) }.filter { it.team != fightingGroup.team }.sortedWith(compareBy({ -fightingGroup.damageTo(it) }, { -it.effectivePower }, { -it.initiative })).firstOrNull()
                 if (target != null) {
                     Targetting(acc.groupUsed + target.id, acc.targets + (fightingGroup.id to target.id))
                 } else {
                     acc
                 }
-            }
+            }.targets.toMap()
 
-            battlePlan.targets.forEach { (attackingId, defendingId) ->
+
+            groupSequence.sortedBy { -it.initiative }.map { it.id }.forEach { attackingId ->
                 val attacking = groupById[attackingId]
                 if (attacking != null) {
-                    var defending = groupById[defendingId]!!
-                    defending = defending.receiveDamage(attacking)
-                    if (defending.size <= 0) {
-                        groupById.remove(defendingId)
-                    } else {
-                        groupById[defendingId] = defending
+                    val defendingId = battlePlan[attackingId]
+                    if (defendingId != null) {
+                        var defending = groupById[defendingId]!!
+                        defending = defending.receiveDamage(attacking)
+                        if (defending.size <= 0) {
+                            groupById.remove(defending.id)
+                        } else {
+                            groupById[defending.id] = defending
+                        }
                     }
                 }
             }
@@ -94,19 +98,22 @@ object Day24 {
     }
 
     fun parseInput(lines: Sequence<String>): Battlefield {
-        var id = 0
-        val team1Name1 = parseTeam(lines.first().trim().dropLast(1))
-        val team1 = lines.drop(1).takeWhile { it != "" }.map { parse(it, team1Name1, id++) }.toList()
+        var id = 1
+        val team1Name = parseTeam(lines.first().trim().dropLast(1))
+        val team1 = lines.drop(1).takeWhile { it != "" }.map { parse(it, team1Name, "${team1Name.teamName}${id++}") }.toList()
 
 
         val foo = lines.dropWhile { it != "" }
         val teamName2 = parseTeam(foo.drop(1).first().trim().dropLast(1))
-        val team2 = foo.drop(2).map { parse(it, teamName2, id++) }.toList()
+        id = 1
+        val team2 = foo.drop(2).map { parse(it, teamName2, "${teamName2.teamName}${id++}") }.toList()
         return Battlefield(team1 + team2)
     }
 
     fun solve1(lines: Sequence<String>): Int {
         var battlefield = parseInput(lines)
+        val all = battlefield.groups.flatMap { it.weakTo + it.immuneTo }.toSet()
+        println("")
         while (battlefield.groups.groupBy { it.team }.size > 1) {
             battlefield = battlefield.battleRound()
         }

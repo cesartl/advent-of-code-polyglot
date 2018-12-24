@@ -18,8 +18,9 @@ Infection:
 
     @Test
     fun solve1() {
+
         assertEquals(5216, Day24.solve1(example))
-//        Day24.solve1(input)
+        println(Day24.solve1(input)) //> 19380
 
     }
 }
