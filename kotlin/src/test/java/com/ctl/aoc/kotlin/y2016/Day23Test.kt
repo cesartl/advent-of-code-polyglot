@@ -25,13 +25,13 @@ dec a""".split("\n").asSequence()
 
     @Test
     internal fun day23Sove1() {
-//        val exampleState = Day23.run(Day23.parse(example))
-//        assertEquals(3, exampleState.getValue(Day23.Ref.Register('a')))
+        val exampleState = Day23.run(Day23.parse(example))
+        assertEquals(3, exampleState.getValue(Day23.Ref.Register('a')))
         assertEquals(12775, Day23.solve1(day23Input))
     }
 
     @Test
     internal fun day23Sove2() {
-        println(Day23.solve2(day23Input))
+        assertEquals(479009335, Day23.solve2(day23Input))
     }
 }

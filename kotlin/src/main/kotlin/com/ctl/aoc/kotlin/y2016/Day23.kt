@@ -55,6 +55,19 @@ object Day23 {
         }
 
         fun execute(): State {
+            return if (position == 3) {
+                val d = getValue(Register('d'))
+                val b = getValue(Register('b'))
+                copy(registers = registers + ('a' to d * b), position = 10)
+            } else if (position == 11) {
+                val b = getValue(Register('b'))
+                copy(registers = registers + ('c' to 2 * b), position = 16)
+            } else {
+                executeN()
+            }
+        }
+
+        fun executeN(): State {
             val instr = instructions[position]
             return when (instr) {
                 is Copy -> updateValue(instr.y, getValue(instr.x)).next()
