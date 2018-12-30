@@ -70,7 +70,7 @@ object Day22 {
         }
 
         fun exploreAround(position: Position) {
-            position.adjacents().filter { it.x > 0 && it.y > 0 && (xCap == null || it.x < xCap) }.map { it to regionAt(it) }.filter { it.second == null }.forEach {
+            position.adjacent().filter { it.x > 0 && it.y > 0 && (xCap == null || it.x < xCap) }.map { it to regionAt(it) }.filter { it.second == null }.forEach {
                 val (x, y) = it.first
                 val erosion = erosion(Position(x, y))
                 regionMap.computeIfAbsent(y) { mutableMapOf() }[x] = Region.forErosion(erosion)
@@ -125,7 +125,7 @@ object Day22 {
         val position = caveExploration.position
         cave.exploreAround(position)
         val currentRegion = caveExploration.region
-        val around = position.adjacents().map { it to cave.regionAt(it) }.filter { it.second != null }.map { it.first to it.second!! }
+        val around = position.adjacent().map { it to cave.regionAt(it) }.filter { it.second != null }.map { it.first to it.second!! }
 
         val tools = toolsForRegion(currentRegion).asSequence()
 
