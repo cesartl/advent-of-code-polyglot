@@ -3,7 +3,6 @@ package com.ctl.aoc.kotlin.y2016
 import com.ctl.aoc.kotlin.utils.Position
 import java.util.*
 import java.util.regex.Pattern
-import kotlin.Comparator
 
 object Day22 {
     data class Node(val x: Int, val y: Int, val size: Int, val used: Int) {
@@ -47,29 +46,55 @@ object Day22 {
         fun isMoveValid(moveStep: MoveStep): Boolean {
             val from = map[moveStep.from]!!
             val to = map[moveStep.to]!!
-            return to.avail >= from.used
+            return from.used <= to.size
+        }
+
+        fun print(): String {
+            val builder = StringBuilder()
+
+            val avg = map.values.map { it.used }.average().toInt()
+            val xMax = map.values.map { it.x }.max()!!
+            val yMax = map.values.map { it.y }.max()!!
+            for (y in 0..yMax){
+                for(x in 0..xMax){
+                    val node = map[Position(x, y)]!!
+                    when {
+                        node.used == 0 -> builder.append("_")
+                        node.used > avg -> builder.append("#")
+                        else -> builder.append(".")
+                    }
+                }
+                builder.append("\n")
+            }
+            println("avg $avg")
+            println(Position(xMax, 0))
+
+            return builder.toString()
         }
     }
 
-    data class MoveStep(val from: Position, val to: Position)
-
-    data class State(val grid: Grid, val steps: List<MoveStep>, val goal: Position, val zero: Position) {
-        val winning: Boolean = goal == Position(0, 0)
-        val stateEq = goal to zero
-
-        val cost = steps.size + 900 * goal.distance(Position(0, 0))
+    data class MoveStep(val from: Position, val to: Position) {
+        override fun toString(): String {
+            return "$from -> $to"
+        }
     }
 
-    fun generateMoves(state: State): List<State> {
+    data class State(val steps: List<MoveStep>, val goal: Position, val zero: Position) {
+        val winning: Boolean = goal == Position(0, 0)
+        val stateEq = goal to zero
+        val goalDistance = goal.distance(Position(0, 0))
+    }
 
-        val movingZero = state.zero.adjacent().filter { state.grid.map.containsKey(it) }
+    fun generateMoves(state: State, grid: Grid): List<State> {
+
+        val movingZero = state.zero.adjacent().filter { grid.map.containsKey(it) }
                 .map { MoveStep(it, state.zero) }
-                .filter { state.grid.isMoveValid(it) }
+                .filter { grid.isMoveValid(it) }
                 .map {
                     if (it.from == state.goal) {
-                        state.copy(grid = state.grid.doMoveData(it), steps = state.steps + it, zero = it.from, goal = it.to)
+                        state.copy(steps = state.steps + it, zero = it.from, goal = it.to)
                     } else {
-                        state.copy(grid = state.grid.doMoveData(it), steps = state.steps + it, zero = it.from)
+                        state.copy(steps = state.steps + it, zero = it.from)
                     }
                 }
                 .filter { it.goal.distance(it.zero) <= state.goal.distance(state.zero) + 4 }
@@ -78,25 +103,23 @@ object Day22 {
 
     fun findSteps(grid: Grid): State {
         val goalNode = grid.map.filter { it.key.y == 0 }.maxBy { it.key.x }!!
-        val zero = grid.map.values.filter { it.avail >= goalNode.value.used }.first()
+        val zero = grid.map.values.first { it.avail >= goalNode.value.used }
 
         println("goalNode: $goalNode")
         println("zero $zero")
 
-        val start = State(grid, listOf(), goalNode.value.position, zero.position)
+        val start = State(listOf(), goalNode.value.position, zero.position)
 
         val visited = mutableSetOf<Pair<Position, Position>>()
 //        val queue = ArrayDeque<State>()
-        val minQueue = PriorityQueue<State>(Comparator<State> { o1, o2 ->
-            o1.cost - o2.cost
-        })
+        val minQueue = PriorityQueue<State>(compareBy({ it.goalDistance }))
         minQueue.add(start)
         var state: State = start
         while (!state.winning && !minQueue.isEmpty()) {
             state = minQueue.remove()
 //            println("goal ${state.goal} zero ${state.zero}")
             visited.add(state.stateEq)
-            generateMoves(state).filter { !visited.contains(it.stateEq) }.forEach { neighbour ->
+            generateMoves(state, grid).filter { !visited.contains(it.stateEq) }.forEach { neighbour ->
                 minQueue.add(neighbour)
             }
         }
@@ -107,8 +130,9 @@ object Day22 {
     fun solve2(lines: Sequence<String>): Int {
         val nodes = lines.drop(2).map { parse(it) }
         val grid = Grid(nodes.map { it.position to it }.toMap())
-        val state = findSteps(grid)
-        println(state.steps)
-        return state.steps.size
+//        val state = findSteps(grid)
+//        println(state.steps)
+        println(grid.print())
+        return 10 + 23 + 8 + 22 + 5*35
     }
 }

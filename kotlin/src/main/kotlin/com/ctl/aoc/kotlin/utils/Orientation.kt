@@ -3,6 +3,10 @@ package com.ctl.aoc.kotlin.utils
 data class Position(val x: Int, val y: Int) {
     fun adjacent(): Sequence<Position> = sequenceOf(N, S, E, W).map { it.move(this) }
     fun distance(other: Position) : Int = Math.abs(other.x - x) + Math.abs(other.y - y)
+    override fun toString(): String {
+        return "(x=$x, y=$y)"
+    }
+
 }
 
 sealed class Orientation {
