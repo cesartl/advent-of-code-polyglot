@@ -20,6 +20,8 @@ object Day23 {
         data class Inc(val x: Ref.Register) : Instruction()
         data class Dec(val x: Ref.Register) : Instruction()
         data class Jump(val x: Ref, val y: Ref) : Instruction()
+        data class Toggle(val x: Ref.Register) : Instruction()
+        data class Invalid(val instruction: Instruction) : Instruction()
     }
 
     fun parseInstruction(s: String): Instruction {
@@ -28,6 +30,7 @@ object Day23 {
             "cpy" -> Copy(Ref.parse(split[1]), Register(split[2].first()))
             "inc" -> Inc(Register(split[1].first()))
             "dec" -> Dec(Register(split[1].first()))
+            "tgl" -> Toggle(Register(split[1].first()))
             "jnz" -> Jump(Ref.parse(split[1]), Ref.parse(split[2]))
             else -> throw IllegalArgumentException(s)
         }
@@ -58,6 +61,25 @@ object Day23 {
                 is Inc -> updateValue(instr.x, getValue(instr.x) + 1).next()
                 is Dec -> updateValue(instr.x, getValue(instr.x) - 1).next()
                 is Jump -> if (getValue(instr.x) != 0L) next(getValue(instr.y).toInt()) else next()
+                is Toggle -> {
+                    val index = getValue(instr.x).toInt() + position
+                    if (index >= instructions.size) return next()
+                    val toToggle = instructions[index]
+                    val toggled = when (toToggle) {
+                        is Inc -> Dec(toToggle.x)
+                        is Copy -> Jump(toToggle.x, toToggle.y)
+                        is Dec -> Inc(toToggle.x)
+                        is Jump -> when (toToggle.y) {
+                            is Register -> Copy(toToggle.x, toToggle.y)
+                            else -> Invalid(toToggle)
+                        }
+                        is Toggle -> Inc(toToggle.x)
+                        is Invalid -> toToggle.instruction
+                    }
+                    val newInstructions = instructions.subList(0, index) + toggled + instructions.subList(index + 1, instructions.size)
+                    this.copy(instructions = newInstructions, position = position + 1)
+                }
+                is Invalid -> next()
             }
         }
     }
@@ -77,6 +99,18 @@ object Day23 {
 
     fun day12Solve2(lines: Sequence<String>): Long {
         val state = parse(lines).updateValue(Register('c'), 1)
+        val end = run(state)
+        return end.getValue(Register('a'))
+    }
+
+    fun solve1(lines: Sequence<String>): Long {
+        val state = parse(lines).updateValue(Register('a'), 7)
+        val end = run(state)
+        return end.getValue(Register('a'))
+    }
+
+    fun solve2(lines: Sequence<String>): Long {
+        val state = parse(lines).updateValue(Register('a'), 12)
         val end = run(state)
         return end.getValue(Register('a'))
     }
