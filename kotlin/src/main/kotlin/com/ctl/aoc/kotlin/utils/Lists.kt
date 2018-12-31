@@ -1,7 +1,5 @@
 package com.ctl.aoc.kotlin.utils
 
-import java.lang.IllegalArgumentException
-
 val <T> List<T>.tail: List<T>
     get() = drop(1)
 
@@ -43,5 +41,18 @@ object Lists {
             idx++
         }
         return result
+    }
+
+    fun <T> permutations(list: List<T>): Sequence<List<T>> {
+        return sequence {
+            if (list.size == 1) yield(list)
+            else {
+                permutations(list.drop(1)).forEach { permutation ->
+                    for (i in 0..permutation.size) {
+                        yield(permutation.subList(0, i) + list.first() + permutation.drop(i))
+                    }
+                }
+            }
+        }
     }
 }

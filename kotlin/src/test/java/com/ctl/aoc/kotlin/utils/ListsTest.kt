@@ -14,4 +14,10 @@ internal class ListsTest{
     internal fun powerSet() {
         println(Lists.powerSet(listOf(1, 2, 3, 4)))
     }
+
+    @Test
+    internal fun permutations() {
+        val list = listOf(1, 2, 3, 4, 5, 6, 7)
+        println(Lists.permutations(list).toList().size)
+    }
 }
