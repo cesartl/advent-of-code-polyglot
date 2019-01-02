@@ -30,14 +30,14 @@ object Day7 {
         }
     }
 
-    data class CircuitState(val wires: Map<String, Short> = mapOf()) {
+    data class CircuitState(val wires: Map<String, Short> = mapOf(), val overrideWires: Map<String, Short> = mapOf()) {
         fun setWire(wire: String, value: Short): CircuitState {
             return copy(wires = wires + (wire to value))
         }
 
         fun getValue(connector: Connector): Short {
             return when (connector) {
-                is Connector.Wire -> wires[connector.name]!!
+                is Connector.Wire -> overrideWires[connector.name] ?: wires[connector.name]!!
                 is Connector.Value -> connector.value
             }
         }
@@ -48,14 +48,20 @@ object Day7 {
         abstract fun execute(circuitState: CircuitState): CircuitState
         abstract fun isReady(circuitState: CircuitState): Boolean
         abstract val provideValueFor: String
+        abstract val requiresValueFrom: List<String>
 
-        data class Assignment(val value: Short, val wire: String) : Instruction() {
+        data class Assignment(val value: Connector, val wire: String) : Instruction() {
+            override val requiresValueFrom: List<String>
+                get() = when (value) {
+                    is Connector.Wire -> listOf(value.name)
+                    else -> listOf()
+                }
             override val provideValueFor: String
                 get() = wire
 
-            override fun isReady(circuitState: CircuitState): Boolean = true
+            override fun isReady(circuitState: CircuitState): Boolean = value.isReady(circuitState)
 
-            override fun execute(circuitState: CircuitState): CircuitState = circuitState.setWire(wire, value)
+            override fun execute(circuitState: CircuitState): CircuitState = circuitState.setWire(wire, circuitState.getValue(value))
         }
 
         sealed class Gate : Instruction() {
@@ -72,6 +78,13 @@ object Day7 {
 
             override val provideValueFor: String
                 get() = target
+
+            override val requiresValueFrom: List<String>  by lazy {
+                val list = mutableListOf<String>()
+                left.ifWire { list.add(it) }
+                right.ifWire { list.add(it) }
+                list
+            }
 
             data class OrGate(override val left: Connector, override val right: Connector, override val target: String) : Gate() {
                 override fun compute(x: Short, y: Short): Short = x or y
@@ -94,6 +107,12 @@ object Day7 {
             override val provideValueFor: String
                 get() = target
 
+            override val requiresValueFrom: List<String>  by lazy {
+                val list = mutableListOf<String>()
+                arg.ifWire { list.add(it) }
+                list
+            }
+
             override fun isReady(circuitState: CircuitState): Boolean = arg.isReady(circuitState)
 
             data class Not(override val arg: Connector, override val target: String) : Operator() {
@@ -111,10 +130,10 @@ object Day7 {
 
         enum class Parser {
             Assignment {
-                override fun regex(): Regex = """([\d]+) -> ([a-z]+)""".toRegex()
+                override fun regex(): Regex = """([\w]+) -> ([a-z]+)""".toRegex()
 
                 override fun parse(m: MatchResult): Instruction {
-                    return m.let { Assignment(it.groupValues[1].toShort(), it.groupValues[2]) }
+                    return m.let { Assignment(Connector.parse(it.groupValues[1]), it.groupValues[2]) }
                 }
             },
             AndGate {
@@ -190,22 +209,17 @@ object Day7 {
         }
     }
 
-    fun resolve(instructions: Sequence<Instruction>): CircuitState {
-        var circuitState = CircuitState()
+    fun resolve(instructions: Sequence<Instruction>, start: CircuitState = CircuitState()): CircuitState {
+        var circuitState = start
 
         val readyQ = ArrayDeque<Instruction>()
         val dependencies = mutableMapOf<String, List<Instruction>>()
 
         instructions.forEach { instr ->
-            when (instr) {
-                is Instruction.Assignment -> readyQ.add(instr)
-                is Instruction.Gate -> {
-                    instr.left.ifWire { dependencies.merge(it, listOf(instr)) { t, u -> t + u } }
-                    instr.right.ifWire { dependencies.merge(it, listOf(instr)) { t, u -> t + u } }
-                }
-                is Instruction.Operator -> {
-                    instr.arg.ifWire { dependencies.merge(it, listOf(instr)) { t, u -> t + u } }
-                }
+            if (instr.isReady(circuitState)) {
+                readyQ.add(instr)
+            } else {
+                instr.requiresValueFrom.forEach { wire -> dependencies.merge(wire, listOf(instr)) { t, u -> t + u } }
             }
         }
 
@@ -224,6 +238,14 @@ object Day7 {
     fun solve1(lines: Sequence<String>): Short {
         val instructions = lines.map { Instruction.parse(it) }
         val state = resolve(instructions)
+        return state.getValue(Connector.Wire("a"))
+    }
+
+    fun solve2(lines: Sequence<String>): Short {
+        val a = solve1(lines)
+        val instructions = lines.map { Instruction.parse(it) }
+        val start = CircuitState(overrideWires = mapOf("b" to a))
+        val state = resolve(instructions, start)
         return state.getValue(Connector.Wire("a"))
     }
 }

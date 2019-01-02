@@ -34,4 +34,9 @@ NOT y -> i""".split("\n").asSequence().map { Day7.Instruction.parse(it) }
     internal fun solve1() {
         println(Day7.solve1(input))
     }
+
+    @Test
+    internal fun solve2() {
+        println(Day7.solve2(input))
+    }
 }
