@@ -8,7 +8,7 @@ internal class Day8Test {
 
     val input = InputUtils.getLines(2015, 18)
 
-    val example = InputUtils.getLines("2015", "day18-ex.txt")
+    val example = InputUtils.getLines("2015", "day8-ex.txt")
 
     @Test
     fun countChar() {

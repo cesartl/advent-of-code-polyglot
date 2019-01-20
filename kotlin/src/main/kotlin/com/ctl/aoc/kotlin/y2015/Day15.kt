@@ -31,46 +31,51 @@ object Day15 {
     fun atIndex(value: Long, idx: Int, size: Int): List<Long> = generateSequence(0L) { 0L }.take(size).mapIndexed { i, _ -> if (i == idx) value else 0L }.toList()
 
 
-    data class Cookie(val quantities: List<Long>, val ingredients: Iterable<Ingredient>) {
+    data class Cookie(val quantities: List<Long>, val ingredients: List<Ingredient>) {
         val score1: Long = quantities.zip(ingredients).map { (qty, ingredient) -> ingredient.quatity(qty) }.reduce { l, r -> combine(l, r) }.properties.dropLast(1).fold(1L) { acc, l -> acc * Math.max(0, l) }
+        val calories: Long = quantities.zip(ingredients).map { (qty, ingredient) -> ingredient.quatity(qty) }.reduce { l, r -> combine(l, r) }.properties.last()
+        val total = quantities.sum()
         override fun toString(): String {
-            return "Cookie(quantities=$quantities, score1=$score1)"
+            return "Cookie(quantities=$quantities, score1=$score1, total=$total, calories=$calories)"
         }
     }
 
 
+    fun generateAll(size: Int, max: Long): Sequence<List<Long>> = sequence {
+        val one = atIndex(1, size - 1, size)
+        var quantities = zero(size)
+        val upper = Math.pow(max.toDouble() + 1, quantities.size.toDouble()).toLong()
+        for (i in 1 until upper) {
+            if (i % 100000L == 0L) {
+                println("i: $i")
+            }
+            quantities = add(quantities, one, max + 1)
+            yield(quantities)
+        }
+    }
 
     tailrec fun findStable(ingredients: List<Ingredient>, max: Long = 1): Cookie {
-        val one = atIndex(1, ingredients.size - 1, ingredients.size)
-        println("max $max")
+        return generateAll(ingredients.size, max).map { Cookie(it, ingredients) }.filter { it.score1 > 0 }.firstOrNull()
+                ?: findStable(ingredients, max + 1)
+    }
 
-        var quantities = zero(ingredients.size)
-        val upper = Math.pow(quantities.size.toDouble(), max.toDouble() + 1).toInt()
-        for (i in 1..upper) {
-            quantities = add(quantities, one, max + 1)
-            val cookie = Cookie(quantities, ingredients)
-            if (cookie.score1 > 0) {
-                println("found stable $cookie")
-                return cookie
-            }
+    fun scaleUpTo(cookie: Cookie, n: Int): Cookie {
+        var cookie = findStable(cookie.ingredients)
+        var current: Cookie = cookie
+        var i = 2L
+        while (current.quantities.sum() < n) {
+            current = current.copy(quantities = mult(cookie.quantities, i))
+            i++
         }
-        return findStable(ingredients, max + 1)
+        println("i $i")
+        return cookie.copy(quantities = mult(cookie.quantities, i - 2))
     }
 
     fun solve1(lines: Sequence<String>): Cookie {
         val ingredients = lines.map { Day15.Ingredient.parse(it) }.toList()
         println(ingredients)
 
-        var cookie = findStable(ingredients)
-        var current: Cookie = cookie
-        var i = 2L
-        while (current.quantities.sum() <= 100) {
-            current = current.copy(quantities = mult(current.quantities, i))
-            i++
-        }
-        println("i $i")
-        cookie = cookie.copy(quantities = mult(cookie.quantities, i))
-
+        var cookie = scaleUpTo(findStable(ingredients), 100)
 
         println("start $cookie")
         println("total ${cookie.quantities.sum()}")
@@ -80,6 +85,23 @@ object Day15 {
             println(candidates)
             cookie = candidates.last()
             total++
+        }
+        println(cookie)
+        return cookie
+    }
+
+    fun solve2(lines: Sequence<String>): Cookie {
+        val ingredients = lines.map { Day15.Ingredient.parse(it) }.toList()
+        val stable = findStable(ingredients)
+        println("stable $stable")
+        var cookie = scaleUpTo(stable, 80)
+
+        println("cookie $cookie")
+        while (cookie.total < 100) {
+            val candidates = generateAll(ingredients.size, Math.min(30, 100 - cookie.total)).map { Cookie(combine(cookie.quantities, it), ingredients) }.filter { it.quantities.sum() <= 100 }.filter { it.score1 > 0 }.filter { it.calories == 500L }.sortedBy { it.score1 }.toList()
+            println("candidates ${candidates.size}")
+            cookie = candidates.last()
+            println("cookie $cookie")
         }
         println(cookie)
         return cookie

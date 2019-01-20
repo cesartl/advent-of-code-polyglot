@@ -1,11 +1,11 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.InputUtils
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day18Test {
-    val input = InputUtils.getLines("2018", "day18.txt").toList()
+    val input = InputUtils.getLines("2018", "day8.txt").toList()
 
     val example = """.#.#...|#.
 .....#|##|
