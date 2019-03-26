@@ -111,3 +111,7 @@ hs_err_pid*
 kotlin/target/**
 
 .DS_Store
+
+# haskell
+*.o
+*.hi
