@@ -1,4 +1,6 @@
 import System.IO
+import Control.Monad.State.Lazy
+import Data.Maybe
 
 main :: IO()
 main = do
@@ -20,66 +22,71 @@ parseDirection _ = Nothing
 parseLine :: String -> Maybe [Direction]
 parseLine = traverse parseDirection
 
-move :: Int -> Direction -> Int
-move 1 R = 2
-move 1 D = 4
-move 1 _ = 1
+data Keypad = K1 | K2 | K3 | K4 | K5 | K6 | K7 | K8 | K9
+  deriving (Show)
 
-move 2 R = 3
-move 2 L = 1
-move 2 D = 5
-move 2 _ = 2
+move :: Keypad -> Direction -> Maybe Keypad
+move K1 R = Just K2
+move K1 D = Just K4
+move K1 _ = Nothing
 
-move 3 L = 2
-move 3 D = 6
-move 3 _ = 3
+move K2 R = Just K3
+move K2 L = Just K1
+move K2 D = Just K5
+move K2 _ = Nothing
 
-move 4 U = 1
-move 4 R = 5
-move 4 D = 7
-move 4 _ = 4
+move K3 L = Just K2
+move K3 D = Just K6
+move K3 _ = Nothing
 
-move 5 U = 2
-move 5 R = 6
-move 5 L = 4
-move 5 D = 8
+move K4 U = Just K1
+move K4 R = Just K5
+move K4 D = Just K7
+move K4 _ = Nothing
 
-move 6 L = 5
-move 6 U = 3
-move 6 D = 9
-move 6 _ = 6
+move K5 U = Just K2
+move K5 R = Just K6
+move K5 L = Just K4
+move K5 D = Just K8
 
-move 7 U = 4
-move 7 R = 8
-move 7 _ = 7
+move K6 L = Just K5
+move K6 U = Just K3
+move K6 D = Just K9
+move K6 _ = Nothing
 
-move 8 L = 7
-move 8 U = 5
-move 8 R = 9
-move 8 _ = 8
+move K7 U = Just K4
+move K7 R = Just K8
+move K7 _ = Nothing
 
-move 9 U = 6
-move 9 L = 8
-move 9 _ = 9
+move K8 L = Just K7
+move K8 U = Just K5
+move K8 R = Just K9
+move K8 _ = Nothing
 
-move x _ = x
+move K9 U = Just K6
+move K9 L = Just K8
+move K9 _ = Nothing
 
-reduceDirection :: Int -> [Direction] -> Int
-reduceDirection start = foldl move start
+moveDefault ::  Keypad -> Direction -> Keypad
+moveDefault k d = fromMaybe k (move k d)
 
-processLine :: String -> Maybe (Int -> Int)
-processLine s = do
-    directions <- parseLine s
-    pure $ \start -> reduceDirection start directions
+moveS :: Direction -> State Keypad ()
+moveS dir = do
+  current <- get
+  next <- pure $ (moveDefault current dir)
+  put next
 
-findCode :: [String] -> Int -> Maybe [Int]
-findCode instructions = do
-  handlers <- traverse processLine instructions
-  pure $ foldl f [] handlers
-  where
-    f :: [Int] -> (Int -> Int) -> [Int]
-    f = ...
+reduceLine :: [Direction] -> State Keypad Keypad
+reduceLine dirs = traverse moveS dirs >> get
 
+findCombination :: [[Direction]] -> State Keypad [Keypad]
+findCombination rows = traverse reduceLine rows
 
-solve :: [String] -> Maybe [Int]
-solve instructions = findCode instructions 5
+parse :: [String] -> Maybe [[Direction]]
+parse = traverse parseLine
+
+solve :: [String] -> Maybe [Keypad]
+solve instructions = do
+  rows <- parse instructions
+  s <- pure $ findCombination rows
+  pure $ fst $ runState s K5
