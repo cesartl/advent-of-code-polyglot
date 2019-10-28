@@ -73,8 +73,7 @@ moveDefault k d = fromMaybe k (move k d)
 moveS :: Direction -> State Keypad ()
 moveS dir = do
   current <- get
-  next <- pure $ (moveDefault current dir)
-  put next
+  put (moveDefault current dir)
 
 reduceLine :: [Direction] -> State Keypad Keypad
 reduceLine dirs = traverse moveS dirs >> get
