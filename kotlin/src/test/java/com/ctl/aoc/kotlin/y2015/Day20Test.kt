@@ -20,4 +20,9 @@ internal class Day20Test {
         assertEquals(8, Day20.solve1(150))
         println(Day20.solve1(34000000))
     }
+
+    @Test
+    internal fun solve2() {
+        println(Day20.solve2(340000))
+    }
 }

@@ -2,6 +2,8 @@ package com.ctl.aoc.kotlin.utils
 
 import java.math.BigInteger
 
+typealias Factorisation = Pair<BigInteger, Int>
+
 object Primes {
 
     fun isPrime(n: Long): Boolean {
@@ -17,7 +19,7 @@ object Primes {
     fun isPrime(n: Int): Boolean = isPrime(n.toLong())
 
     fun isPrime(n: BigInteger): Boolean {
-        if (n < 2) return false
+        if (n < BigInteger.TWO) return false
         var i = BigInteger.ZERO
         while ((i * i) <= n) {
             if (n.mod(i) == BigInteger.ZERO) return false
@@ -26,10 +28,10 @@ object Primes {
         return true
     }
 
-    fun allPrimes(): Sequence<Long> = sequence {
-        var i = 2L
+    fun allPrimes(): Sequence<BigInteger> = sequence {
+        var i = BigInteger.valueOf(2)
         while (true) {
-            while (!BigInteger.valueOf(i).isProbablePrime(15)) {
+            while (!i.isProbablePrime(15)) {
                 i++
             }
             yield(i)
@@ -37,16 +39,23 @@ object Primes {
         }
     }
 
-    fun primeFactorisation(n: Long, primes: List<Long>): Sequence<Pair<Long, Int>> = sequence {
-        var current = n
+    fun divisorFunction(degree: Int, factorisation: Factorisation): BigInteger {
+        val (prime, n) = factorisation
+        return prime.pow((n + 1) * degree).subtract(BigInteger.ONE).divide(prime.pow(degree).subtract(BigInteger.ONE))
+    }
+
+    fun numberOfDivisor(factorisation: Factorisation): BigInteger = divisorFunction(0, factorisation)
+
+    fun sumOfDivisor(factorisation: Factorisation): BigInteger = divisorFunction(1, factorisation)
+
+    fun primeFactorisation(n: Long, primes: List<BigInteger>): Sequence<Factorisation> = sequence {
+        var current = BigInteger.valueOf(n)
         val it = primes.iterator()
-        while (current > 1) {
-            if (!it.hasNext()) {
-                throw IllegalArgumentException("Not enough primes")
-            }
-            var prime = it.next()
+        while (current > BigInteger.ONE) {
+            require(it.hasNext()) { "Not enough primes" }
+            val prime = it.next()
             var count = 0
-            while (current > 0 && (current % prime == 0L)) {
+            while (current > BigInteger.ZERO && (current % prime == BigInteger.ZERO)) {
                 current /= prime
                 count++
             }
