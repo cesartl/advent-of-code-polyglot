@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2019
 
 import java.lang.IllegalArgumentException
+import java.util.*
 import kotlin.math.abs
 
 object Day3 {
@@ -39,7 +40,11 @@ object Day3 {
     }
 
     fun Direction.traceMove(p: Point, n: Int): List<Point> {
-        return (0 until n).fold(listOf(p)) { acc, _ -> acc + this.move(acc.last()) }.drop(1)
+        return (0 until n).fold(p to LinkedList<Point>()) { (last, acc), _ ->
+            val newPoint = this.move(last)
+            acc.push(newPoint)
+            newPoint to acc
+        }.second.reversed()
     }
 
 
@@ -65,7 +70,13 @@ object Day3 {
     fun solve1(lines: Sequence<String>): Int {
         val wires = lines.map { line -> line.split(",").map { WireTurn.parse(it) } }
 
-        val tmp: List<List<Point>> = wires.map { wire -> wire.fold(listOf(Point(0, 0))) { acc, turn -> acc + turn.move(acc.last()) } }.toList()
+        val tmp: List<List<Point>> = wires.map { wire ->
+            wire.fold(Point(0, 0) to LinkedList<Point>()) { (last, acc), turn ->
+                val newPoints = turn.move(last)
+                newPoints.forEach { acc.push(it) }
+                newPoints.last() to acc
+            }.second.reversed()
+        }.toList()
         val wirePoints = tmp
                 .map { points -> points.drop(1).toSet() }.toList()
 
