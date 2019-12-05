@@ -57,6 +57,14 @@ object Day5 {
             data class Op2(override val param1: Parameter, override val param2: Parameter, override val output: Parameter.PositionParameter) : BinaryOppCode(param1, param2, output) {
                 override fun compute(arg1: Int, arg2: Int): Int = arg1 * arg2
             }
+
+            data class Op7(override val param1: Parameter, override val param2: Parameter, override val output: Parameter.PositionParameter) : BinaryOppCode(param1, param2, output) {
+                override fun compute(arg1: Int, arg2: Int): Int = if(arg1 < arg2) 1 else 0
+            }
+
+            data class Op8(override val param1: Parameter, override val param2: Parameter, override val output: Parameter.PositionParameter) : BinaryOppCode(param1, param2, output) {
+                override fun compute(arg1: Int, arg2: Int): Int = if(arg1 == arg2) 1 else 0
+            }
         }
 
         object Op99 : OppCode() {
@@ -79,6 +87,31 @@ object Day5 {
                 return state.copy(index = state.index + 2)
             }
         }
+
+        data class Opp5(val param1: Parameter, val param2: Parameter) : OppCode() {
+            override fun nextState(state: IntCodeState): IntCodeState {
+                val test = state.getValue(param1)
+                return if (test != 0) {
+                    state.copy(index = state.getValue(param2))
+                } else {
+                    state.copy(index = state.index + 3)
+                }
+            }
+
+        }
+
+        data class Opp6(val param1: Parameter, val param2: Parameter) : OppCode() {
+            override fun nextState(state: IntCodeState): IntCodeState {
+                val test = state.getValue(param1)
+                return if (test == 0) {
+                    state.copy(index = state.getValue(param2))
+                } else {
+                    state.copy(index = state.index + 3)
+                }
+            }
+
+        }
+
     }
 
     fun buildParameter(paramValue: Int, paramIndex: Int, nPositionMode: List<Boolean>): Parameter {
@@ -106,6 +139,10 @@ object Day5 {
             2 -> OppCode.BinaryOppCode.Op2(buildParameter(this.intCode[index + 1], 0, inPositionMode), buildParameter(this.intCode[index + 2], 1, inPositionMode), Parameter.PositionParameter(this.intCode[index + 3]))
             3 -> OppCode.Opp3(Parameter.PositionParameter(this.intCode[index + 1]))
             4 -> OppCode.Opp4(buildParameter(this.intCode[index + 1], 0, inPositionMode))
+            5 -> OppCode.Opp5(buildParameter(this.intCode[index +1], 0, inPositionMode), buildParameter(this.intCode[index +2], 1, inPositionMode))
+            6 -> OppCode.Opp6(buildParameter(this.intCode[index +1], 0, inPositionMode), buildParameter(this.intCode[index +2], 1, inPositionMode))
+            7 -> OppCode.BinaryOppCode.Op7(buildParameter(this.intCode[index + 1], 0, inPositionMode), buildParameter(this.intCode[index + 2], 1, inPositionMode), Parameter.PositionParameter(this.intCode[index + 3]))
+            8 -> OppCode.BinaryOppCode.Op8(buildParameter(this.intCode[index + 1], 0, inPositionMode), buildParameter(this.intCode[index + 2], 1, inPositionMode), Parameter.PositionParameter(this.intCode[index + 3]))
             99 -> OppCode.Op99
             else -> throw IllegalArgumentException("Invalid oppCode $code")
         }
@@ -113,7 +150,7 @@ object Day5 {
 
     fun IntCodeState.nextState(): IntCodeState {
         val oppCode = this.currentOpCode()
-        val next =  oppCode.nextState(this)
+        val next = oppCode.nextState(this)
         return next
     }
 
@@ -124,6 +161,14 @@ object Day5 {
     fun solve1(puzzleInput: IntArray): Int {
         val input = LinkedList<Int>()
         input.push(1)
+        val state = Day5.IntCodeState(intCode = puzzleInput, input = input)
+        val final = state.exectute()
+        return final.output.first
+    }
+
+    fun solve2(puzzleInput: IntArray): Int {
+        val input = LinkedList<Int>()
+        input.push(5)
         val state = Day5.IntCodeState(intCode = puzzleInput, input = input)
         val final = state.exectute()
         return final.output.first
