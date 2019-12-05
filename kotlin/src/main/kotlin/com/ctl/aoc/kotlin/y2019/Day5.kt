@@ -5,7 +5,7 @@ import java.util.*
 
 object Day5 {
 
-    data class IntCodeState(val index: Int = 0, val intCode: IntArray, val terminated: Boolean = false, val input: LinkedList<Int> = LinkedList(), val output: LinkedList<Int> = LinkedList()) {
+    data class IntCodeState(val index: Int = 0, val intCode: IntArray, val terminated: Boolean = false, val input: () -> Int = { 0 }, val output: (Int) -> Unit = {}) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -59,11 +59,11 @@ object Day5 {
             }
 
             data class Op7(override val param1: Parameter, override val param2: Parameter, override val output: Parameter.PositionParameter) : BinaryOppCode(param1, param2, output) {
-                override fun compute(arg1: Int, arg2: Int): Int = if(arg1 < arg2) 1 else 0
+                override fun compute(arg1: Int, arg2: Int): Int = if (arg1 < arg2) 1 else 0
             }
 
             data class Op8(override val param1: Parameter, override val param2: Parameter, override val output: Parameter.PositionParameter) : BinaryOppCode(param1, param2, output) {
-                override fun compute(arg1: Int, arg2: Int): Int = if(arg1 == arg2) 1 else 0
+                override fun compute(arg1: Int, arg2: Int): Int = if (arg1 == arg2) 1 else 0
             }
         }
 
@@ -73,7 +73,7 @@ object Day5 {
 
         data class Opp3(val output: Parameter.PositionParameter) : OppCode() {
             override fun nextState(state: IntCodeState): IntCodeState {
-                val input = state.input.pollLast()
+                val input = state.input()
                 val intCode = state.intCode
                 intCode[output.index] = input
                 return state.copy(index = state.index + 2)
@@ -83,7 +83,7 @@ object Day5 {
         data class Opp4(val param: Parameter) : OppCode() {
             override fun nextState(state: IntCodeState): IntCodeState {
                 val value = state.getValue(param)
-                state.output.push(value)
+                state.output(value)
                 return state.copy(index = state.index + 2)
             }
         }
@@ -139,8 +139,8 @@ object Day5 {
             2 -> OppCode.BinaryOppCode.Op2(buildParameter(this.intCode[index + 1], 0, inPositionMode), buildParameter(this.intCode[index + 2], 1, inPositionMode), Parameter.PositionParameter(this.intCode[index + 3]))
             3 -> OppCode.Opp3(Parameter.PositionParameter(this.intCode[index + 1]))
             4 -> OppCode.Opp4(buildParameter(this.intCode[index + 1], 0, inPositionMode))
-            5 -> OppCode.Opp5(buildParameter(this.intCode[index +1], 0, inPositionMode), buildParameter(this.intCode[index +2], 1, inPositionMode))
-            6 -> OppCode.Opp6(buildParameter(this.intCode[index +1], 0, inPositionMode), buildParameter(this.intCode[index +2], 1, inPositionMode))
+            5 -> OppCode.Opp5(buildParameter(this.intCode[index + 1], 0, inPositionMode), buildParameter(this.intCode[index + 2], 1, inPositionMode))
+            6 -> OppCode.Opp6(buildParameter(this.intCode[index + 1], 0, inPositionMode), buildParameter(this.intCode[index + 2], 1, inPositionMode))
             7 -> OppCode.BinaryOppCode.Op7(buildParameter(this.intCode[index + 1], 0, inPositionMode), buildParameter(this.intCode[index + 2], 1, inPositionMode), Parameter.PositionParameter(this.intCode[index + 3]))
             8 -> OppCode.BinaryOppCode.Op8(buildParameter(this.intCode[index + 1], 0, inPositionMode), buildParameter(this.intCode[index + 2], 1, inPositionMode), Parameter.PositionParameter(this.intCode[index + 3]))
             99 -> OppCode.Op99
@@ -154,23 +154,25 @@ object Day5 {
         return next
     }
 
-    tailrec fun IntCodeState.exectute(): IntCodeState {
-        return if (this.terminated) this else this.nextState().exectute()
+    tailrec fun IntCodeState.execute(): IntCodeState {
+        return if (this.terminated) this else this.nextState().execute()
     }
 
     fun solve1(puzzleInput: IntArray): Int {
-        val input = LinkedList<Int>()
-        input.push(1)
-        val state = Day5.IntCodeState(intCode = puzzleInput, input = input)
-        val final = state.exectute()
-        return final.output.first
+        val inputs = LinkedList<Int>()
+        val outputs = LinkedList<Int>()
+        inputs.push(1)
+        val state = Day5.IntCodeState(intCode = puzzleInput, input = { inputs.poll() }, output = { outputs.push(it) })
+        val final = state.execute()
+        return outputs.first
     }
 
     fun solve2(puzzleInput: IntArray): Int {
-        val input = LinkedList<Int>()
-        input.push(5)
-        val state = Day5.IntCodeState(intCode = puzzleInput, input = input)
-        val final = state.exectute()
-        return final.output.first
+        val inputs = LinkedList<Int>()
+        val outputs = LinkedList<Int>()
+        inputs.push(5)
+        val state = Day5.IntCodeState(intCode = puzzleInput, input = { inputs.poll() }, output = { outputs.push(it) })
+        state.execute()
+        return outputs.first
     }
 }

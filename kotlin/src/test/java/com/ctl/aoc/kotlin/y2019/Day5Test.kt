@@ -1,10 +1,8 @@
 package com.ctl.aoc.kotlin.y2019
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
-import java.util.*
 
 internal class Day5Test {
 
@@ -15,18 +13,18 @@ internal class Day5Test {
         val intCode = intArrayOf(1002, 4, 3, 4, 33)
         val state = Day5.IntCodeState(intCode = intCode)
         Day5.run {
-            val final = state.exectute()
+            val final = state.execute()
             println("")
         }
     }
 
     @Test
     fun solve1() {
-        println(Day5.solve1(puzzleInput))
+        assertThat(Day5.solve1(puzzleInput)).isEqualTo(13087969)
     }
 
     @Test
     fun solve2() {
-        println(Day5.solve2(puzzleInput))
+        assertThat(Day5.solve2(puzzleInput)).isEqualTo(14110739)
     }
 }
