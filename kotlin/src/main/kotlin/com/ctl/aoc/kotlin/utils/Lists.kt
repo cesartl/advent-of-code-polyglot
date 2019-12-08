@@ -7,6 +7,7 @@ val <T> List<T>.head: T
     get() = first()
 
 
+fun <T> List<T>.frequency() = Lists.frequency(this)
 
 object Lists {
     fun <T> weave(first: List<T>, second: List<T>, prefix: List<T> = listOf()): List<List<T>> {
@@ -56,5 +57,13 @@ object Lists {
                 }
             }
         }
+    }
+
+    fun <T> frequency(list: List<T>): Map<T, Int> {
+        val map = mutableMapOf<T, Int>()
+        list.forEach {
+            map[it] = (map[it] ?: 0) + 1
+        }
+        return map
     }
 }
