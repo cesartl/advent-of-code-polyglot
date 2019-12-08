@@ -6,6 +6,8 @@ val <T> List<T>.tail: List<T>
 val <T> List<T>.head: T
     get() = first()
 
+
+
 object Lists {
     fun <T> weave(first: List<T>, second: List<T>, prefix: List<T> = listOf()): List<List<T>> {
         if (first.isEmpty()) {
