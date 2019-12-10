@@ -4,6 +4,19 @@ import kotlin.math.atan2
 
 object Day10 {
 
+    fun solve1(lines: Sequence<String>): Int {
+        val grid = Grid.parse(lines)
+        val best = findBest(grid)
+        return best.second
+    }
+
+    fun solve2(lines: Sequence<String>): Int {
+        val grid = Grid.parse(lines)
+        val destroyed = laserDestroy(grid).drop(199).first()
+        println(destroyed)
+        return destroyed.x * 100 + destroyed.y
+    }
+
     data class Position(val x: Int, val y: Int)
 
     operator fun Position.plus(other: Position) = Position(this.x + other.x, this.y + other.y)
@@ -37,13 +50,8 @@ object Day10 {
         }
     }
 
-    fun solve1(lines: Sequence<String>): Int {
-        val grid = Grid.parse(lines)
-        val best = findBest(grid)
-        return best.second
-    }
 
-    fun laserDestroy(grid: Grid): Sequence<Position> {
+    private fun laserDestroy(grid: Grid): Sequence<Position> {
         val (asteroids, bottomRight) = grid
         val vectors = findCircularVectors(bottomRight)
 
@@ -63,13 +71,6 @@ object Day10 {
                 i++
             } while (remaining.isNotEmpty())
         }
-    }
-
-    fun solve2(lines: Sequence<String>): Int {
-        val grid = Grid.parse(lines)
-        val destroyed = laserDestroy(grid).drop(199).first()
-        println(destroyed)
-        return destroyed.x * 100 + destroyed.y
     }
 
     private fun findCircularVectors(bottomRight: Position): List<Pair<Vector, Double>> {
@@ -97,9 +98,6 @@ object Day10 {
 
     data class Vector(val aX: Int, val bY: Int) {
         fun simplify(): Vector {
-//            return if (aX < 0 && bY < 0) {
-//                Coefficient(-aX, -bY).simplify()
-//            } else
             return if (aX != 0 && bY != 0) {
                 val gcd = aX.toBigInteger().gcd(bY.toBigInteger()).toInt()
                 Vector(aX / gcd, bY / gcd)
@@ -146,17 +144,14 @@ object Day10 {
     }
 
     private fun countLineOfSight(center: Position, asteroids: Set<Position>, bottomRight: Position): Int {
-        val (maxX, maxY) = bottomRight
         val insightMap = mutableMapOf<Vector, List<Position>>()
-        (0..maxX).forEach { x ->
-            (0..maxY).forEach { y ->
+        asteroids.forEach { (x, y) ->
                 if (x != center.x || y != center.y) {
                     val c = Vector(x - center.x, y - center.y).simplify()
                     if (!insightMap.containsKey(c)) {
                         insightMap[c] = countInSight(center, c, asteroids, bottomRight)
                     }
                 }
-            }
         }
         val visibleAsteroids = insightMap.values.flatMap { it.toList() }.toSet()
         return visibleAsteroids.size
