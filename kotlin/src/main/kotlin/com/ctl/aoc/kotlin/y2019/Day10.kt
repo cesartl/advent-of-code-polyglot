@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2019
 
 import kotlin.math.atan2
+import kotlin.math.sign
 
 object Day10 {
 
@@ -33,18 +34,6 @@ object Day10 {
                     }
                 }
                 val bottomRight = Position(lines.first().length - 1, lines.count() - 1)
-                val (maxX, maxY) = bottomRight
-                val vectors = mutableSetOf<Vector>()
-
-                (0..maxX).forEach { x ->
-                    (0..maxY).forEach { y ->
-                        val (xx, yy) = Vector(x, y).simplify()
-                        vectors.add(Vector(xx, yy))
-                        vectors.add(Vector(-xx, yy))
-                        vectors.add(Vector(xx, -yy))
-                        vectors.add(Vector(-xx, -yy))
-                    }
-                }
                 return Grid(asteroids, bottomRight)
             }
         }
@@ -53,9 +42,13 @@ object Day10 {
 
     private fun laserDestroy(grid: Grid): Sequence<Position> {
         val (asteroids, bottomRight) = grid
-        val vectors = findCircularVectors(bottomRight)
 
+
+        val t1 = System.currentTimeMillis()
         val best = findBest(grid).first
+        val t2 = System.currentTimeMillis()
+        println("Finding best in ${t2 - t1}ms")
+        val vectors = findCircularVectors(best, bottomRight, asteroids)
 
         return sequence {
             var i = 0
@@ -73,16 +66,11 @@ object Day10 {
         }
     }
 
-    private fun findCircularVectors(bottomRight: Position): List<Pair<Vector, Double>> {
-        val (maxX, maxY) = bottomRight
+    private fun findCircularVectors(center: Position, bottomRight: Position, asteroids: Set<Position>): List<Pair<Vector, Double>> {
         val vectors = mutableSetOf<Vector>()
-        (0..maxX).forEach { x ->
-            (0..maxY).forEach { y ->
-                val (xx, yy) = Vector(x, y).simplify()
-                vectors.add(Vector(xx, yy))
-                vectors.add(Vector(-xx, yy))
-                vectors.add(Vector(xx, -yy))
-                vectors.add(Vector(-xx, -yy))
+        (asteroids).forEach { (x, y) ->
+            if (Position(x, y) != center) {
+                vectors.add(Vector(x - center.x, y - center.y).simplify())
             }
         }
 
@@ -102,9 +90,9 @@ object Day10 {
                 val gcd = aX.toBigInteger().gcd(bY.toBigInteger()).toInt()
                 Vector(aX / gcd, bY / gcd)
             } else if (aX == 0) {
-                Vector(0, 1)
+                Vector(0, bY.sign)
             } else {
-                Vector(1, 0)
+                Vector(aX.sign, 0)
             }
         }
 
@@ -144,23 +132,13 @@ object Day10 {
     }
 
     private fun countLineOfSight(center: Position, asteroids: Set<Position>, bottomRight: Position): Int {
-        val insightMap = mutableMapOf<Vector, List<Position>>()
+        val vectors = mutableSetOf<Vector>()
         asteroids.forEach { (x, y) ->
-                if (x != center.x || y != center.y) {
-                    val c = Vector(x - center.x, y - center.y).simplify()
-                    if (!insightMap.containsKey(c)) {
-                        insightMap[c] = countInSight(center, c, asteroids, bottomRight)
-                    }
-                }
+            if (Position(x, y) != center) {
+                vectors.add(Vector(x - center.x, y - center.y).simplify())
+            }
         }
-        val visibleAsteroids = insightMap.values.flatMap { it.toList() }.toSet()
-        return visibleAsteroids.size
-    }
-
-    private fun countInSight(center: Position, vector: Vector, asteroids: Set<Position>, bottomRight: Position): List<Position> {
-        val a = vector.forward(center, bottomRight).filter { asteroids.contains(it) }.take(1).toList()
-        val b = vector.backward(center, bottomRight).filter { asteroids.contains(it) }.take(1).toList()
-        return a + b
+        return vectors.size
     }
 
     fun Position.isInLimit(bottomRight: Position): Boolean {

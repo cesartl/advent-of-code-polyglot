@@ -93,6 +93,9 @@ internal class Day10Test {
     @Test
     fun solve2() {
         assertThat(Day10.solve2(example4)).isEqualTo(802)
+        val t1= System.currentTimeMillis()
         assertThat(Day10.solve2(puzzleInput)).isEqualTo(616)
+        val t2 = System.currentTimeMillis()
+        println("${t2 - t1}ms")
     }
 }
