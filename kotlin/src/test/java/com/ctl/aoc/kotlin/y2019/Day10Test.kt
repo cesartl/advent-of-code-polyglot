@@ -86,7 +86,15 @@ internal class Day10Test {
         println(Day10.solve1(puzzleInput))
     }
 
+    val part2Ex1 = """.#....#####...#..
+##...##.#####..##
+##...#...#.#####.
+..#.....#...###..
+..#.#.....#....##""".split("\n").asSequence()
+
     @Test
-    fun solve1() {
+    fun solve2() {
+        Day10.solve2(example4)
+        println(Day10.solve2(puzzleInput))
     }
 }
