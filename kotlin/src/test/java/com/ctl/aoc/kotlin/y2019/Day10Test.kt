@@ -4,8 +4,6 @@ import com.ctl.aoc.kotlin.utils.InputUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.Assertions.*
-
 internal class Day10Test {
 
     val puzzleInput = InputUtils.getLines(2019, 10)
@@ -72,8 +70,8 @@ internal class Day10Test {
 
     @Test
     internal fun testCoeff() {
-        Day10.Coefficient(-3, 1).forward(Day10.Position(0, 0), Day10.Position(10, 10)).forEach { println(it) }
-        Day10.Coefficient(-3, 1).backward(Day10.Position(0, 0), Day10.Position(10, 10)).forEach { println(it) }
+        Day10.Vector(-3, 1).forward(Day10.Position(0, 0), Day10.Position(10, 10)).forEach { println(it) }
+        Day10.Vector(-3, 1).backward(Day10.Position(0, 0), Day10.Position(10, 10)).forEach { println(it) }
     }
 
     @Test
@@ -94,7 +92,7 @@ internal class Day10Test {
 
     @Test
     fun solve2() {
-        Day10.solve2(example4)
-        println(Day10.solve2(puzzleInput))
+        assertThat(Day10.solve2(example4)).isEqualTo(802)
+        assertThat(Day10.solve2(puzzleInput)).isEqualTo(616)
     }
 }
