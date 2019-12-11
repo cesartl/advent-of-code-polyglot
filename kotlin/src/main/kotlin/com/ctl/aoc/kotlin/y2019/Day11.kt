@@ -106,21 +106,46 @@ object Day11 {
     }
 
     private fun displayHull(hullState: HullState) {
-        val maxX = hullState.painedBlocks.keys.maxBy { it.x }!!.x
-        val maxY = hullState.painedBlocks.keys.maxBy { it.y }!!.y
-        val minX = hullState.painedBlocks.keys.minBy { it.x }!!.x
-        val minY = hullState.painedBlocks.keys.minBy { it.y }!!.y
+        val (rx, ry) = hullState.robot.position
+//        val maxX = rx.coerceAtLeast(hullState.painedBlocks.keys.maxBy { it.x }!!.x)
+        val maxX = 42
+//        val maxY = ry.coerceAtLeast(hullState.painedBlocks.keys.maxBy { it.y }!!.y)
+        val maxY = 0
+//        val minX = rx.coerceAtMost(hullState.painedBlocks.keys.minBy { it.x }!!.x)
+        val minX = 0
+//        val minY = ry.coerceAtMost(hullState.painedBlocks.keys.minBy { it.y }!!.y)
+        val minY = -5
 
         (maxY downTo minY).forEach { y ->
             (minX..maxX).forEach { x ->
-                if (hullState.painedBlocks[Point(x, y)] == PaintColour.White) {
-                    print("#")
-                } else {
-                    print(" ")
+                when {
+                    Point(x, y) == hullState.robot.position -> {
+                        val d = when (hullState.robot.direction) {
+                            Direction.Up -> "^"
+                            Direction.Right -> ">"
+                            Direction.Down -> "v"
+                            Direction.Left -> "<"
+                        }
+                        print(d)
+                    }
+                    hullState.painedBlocks[Point(x, y)] == PaintColour.White -> {
+                        print("#")
+                    }
+                    hullState.painedBlocks[Point(x, y)] == PaintColour.Black -> {
+                        print("_")
+                    }
+                    else -> {
+                        print(" ")
+                    }
                 }
             }
             println()
+            print("\r")
         }
+        (maxY downTo minY).forEach {
+//            print("\r")
+        }
+//        println("------------------------------------------------------")
     }
 
     private fun runRobot(puzzleInput: LongArray, hullState: HullState) {
@@ -130,6 +155,7 @@ object Day11 {
                 hullState.drawColour(it)
             } else {
                 hullState.rotateAndMoveRobot(it)
+                displayHull(hullState)
             }
             isFirstOutput.incrementAndGet()
         })
