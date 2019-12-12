@@ -29,6 +29,8 @@ internal class Day12Test {
 
     @Test
     internal fun solve2() {
-
+        val system = Day12.JupiterSystem(example.map { Day12.Moon(it) })
+        assertThat(system.findCycle()).isEqualTo(2772)
+        println(Day12.solve2(input))
     }
 }

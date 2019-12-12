@@ -70,6 +70,17 @@ object Day12 {
             return this.copy(moons = moonsByPosition.values.toList())
         }
 
+        private fun applyGravitySingleAxis(axis: (Moon) -> Int, updateVelocity: (Vector, Int) -> Vector): JupiterSystem {
+            val moonsByPosition = mutableMapOf<Vector, Moon>()
+            moons.forEach { moonsByPosition[it.position] = it }
+            (moons.indices).forEach { i ->
+                (i + 1 until moons.size).forEach { j ->
+                    applyGravity(moonsByPosition[moons[i].position]!! to moonsByPosition[moons[j].position]!!, axis, updateVelocity).toList().forEach { moonsByPosition[it.position] = it }
+                }
+            }
+            return this.copy(moons = moonsByPosition.values.toList())
+        }
+
         private fun applyVelocity(): JupiterSystem {
             return this.copy(moons = this.moons.map { it.applyVelocity() })
         }
@@ -77,6 +88,26 @@ object Day12 {
         fun doTick(): JupiterSystem = this.applyGravity().applyVelocity()
 
         fun totalEnergy(): Int = moons.map { it.totalEnergy() }.sum()
+
+        fun findCycle(axis: (Moon) -> Int, updateVelocity: (Vector, Int) -> Vector): Long {
+            var tick = 0L
+            var current = this
+            do{
+                current = current.applyGravitySingleAxis(axis, updateVelocity).applyVelocity()
+                tick++
+            }while(current != this)
+            return tick
+        }
+
+        fun findCycle(): Long {
+            val x = this.findCycle({ it.position.x }, { v, value -> v.copy(x = v.x + value) }).toBigInteger()
+            val y = this.findCycle({ it.position.y }, { v, value -> v.copy(y = v.y + value) }).toBigInteger()
+            val z = this.findCycle({ it.position.z }, { v, value -> v.copy(z = v.z + value) }).toBigInteger()
+            val gcd = x.gcd(y.gcd(z))
+            println("gcd $gcd")
+            return ((x / gcd) * (y / gcd) * (z / gcd)).toLong()
+        }
+
     }
 
     tailrec fun doTicks(jupiterSystem: JupiterSystem, n: Int): JupiterSystem {
@@ -89,5 +120,11 @@ object Day12 {
         val system = JupiterSystem(vectors.map { Moon(it) })
         val afterTicks = doTicks(system, 1000)
         return afterTicks.totalEnergy()
+    }
+
+    fun solve2(lines: Sequence<String>): Long {
+        val vectors = lines.map { Vector.parse(it) }.toList()
+        val system = JupiterSystem(vectors.map { Moon(it) })
+        return system.findCycle()
     }
 }
