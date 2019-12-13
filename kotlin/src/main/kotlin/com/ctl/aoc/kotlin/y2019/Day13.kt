@@ -55,13 +55,19 @@ object Day13 {
         return grid.values.filterIsInstance(Tile.Block.javaClass).size
     }
 
-    fun solve2(intCode: LongArray): Int {
+    fun solve2(intCode: LongArray): Long {
         val grid = mutableMapOf<Point, Tile>()
+
+        var previousBall: Point = Point(0, 0)
+        var ball: Point = Point(0, 0)
+        var paddle: Point = Point(0, 0)
+
         val count = AtomicInteger(0)
         var x = 0L
         var y = 0L
         var tile: Tile = Tile.Empty
         intCode[0] = 2
+        var score = 0L
         val state = Day9.IntCodeState(intCode = intCode.copyOf(9999), output = {
             val i = count.getAndIncrement()
             when {
@@ -72,14 +78,42 @@ object Day13 {
                     y = it
                 }
                 else -> {
-                    tile = Tile.fromCode(it)
-                    grid[Point(x, y)] = tile
+                    val p = Point(x, y)
+                    if (p == Point(-1, 0)) {
+                        score = it
+                    } else {
+                        tile = Tile.fromCode(it)
+                        grid[p] = tile
+                        when (tile) {
+                            is Tile.Ball -> {
+                                previousBall = ball
+                                ball = p
+                                println("Ball $p")
+                            }
+                            is Tile.Paddle -> {
+                                paddle = p
+                                println("Paddle $p")
+                            }
+                        }
+                    }
+                }
+            }
+        }, input = {
+            when {
+                paddle.x - ball.x > 0 -> {
+                    -1
+                }
+                paddle.x - ball.x < 0 -> {
+                    1
+                }
+                else -> {
+                    0
                 }
             }
         })
         Day9.run {
             state.execute()
         }
-        return grid.values.filterIsInstance(Tile.Block.javaClass).size
+        return score
     }
 }
