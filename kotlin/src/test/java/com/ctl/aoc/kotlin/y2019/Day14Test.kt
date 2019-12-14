@@ -69,9 +69,9 @@ internal class Day14Test {
 
     @Test
     fun solve1() {
-//        assertThat(Day14.solve1(example1)).isEqualTo(31)
-//        assertThat(Day14.solve1(example2)).isEqualTo(165)
-//        assertThat(Day14.solve1(example3)).isEqualTo(13312)
+        assertThat(Day14.solve1(example1)).isEqualTo(31)
+        assertThat(Day14.solve1(example2)).isEqualTo(165)
+        assertThat(Day14.solve1(example3)).isEqualTo(13312)
         assertThat(Day14.solve1(example4)).isEqualTo(180697)
         assertThat(Day14.solve1(example5)).isEqualTo(2210736)
         println(Day14.solve1(puzzleInput)) //not 881540
