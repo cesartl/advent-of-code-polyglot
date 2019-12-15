@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2019
 
 import java.lang.IllegalArgumentException
+import java.util.*
 
 object Day15 {
 
@@ -72,12 +73,12 @@ object Day15 {
                                 var nextCommand: ExplorationOption? = null,
                                 var bestPath: List<Command> = listOf()
     ) {
-        private fun neighours(): List<ExplorationOption> = listOf(
+        fun neighbours(point: Point = currentPosition): List<ExplorationOption> = listOf(
                 Command.N, Command.S, Command.W, Command.E
-        ).map { ExplorationOption(currentPosition.moveTo(it), it) }
+        ).map { ExplorationOption(point.moveTo(it), it) }
 
         private fun nextNeighbour(): ExplorationOption? {
-            return neighours().firstOrNull { !visitedTiles.containsKey(it.point) }
+            return neighbours().firstOrNull { !visitedTiles.containsKey(it.point) }
         }
 
         fun exploreNext() {
@@ -124,16 +125,43 @@ object Day15 {
 
     fun solve1(intCode: LongArray): Int {
         val state = ExplorationState()
+        exploreAll(intCode, state)
+        state.printState()
+        return state.bestPath.size
+    }
 
+    fun solve2(intCode: LongArray): Int {
+        val state = ExplorationState()
+        exploreAll(intCode, state)
+
+        val oxygen = state.visitedTiles.entries.find { it.value == Tile.Oxygen }!!.let { it.key }
+        val frontier: Deque<Point> = ArrayDeque()
+        frontier.add(oxygen)
+        var count = 0
+        while (frontier.isNotEmpty()) {
+            val newFrontier = mutableListOf<Point>()
+            while (frontier.isNotEmpty()) {
+                val current = frontier.pop()
+                state.neighbours(current).filter { state.visitedTiles[it.point] == Tile.Empty }.forEach {
+                    newFrontier.add(it.point)
+                    state.visitedTiles[it.point] = Tile.Oxygen
+                }
+            }
+//            state.printState()
+            newFrontier.forEach { frontier.add(it) }
+            if (newFrontier.isNotEmpty()) {
+                count++
+            }
+        }
+        return count
+    }
+
+    private fun exploreAll(intCode: LongArray, state: ExplorationState) {
         val prgm = Day9.IntCodeState(intCode = intCode, input = {
             state.exploreNext()
             val c = state.nextCommand?.command
-            if (c != null) {
-//                println("Going $c from ${state.currentPosition}")
-                c.code()
-            } else {
-                0
-            }
+            //                println("Going $c from ${state.currentPosition}")
+            c?.code() ?: 0
         }, output = { status ->
             val next = state.nextCommand!!
             when (status) {
@@ -161,13 +189,9 @@ object Day15 {
                     }
                 }
             }
-//            state.printState()
-//            println("Visited ${state.visitedTiles.size}")
         })
         Day9.run {
             prgm.execute()
         }
-        state.printState()
-        return state.bestPath.size
     }
 }

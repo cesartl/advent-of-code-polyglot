@@ -10,4 +10,9 @@
       </list>
     </option>
   </component>
+  <component name="FacetManager">
+    <facet type="TornadoFX" name="TornadoFX">
+      <configuration />
+    </facet>
+  </component>
 </module>
