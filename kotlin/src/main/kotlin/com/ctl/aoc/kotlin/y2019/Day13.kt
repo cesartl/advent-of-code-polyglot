@@ -1,7 +1,9 @@
 package com.ctl.aoc.kotlin.y2019
 
 import java.lang.IllegalArgumentException
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.sign
 
 object Day13 {
 
@@ -25,6 +27,9 @@ object Day13 {
             }
         }
     }
+
+    //TODO tile with point
+    data class TileAtPoint(val tile: Tile, val point: Point)
 
     data class Point(val x: Long, val y: Long)
 
@@ -56,13 +61,33 @@ object Day13 {
     }
 
     fun solve2(intCode: LongArray): Long {
+        return runGame(intCode)
+    }
+
+    data class GameState(val grid: Map<Point, Tile>, val score: Long = 0) {
+        fun rows(): List<List<TileAtPoint>> {
+            val maxX = grid.keys.maxBy { it.x }?.x ?: 0
+            val maxY = grid.keys.maxBy { it.y }?.y ?: 0
+            val rows = mutableListOf<List<TileAtPoint>>()
+            (0..maxY).forEach { y ->
+                val row = mutableListOf<TileAtPoint>()
+                (0..maxX).forEach { x ->
+                    row.add(TileAtPoint((grid[Point(x, y)] ?: Tile.Empty), Point(x, y)))
+                }
+                rows.add(row)
+            }
+            return rows
+        }
+    }
+
+    public fun runGame(intCode: LongArray, viewUpdate: (GameState) -> Unit = {}): Long {
         val grid = mutableMapOf<Point, Tile>()
 
-        var previousBall: Point = Point(0, 0)
         var ball: Point = Point(0, 0)
         var paddle: Point = Point(0, 0)
 
         val count = AtomicInteger(0)
+        val shouldUpdateView = AtomicBoolean(false)
         var x = 0L
         var y = 0L
         var tile: Tile = Tile.Empty
@@ -86,30 +111,21 @@ object Day13 {
                         grid[p] = tile
                         when (tile) {
                             is Tile.Ball -> {
-                                previousBall = ball
                                 ball = p
-                                println("Ball $p")
                             }
                             is Tile.Paddle -> {
                                 paddle = p
-                                println("Paddle $p")
                             }
+                        }
+                        if (shouldUpdateView.get()) {
+                            viewUpdate(GameState(grid, score))
                         }
                     }
                 }
             }
         }, input = {
-            when {
-                paddle.x - ball.x > 0 -> {
-                    -1
-                }
-                paddle.x - ball.x < 0 -> {
-                    1
-                }
-                else -> {
-                    0
-                }
-            }
+            shouldUpdateView.set(true)
+            (ball.x - paddle.x).sign.toLong()
         })
         Day9.run {
             state.execute()
