@@ -46,20 +46,20 @@ object Day16 {
         }.drop(1)
     }
 
-    private fun cachedPatternForIndex(size: Int, idx: Int, offset: Int): LongArray {
-        return patternCache.computeIfAbsent("$size-$idx-$offset") { arrayPattern(size, idx, offset) }
+    private fun cachedPatternForIndex(size: Int, idx: Int): LongArray {
+        return patternCache.computeIfAbsent("$size-$idx-") { arrayPattern(size, idx) }
     }
 
-    fun arrayPattern(size: Int, idx: Int, offset: Int): LongArray {
-        val pattern = patterForIndex(idx + offset).drop(offset)
+    private fun arrayPattern(size: Int, idx: Int): LongArray {
+        val pattern = patterForIndex(idx)
         val iterator = pattern.iterator()
         return LongArray(size) {
             iterator.next().toLong()
         }
     }
 
-    private fun processOneDigit(idx: Int, signal: LongArray, offset: Int): Long {
-        val pattern = cachedPatternForIndex(size = signal.size, idx = idx, offset = offset)
+    private fun processOneDigit(idx: Int, signal: LongArray): Long {
+        val pattern = cachedPatternForIndex(size = signal.size, idx = idx)
         var count = 0L
         (signal.indices).forEach { i ->
             count += (signal[i] * pattern[i]) % 10
@@ -71,9 +71,9 @@ object Day16 {
         TODO()
     }
 
-    private fun applyFFTOnce(signal: LongArray, offset: Int): LongArray {
+    private fun applyFFTOnce(signal: LongArray): LongArray {
         (signal.indices).forEach { idx ->
-            signal[idx] = processOneDigit(idx, signal, offset)
+            signal[idx] = processOneDigit(idx, signal)
         }
         return signal
     }
@@ -87,11 +87,11 @@ object Day16 {
         return signal
     }
 
-    private tailrec fun applyFFT(n: Int, signal: LongArray, offset: Int): LongArray {
+    private tailrec fun applyFFT(n: Int, signal: LongArray): LongArray {
         return if (n == 0) {
             signal
         } else {
-            applyFFT(n - 1, applyFFTOnce(signal, offset), offset)
+            applyFFT(n - 1, applyFFTOnce(signal))
         }
     }
 
@@ -105,8 +105,8 @@ object Day16 {
 
     private fun parseSignal(s: String): LongArray = s.map { it.toLong() - '0'.toLong() }.toLongArray()
 
-    fun applyFFT(n: Int, signal: String, offset: Int = 0): LongArray {
+    fun applyFFT(n: Int, signal: String): LongArray {
         println("Signal length ${signal.length}")
-        return applyFFT(n, parseSignal(signal), offset)
+        return applyFFT(n, parseSignal(signal))
     }
 }

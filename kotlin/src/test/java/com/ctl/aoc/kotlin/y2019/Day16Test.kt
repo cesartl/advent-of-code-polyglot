@@ -21,7 +21,7 @@ internal class Day16Test {
         assertThat(Day16.solve2("03036732577212944063491565474664")).isEqualTo("84462026")
         assertThat(Day16.solve2("02935109699940807407585447034323")).isEqualTo("78725270")
         assertThat(Day16.solve2("03081770884921959731165446850517")).isEqualTo("53553731")
-        println(Day16.solve2(puzzleInput))
+        assertThat(Day16.solve2(puzzleInput)).isEqualTo("50077964")
     }
 
     @Test
