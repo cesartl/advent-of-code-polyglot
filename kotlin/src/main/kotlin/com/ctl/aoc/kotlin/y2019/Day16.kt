@@ -8,7 +8,7 @@ object Day16 {
         return applyFFT(100, signal).take(8)
     }
 
-    private val patternCache = mutableMapOf<Int, IntArray>()
+    private val patternCache = mutableMapOf<Int, LongArray>()
 
     private fun patterForIndex(idx: Int): Sequence<Int> {
         return sequence {
@@ -22,32 +22,32 @@ object Day16 {
         }.drop(1)
     }
 
-    private fun cachedPatternForIndex(size: Int, idx: Int): IntArray {
+    private fun cachedPatternForIndex(size: Int, idx: Int): LongArray {
         return patternCache.computeIfAbsent(idx) { arrayPattern(size, it) }
     }
 
-    fun arrayPattern(size: Int, idx: Int): IntArray {
+    fun arrayPattern(size: Int, idx: Int): LongArray {
         val pattern = patterForIndex(idx)
         val iterator = pattern.iterator()
-        return IntArray(size) {
-            iterator.next()
+        return LongArray(size) {
+            iterator.next().toLong()
         }
     }
 
-    private fun processOneDigit(idx: Int, signal: IntArray): Int {
+    private fun processOneDigit(idx: Int, signal: LongArray): Long {
         return signal.zip(cachedPatternForIndex(size = signal.size, idx = idx)) { x, y ->
             x * y
-        }.sum().toString().last().toInt() - '0'.toInt()
+        }.sum().toString().last().toLong() - '0'.toLong()
     }
 
-    private fun applyFFTOnce(signal: IntArray): IntArray {
+    private fun applyFFTOnce(signal: LongArray): LongArray {
         signal.indices.forEach { idx ->
             signal[idx] = processOneDigit(idx, signal)
         }
         return signal
     }
 
-    private tailrec fun applyFFT(n: Int, signal: IntArray): IntArray {
+    private tailrec fun applyFFT(n: Int, signal: LongArray): LongArray {
         return if (n == 0) {
             signal
         } else {
@@ -55,7 +55,7 @@ object Day16 {
         }
     }
 
-    private fun parseSignal(s: String): IntArray = s.map { it.toInt() - '0'.toInt() }.toIntArray()
+    private fun parseSignal(s: String): LongArray = s.map { it.toLong() - '0'.toLong() }.toLongArray()
 
     fun applyFFT(n: Int, signal: String): String {
         return applyFFT(n, parseSignal(signal)).joinToString("")
