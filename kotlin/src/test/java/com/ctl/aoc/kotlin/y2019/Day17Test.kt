@@ -13,4 +13,15 @@ internal class Day17Test {
     fun solve1() {
         println(Day17.solve1(puzzleInput))
     }
+
+    @Test
+    internal fun name() {
+        println(Day17.Routine.parse("R8,R8", 'A').toAscii())
+        println(Day17.Routine.parse("R12", 'A').toAscii())
+    }
+
+    @Test
+    fun solve2() {
+        println(Day17.solve2(puzzleInput))
+    }
 }
