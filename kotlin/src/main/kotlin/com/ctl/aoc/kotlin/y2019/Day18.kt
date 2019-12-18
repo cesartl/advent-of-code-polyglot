@@ -1,11 +1,10 @@
 package com.ctl.aoc.kotlin.y2019
 
-import com.ctl.aoc.kotlin.utils.CustomConstraint
 import com.ctl.aoc.kotlin.utils.Dijkstra
 import com.ctl.aoc.kotlin.utils.PathingResult
 import com.ctl.aoc.kotlin.utils.findPath
-import java.lang.IllegalArgumentException
 import java.util.*
+import kotlin.math.abs
 
 object Day18 {
 
@@ -23,25 +22,27 @@ object Day18 {
             yield(copy(y = y - 1))
             yield(copy(y = y + 1))
         }
+
+        fun distance(other: Point): Int = abs(x - other.x) + abs(y - other.y)
     }
 
     private val keyRegex = """[a-z]""".toRegex()
     private val doorRegex = """[A-Z]""".toRegex()
 
-    data class State(val position: Point, val grid: Map<Point, Tile>, val keys: Set<String> = setOf(), val totalPath: List<Point> = listOf(), val stepsCount: Int = 0) {
 
-        private val allKeys = grid.values.filterIsInstance(Tile.Key::class.java).map { it.id }.toSet()
+    data class Grid(val tiles: Map<Point, Tile>, val keys: Map<String, Point>)
 
-        private val remainingKeys = allKeys.minus(keys)
+    data class State(val position: Point, val grid: Grid, val keys: Set<String> = setOf(), val totalPath: List<Point> = listOf(), val stepsCount: Int = 0) {
+
+        private val allKeys = grid.tiles.values.filterIsInstance(Tile.Key::class.java).map { it.id }.toSet()
+
+        val remainingKeys = allKeys.minus(keys)
 
         fun allKeysFound() = remainingKeys.isEmpty()
 
-        fun allKeysPathed(steps: Map<Point, Long>): Boolean {
-            return remainingKeys.minus(steps.keys.mapNotNull { grid[it] }.filterIsInstance(Tile.Key::class.java).map { it.id }).isEmpty()
-        }
 
         private fun generateNodes(point: Point): Sequence<Point> {
-            return point.adjacents().map { adj -> grid[adj]?.let { it to adj } }
+            return point.adjacents().map { adj -> grid.tiles[adj]?.let { it to adj } }
                     .filterNotNull()
                     .filter {
                         when (val tile = it.first) {
@@ -54,6 +55,13 @@ object Day18 {
                     .map { it.second }
         }
 
+        fun pathToKey(key: String): Pair<Point, PathingResult<Point>> {
+            val keyLocation = grid.keys[key] ?: error("Could not find key $key")
+            return keyLocation to Dijkstra.traverse(start = position, end = keyLocation,
+                    nodeGenerator = { generateNodes(it) }, distance = { _, _ -> 1L },
+                    heuristic = { it.distance(keyLocation).toLong() })
+        }
+
         fun doDijkstra(): PathingResult<Point> {
             return Dijkstra.traverse(start = position, end = null,
                     nodeGenerator = {
@@ -61,48 +69,49 @@ object Day18 {
                         generateNodes
                     },
                     distance = { _, _ -> 1L }
-//                    constraints = listOf(CustomConstraint { _, steps -> !allKeysPathed(steps) })
             )
         }
 
         fun goTo(point: Point, path: List<Point>): State {
-            val collectedKeys = path.mapNotNull { grid[it] }.filterIsInstance(Tile.Key::class.java).map { it.id }
+            val collectedKeys = path.mapNotNull { grid.tiles[it] }.filterIsInstance(Tile.Key::class.java).map { it.id }
             return this.copy(position = point, stepsCount = stepsCount + path.size, keys = keys + collectedKeys)
         }
     }
 
 
-    fun collectAllKeys(state: State): Int {
+    private fun collectAllKeys(state: State): Int {
         val queue: Deque<State> = ArrayDeque()
         queue.add(state)
         val results = mutableListOf<State>()
         var best = Int.MAX_VALUE
         while (queue.isNotEmpty()) {
-            val current = queue.removeFirst()
-            val result = current.doDijkstra()
-            val (steps, previous) = result
-            val accessible = steps.keys.mapNotNull { p -> state.grid[p]?.let { p to it } }
-            val candidates = accessible
-                    .filter {
-                        when (val tile = it.second) {
-                            is Tile.Key -> {
-                                !current.keys.contains(tile.id)
-                            }
-                            else -> false
-                        }
-                    }
-                    .sortedBy { -(steps[it.first] ?: 0) }
-                    .takeLast(3)
-            candidates.forEach { (point, tile) ->
-                val path = result.findPath(point).drop(1)
-                val newState = current.goTo(point, path)
+            val current = queue.removeLast()
+
+            val pre = current.remainingKeys
+                    .map { it to (state.grid.keys[it] ?: error("")).distance(current.position) }
+                    .sortedBy { it.second }
+                    .take(10)
+
+
+            val candidates = pre
+                    .asSequence()
+                    .map { it.first }
+                    .map { it to current.pathToKey(it) }
+                    .filter { (_, result) -> result.second.steps[result.first] != null }
+                    .sortedBy { (_, result) -> -(result.second.steps[result.first] ?: 0) }
+                    .toList()
+
+            candidates.forEach { (key, pair) ->
+                val (keyLocation, result) = pair
+                val path = result.findPath(keyLocation).drop(1)
+                val newState = current.goTo(keyLocation, path)
                 if (newState.allKeysFound()) {
 //                    results.add(newState)
                     if (newState.stepsCount < best) {
                         best = newState.stepsCount
                         println("Best result $best")
                     }
-                } else if (newState.stepsCount < 4734) {
+                } else if (newState.stepsCount < 4682) {
                     queue.addFirst(newState)
                 }
             }
@@ -116,7 +125,8 @@ object Day18 {
     }
 
     private fun buildState(lines: Sequence<String>): State {
-        val grid = mutableMapOf<Point, Tile>()
+        val tiles = mutableMapOf<Point, Tile>()
+        val keys = mutableMapOf<String, Point>()
         lateinit var position: Point
         lines.forEachIndexed { y, line ->
             line.forEachIndexed { x, c ->
@@ -124,7 +134,10 @@ object Day18 {
                         when {
                             c == '#' -> Tile.Wall
                             c == '.' -> Tile.Empty
-                            keyRegex.matches(c.toString()) -> Tile.Key(c.toString())
+                            keyRegex.matches(c.toString()) -> {
+                                keys[c.toString()] = Point(x, y)
+                                Tile.Key(c.toString())
+                            }
                             doorRegex.matches(c.toString()) -> Tile.Door(c.toString())
                             c == '@' -> {
                                 position = Point(x, y)
@@ -134,9 +147,9 @@ object Day18 {
                                 throw IllegalArgumentException("unknown car $c")
                             }
                         }
-                grid[Point(x, y)] = tile
+                tiles[Point(x, y)] = tile
             }
         }
-        return State(position, grid)
+        return State(position, Grid(tiles, keys))
     }
 }
