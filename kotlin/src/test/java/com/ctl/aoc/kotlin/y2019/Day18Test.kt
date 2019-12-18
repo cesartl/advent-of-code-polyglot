@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 internal class Day18Test {
 
     val puzzleInput = InputUtils.getLines(2019, 18)
+    val puzzleInput2 = InputUtils.getLines("2019", "day18Bis.txt")
 
     val example1 = """########################
 #f.D.E.e.C.b.A.@.a.B.c.#
@@ -47,6 +48,20 @@ internal class Day18Test {
         assertThat(Day18.solve1(example3)).isEqualTo(136)
         println("example 4")
         assertThat(Day18.solve1(example4)).isEqualTo(81)
-        println(Day18.solve1(puzzleInput))
+//        println(Day18.solve1(puzzleInput))
+    }
+
+    val example21 = """###############
+#d.ABC.#.....a#
+######@#@######
+###############
+######@#@######
+#b.....#.....c#
+###############""".splitToSequence('\n')
+
+    @Test
+    internal fun solve2() {
+//        assertThat(Day18.solve2(example21)).isEqualTo(32)
+        println(Day18.solve2(puzzleInput2))
     }
 }

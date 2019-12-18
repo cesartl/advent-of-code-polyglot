@@ -30,55 +30,12 @@ object Day18 {
 
     data class Grid(val tiles: Map<Point, Tile>, val keys: Map<String, Point>)
 
-    data class State(val position: Point, val grid: Grid, val keys: Set<String> = setOf(), val totalPath: List<Point> = listOf(), val stepsCount: Int = 0) {
-
-        private val allKeys = grid.tiles.values.filterIsInstance(Tile.Key::class.java).map { it.id }.toSet()
-
-        val remainingKeys = allKeys.minus(keys)
-
-        fun allKeysFound() = remainingKeys.isEmpty()
-
-
-        private fun generateNodes(point: Point): Sequence<Point> {
-            return point.adjacents().map { adj -> grid.tiles[adj]?.let { it to adj } }
-                    .filterNotNull()
-                    .filter {
-                        when (val tile = it.first) {
-                            is Tile.Wall -> false
-                            is Tile.Empty -> true
-                            is Tile.Key -> true
-                            is Tile.Door -> keys.contains(tile.id.toLowerCase())
-                        }
-                    }
-                    .map { it.second }
-        }
-
-        fun pathToKey(key: String): Pair<Point, PathingResult<Point>> {
-            val keyLocation = grid.keys[key] ?: error("Could not find key $key")
-            return keyLocation to Dijkstra.traverse(start = position, end = keyLocation,
-                    nodeGenerator = { generateNodes(it) }, distance = { _, _ -> 1L },
-                    heuristic = { it.distance(keyLocation).toLong() })
-        }
-
-        fun doDijkstra(): PathingResult<Point> {
-            return Dijkstra.traverse(start = position, end = null,
-                    nodeGenerator = {
-                        val generateNodes = generateNodes(it)
-                        generateNodes
-                    },
-                    distance = { _, _ -> 1L }
-            )
-        }
-
-        fun goTo(point: Point, path: List<Point>): State {
-            val collectedKeys = path.mapNotNull { grid.tiles[it] }.filterIsInstance(Tile.Key::class.java).map { it.id }
-            return this.copy(position = point, stepsCount = stepsCount + path.size, keys = keys + collectedKeys)
-        }
-    }
+    data class State(val positions: List<Point>, val grid: Grid)
 
     data class Node(val point: Point, val keys: Set<String>)
+    data class MultiNode(val r1: Point, val r2: Point, val r3: Point, val r4: Point, val keys: Set<String>)
 
-    fun pointPathing(node: Node, grid: Grid): PathingResult<Point> {
+    private fun pointPathing(node: Node, grid: Grid): PathingResult<Point> {
         return Dijkstra.traverse(start = node.point, end = null,
                 nodeGenerator = {
                     generatePoints(it, grid, node.keys)
@@ -90,7 +47,7 @@ object Day18 {
     private var cacheHit = 0
     private var cacheMiss = 0
     private val pathingCache = mutableMapOf<Node, PathingResult<Point>>()
-    fun getPathingForNode(node: Node, grid: Grid): PathingResult<Point> {
+    private fun getPathingForNode(node: Node, grid: Grid): PathingResult<Point> {
         val cached = pathingCache[node]
         return if (cached == null) {
             cacheMiss++
@@ -118,7 +75,7 @@ object Day18 {
     }
 
 
-    fun generateNodes(node: Node, grid: Grid): Sequence<Node> {
+    private fun generateNodes(node: Node, grid: Grid): Sequence<Node> {
         val pathingResult = getPathingForNode(node, grid)
         return grid.keys.keys.minus(node.keys)
                 .asSequence()
@@ -141,25 +98,31 @@ object Day18 {
                 }
     }
 
-    private fun fullDijkstra(state: State): Long {
+    private fun distance(x: Node, y: Node, grid: Grid): Long {
+        return getPathingForNode(x, grid).steps[y.point] ?: error("Could not find distance from $x to $y")
+    }
+
+    private fun distance(x: MultiNode, y: MultiNode, grid: Grid): Long {
+        val d1 = distance(Node(x.r1, x.keys), Node(y.r1, y.keys), grid)
+        val d2 = distance(Node(x.r2, x.keys), Node(y.r2, y.keys), grid)
+        val d3 = distance(Node(x.r3, x.keys), Node(y.r3, y.keys), grid)
+        val d4 = distance(Node(x.r4, x.keys), Node(y.r4, y.keys), grid)
+        return d1 + d2 + d3 + d4
+    }
+
+    private fun fullDijkstra(grid: Grid, start: Point): Long {
         pathingCache.clear()
         cacheMiss = 0
         cacheHit = 0
-        val grid = state.grid
-        val start = Node(state.position, setOf())
+        val start = Node(start, setOf())
         val constraint: Constraint<Node> = CustomConstraint { node, steps ->
             node.keys.size < grid.keys.size
         }
         val (steps, previous, lastNode) = Dijkstra.traverse(
                 start = start,
                 end = null,
-                nodeGenerator = {
-                    val generateNodes = generateNodes(it, grid)
-                    generateNodes
-                },
-                distance = { x: Node, y: Node ->
-                    getPathingForNode(x, grid).steps[y.point] ?: error("Could not find distance from $x to $y")
-                },
+                nodeGenerator = { generateNodes(it, grid) },
+                distance = { x: Node, y: Node -> distance(x, y, grid) },
                 queue = JavaPriorityQueue(),
                 constraints = listOf(constraint)
         )
@@ -168,16 +131,49 @@ object Day18 {
         return count
     }
 
+    private fun fullDijkstraMultiRobot(grid: Grid, points: List<Point>): Long {
+        pathingCache.clear()
+        cacheMiss = 0
+        cacheHit = 0
+        assert(points.size == 4)
+        val start = MultiNode(points[0], points[1], points[2], points[3], setOf())
+        val constraint: Constraint<MultiNode> = CustomConstraint { node, _ ->
+            node.keys.size < grid.keys.size
+        }
+        val (steps, previous, lastNode) = Dijkstra.traverse(
+                start = start,
+                end = null,
+                nodeGenerator = { (r1, r2, r3, r4, keys) ->
+                    sequence {
+                        yieldAll(generateNodes(Node(r1, keys), grid).map { (p, newKeys) -> MultiNode(p, r2, r3, r4, newKeys) })
+                        yieldAll(generateNodes(Node(r2, keys), grid).map { (p, newKeys) -> MultiNode(r1, p, r3, r4, newKeys) })
+                        yieldAll(generateNodes(Node(r3, keys), grid).map { (p, newKeys) -> MultiNode(r1, r2, p, r4, newKeys) })
+                        yieldAll(generateNodes(Node(r4, keys), grid).map { (p, newKeys) -> MultiNode(r1, r2, r3, p, newKeys) })
+                    }
+                },
+                distance = { x, y -> distance(x, y, grid) },
+                queue = JavaPriorityQueue(),
+                constraints = listOf(constraint)
+        )
+        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minBy { it.value }?.toPair()!!
+        return count
+    }
+
 
     fun solve1(lines: Sequence<String>): Int {
         val state = buildState(lines)
-        return fullDijkstra(state).toInt()
+        return fullDijkstra(grid = state.grid, start = state.positions.first()).toInt()
+    }
+
+    fun solve2(lines: Sequence<String>): Int {
+        val state = buildState(lines)
+        return fullDijkstraMultiRobot(grid = state.grid, points = state.positions).toInt()
     }
 
     private fun buildState(lines: Sequence<String>): State {
         val tiles = mutableMapOf<Point, Tile>()
         val keys = mutableMapOf<String, Point>()
-        lateinit var position: Point
+        val positions = mutableListOf<Point>()
         lines.forEachIndexed { y, line ->
             line.forEachIndexed { x, c ->
                 val tile: Tile =
@@ -190,7 +186,7 @@ object Day18 {
                             }
                             doorRegex.matches(c.toString()) -> Tile.Door(c.toString())
                             c == '@' -> {
-                                position = Point(x, y)
+                                positions.add(Point(x, y))
                                 Tile.Empty
                             }
                             else -> {
@@ -200,6 +196,6 @@ object Day18 {
                 tiles[Point(x, y)] = tile
             }
         }
-        return State(position, Grid(tiles, keys))
+        return State(positions, Grid(tiles, keys))
     }
 }
