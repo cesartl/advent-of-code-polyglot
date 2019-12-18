@@ -6,7 +6,7 @@ import com.ctl.aoc.util.MinPriorityQueue
 typealias NodeGenerator<T> = (T) -> Sequence<T>
 typealias Distance<T> = (T, T) -> Long
 
-data class PathingResult<T>(val steps: Map<T, Long>, val previous: Map<T, T>)
+data class PathingResult<T>(val steps: Map<T, Long>, val previous: Map<T, T>, val lastNode: T? = null)
 
 sealed class Constraint<T>
 
@@ -39,7 +39,7 @@ object Dijkstra {
 
         var current: T? = null
 
-        while (!queue.isEmpty && (end == null || current != end) && constraintsNotMet(current, steps, constraints)) {
+        while (!queue.isEmpty && (end == null || current != end) && constraintsMet(current, steps, constraints)) {
             count + 1
             current = queue.extractMinimum()!!
             nodeGenerator(current).filter { !visited.contains(it) }.forEach { n ->
@@ -57,7 +57,7 @@ object Dijkstra {
             }
             visited.add(current)
         }
-        return PathingResult(steps, prevs)
+        return PathingResult(steps, prevs, current)
     }
 
     private fun <T> isConstraintMet(current: T, steps: Map<T, Long>, constraint: Constraint<T>): Boolean = when (constraint) {
@@ -65,7 +65,7 @@ object Dijkstra {
         is CustomConstraint -> constraint.f(current, steps)
     }
 
-    private fun <T> constraintsNotMet(current: T?, steps: Map<T, Long>, constraints: List<Constraint<T>>): Boolean = current?.let { node ->
+    private fun <T> constraintsMet(current: T?, steps: Map<T, Long>, constraints: List<Constraint<T>>): Boolean = current?.let { node ->
         constraints.all { constraint -> isConstraintMet(node, steps, constraint) }
     } ?: true
 }

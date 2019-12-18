@@ -41,12 +41,12 @@ internal class Day18Test {
     fun solve1() {
         println("example 1")
         assertThat(Day18.solve1(example1)).isEqualTo(86)
-//        println("example 2")
-//        assertThat(Day18.solve1(example2)).isEqualTo(132)
-//        println("example 3")
-//        assertThat(Day18.solve1(example3)).isEqualTo(136)
-//        println("example 4")
-//        assertThat(Day18.solve1(example4)).isEqualTo(81)
+        println("example 2")
+        assertThat(Day18.solve1(example2)).isEqualTo(132)
+        println("example 3")
+        assertThat(Day18.solve1(example3)).isEqualTo(136)
+        println("example 4")
+        assertThat(Day18.solve1(example4)).isEqualTo(81)
         println(Day18.solve1(puzzleInput))
     }
 }

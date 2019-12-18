@@ -78,25 +78,73 @@ object Day18 {
 
     data class Node(val point: Point, val keys: Set<String>)
 
-    fun generateNodes(node: Node, grid: Grid): Sequence<Node> {
-        val (point, keys) = node
+    fun pointPathing(node: Node, grid: Grid): PathingResult<Point> {
+        return Dijkstra.traverse(start = node.point, end = null,
+                nodeGenerator = {
+                    generatePoints(it, grid, node.keys)
+                },
+                distance = { _, _ -> 1L }
+        )
+    }
+
+    private var cacheHit = 0
+    private var cacheMiss = 0
+    private val pathingCache = mutableMapOf<Node, PathingResult<Point>>()
+    fun getPathingForNode(node: Node, grid: Grid): PathingResult<Point> {
+        val cached = pathingCache[node]
+        return if (cached == null) {
+            cacheMiss++
+            val result = pointPathing(node, grid)
+            pathingCache[node] = result
+            result
+        } else {
+            cacheHit++
+            cached
+        }
+    }
+
+    private fun generatePoints(point: Point, grid: Grid, keys: Set<String>): Sequence<Point> {
         return point.adjacents().map { adj -> grid.tiles[adj]?.let { it to adj } }
                 .filterNotNull()
-                .map { pair ->
-                    when (val tile = pair.first) {
-                        is Tile.Wall -> null
-                        is Tile.Empty -> setOf<String>()
-                        is Tile.Key -> setOf(tile.id)
-                        is Tile.Door -> if (keys.contains(tile.id.toLowerCase())) setOf<String>() else null
-                    }?.let {
-                        pair.second to it
+                .filter {
+                    when (val tile = it.first) {
+                        is Tile.Wall -> false
+                        is Tile.Empty -> true
+                        is Tile.Key -> true
+                        is Tile.Door -> keys.contains(tile.id.toLowerCase())
                     }
                 }
-                .filterNotNull()
-                .map { Node(it.first, keys + it.second) }
+                .map { it.second }
+    }
+
+
+    fun generateNodes(node: Node, grid: Grid): Sequence<Node> {
+        val pathingResult = getPathingForNode(node, grid)
+        return grid.keys.keys.minus(node.keys)
+                .asSequence()
+                .mapNotNull { grid.keys[it] }
+                .filter { it != node.point }
+                .filter { pathingResult.steps[it] != null }
+                .mapNotNull { keyPoint ->
+                    pathingResult.findPath(keyPoint)?.let {
+                        keyPoint to it
+                    }
+                }
+                .map { (point, path) ->
+                    point to path.mapNotNull { grid.tiles[it] }
+                            .filterIsInstance(Tile.Key::class.java)
+                            .map { it.id }
+                            .toSet()
+                }
+                .map { (keyPoint, visitedKeys) ->
+                    Node(keyPoint, node.keys + visitedKeys)
+                }
     }
 
     private fun fullDijkstra(state: State): Long {
+        pathingCache.clear()
+        cacheMiss = 0
+        cacheHit = 0
         val grid = state.grid
         val start = Node(state.position, setOf())
         val constraint: Constraint<Node> = CustomConstraint { node, steps ->
@@ -105,15 +153,20 @@ object Day18 {
         val (steps, previous, lastNode) = Dijkstra.traverse(
                 start = start,
                 end = null,
-                nodeGenerator = { generateNodes(it, grid) },
-                distance = { _, _ -> 1L },
+                nodeGenerator = {
+                    val generateNodes = generateNodes(it, grid)
+                    generateNodes
+                },
+                distance = { x: Node, y: Node ->
+                    getPathingForNode(x, grid).steps[y.point] ?: error("Could not find distance from $x to $y")
+                },
                 queue = JavaPriorityQueue(),
-                constraints = listOf(constraint, StepConstraint(4682))
+                constraints = listOf(constraint)
         )
         val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minBy { it.value }?.toPair()!!
+        println("Cache rate ${cacheHit.toDouble() / (cacheHit + cacheMiss)}")
         return count
     }
-
 
 
     fun solve1(lines: Sequence<String>): Int {
