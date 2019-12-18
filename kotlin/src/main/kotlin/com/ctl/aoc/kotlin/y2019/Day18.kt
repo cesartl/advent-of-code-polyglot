@@ -28,7 +28,7 @@ object Day18 {
     private val keyRegex = """[a-z]""".toRegex()
     private val doorRegex = """[A-Z]""".toRegex()
 
-    data class State(val position: Point, val grid: Map<Point, Tile>, val keys: Set<String> = setOf(), val totalPath: List<Point> = listOf()) {
+    data class State(val position: Point, val grid: Map<Point, Tile>, val keys: Set<String> = setOf(), val totalPath: List<Point> = listOf(), val stepsCount: Int = 0) {
 
         private val allKeys = grid.values.filterIsInstance(Tile.Key::class.java).map { it.id }.toSet()
 
@@ -67,7 +67,7 @@ object Day18 {
 
         fun goTo(point: Point, path: List<Point>): State {
             val collectedKeys = path.mapNotNull { grid[it] }.filterIsInstance(Tile.Key::class.java).map { it.id }
-            return this.copy(position = point, totalPath = totalPath + path, keys = keys + collectedKeys)
+            return this.copy(position = point, stepsCount = stepsCount + path.size, keys = keys + collectedKeys)
         }
     }
 
@@ -91,16 +91,18 @@ object Day18 {
                             else -> false
                         }
                     }
+                    .sortedBy { -(steps[it.first] ?: 0) }
+                    .takeLast(3)
             candidates.forEach { (point, tile) ->
                 val path = result.findPath(point).drop(1)
                 val newState = current.goTo(point, path)
                 if (newState.allKeysFound()) {
 //                    results.add(newState)
-                    if(newState.totalPath.size < best){
-                        best = newState.totalPath.size
-                        println("Best result ${newState.totalPath.size}")
+                    if (newState.stepsCount < best) {
+                        best = newState.stepsCount
+                        println("Best result $best")
                     }
-                } else if(newState.totalPath.size < 6576) {
+                } else if (newState.stepsCount < 4734) {
                     queue.addFirst(newState)
                 }
             }

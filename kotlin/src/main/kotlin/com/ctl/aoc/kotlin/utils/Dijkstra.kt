@@ -8,10 +8,10 @@ typealias Distance<T> = (T, T) -> Long
 
 data class PathingResult<T>(val steps: Map<T, Long>, val previous: Map<T, T>)
 
-sealed class Constraint
+sealed class Constraint<T>
 
-data class StepConstraint(val maxSteps: Long) : Constraint()
-
+data class StepConstraint<T>(val maxSteps: Long) : Constraint<T>()
+data class CustomConstraint<T>(val f: (T, steps: Map<T, Long>) -> Boolean) : Constraint<T>()
 
 fun <T> findPath(end: T, prev: Map<T, T>): List<T> {
     return sequence<T> {
@@ -27,7 +27,7 @@ fun <T> PathingResult<T>.findPath(end: T): List<T> = findPath(end, this.previous
 
 object Dijkstra {
 
-    fun <T> traverse(start: T, end: T?, nodeGenerator: NodeGenerator<T>, distance: Distance<T>, constraints: List<Constraint> = listOf(), queue: MinPriorityQueue<T> = FibonacciHeap(), heuristic: (T) -> Long = { 0 }): PathingResult<T> {
+    fun <T> traverse(start: T, end: T?, nodeGenerator: NodeGenerator<T>, distance: Distance<T>, constraints: List<Constraint<T>> = listOf(), queue: MinPriorityQueue<T> = FibonacciHeap(), heuristic: (T) -> Long = { 0 }): PathingResult<T> {
         var count = 0
         val steps = mutableMapOf<T, Long>()
         val prevs = mutableMapOf<T, T>()
@@ -60,16 +60,17 @@ object Dijkstra {
         return PathingResult(steps, prevs)
     }
 
-    private fun <T> isConstraintMet(current: T, steps: Map<T, Long>, constraint: Constraint): Boolean = when (constraint) {
-        is StepConstraint -> (steps[current] ?: 0) < constraint.maxSteps
+    private fun <T> isConstraintMet(current: T, steps: Map<T, Long>, constraint: Constraint<T>): Boolean = when (constraint) {
+        is StepConstraint<*> -> (steps[current] ?: 0) < constraint.maxSteps
+        is CustomConstraint -> constraint.f(current, steps)
     }
 
-    private fun <T> constraintsNotMet(current: T?, steps: Map<T, Long>, constraints: List<Constraint>): Boolean = current?.let { node ->
+    private fun <T> constraintsNotMet(current: T?, steps: Map<T, Long>, constraints: List<Constraint<T>>): Boolean = current?.let { node ->
         constraints.all { constraint -> isConstraintMet(node, steps, constraint) }
     } ?: true
 }
 
-fun <T> Graph<T>.dijkstra(start: T, end: T?, distance: Distance<T> = { _, _ -> 1L }, constraints: List<Constraint> = listOf()): PathingResult<T> = Dijkstra.traverse(
+fun <T> Graph<T>.dijkstra(start: T, end: T?, distance: Distance<T> = { _, _ -> 1L }, constraints: List<Constraint<T>> = listOf()): PathingResult<T> = Dijkstra.traverse(
         start,
         end, {
     this.outgoingNodes(it).asSequence()
