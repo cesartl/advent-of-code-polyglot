@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2019
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 internal class Day18Test {
@@ -38,8 +39,8 @@ internal class Day18Test {
 
     @Test
     fun solve1() {
-//        println("example 1")
-//        assertThat(Day18.solve1(example1)).isEqualTo(86)
+        println("example 1")
+        assertThat(Day18.solve1(example1)).isEqualTo(86)
 //        println("example 2")
 //        assertThat(Day18.solve1(example2)).isEqualTo(132)
 //        println("example 3")

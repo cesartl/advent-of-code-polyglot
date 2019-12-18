@@ -1,9 +1,7 @@
 package com.ctl.aoc.kotlin.y2019
 
-import com.ctl.aoc.kotlin.utils.Dijkstra
-import com.ctl.aoc.kotlin.utils.PathingResult
-import com.ctl.aoc.kotlin.utils.findPath
-import java.util.*
+import com.ctl.aoc.kotlin.utils.*
+import com.ctl.aoc.util.JavaPriorityQueue
 import kotlin.math.abs
 
 object Day18 {
@@ -78,50 +76,49 @@ object Day18 {
         }
     }
 
+    data class Node(val point: Point, val keys: Set<String>)
 
-    private fun collectAllKeys(state: State): Int {
-        val queue: Deque<State> = ArrayDeque()
-        queue.add(state)
-        val results = mutableListOf<State>()
-        var best = Int.MAX_VALUE
-        while (queue.isNotEmpty()) {
-            val current = queue.removeLast()
-
-            val pre = current.remainingKeys
-                    .map { it to (state.grid.keys[it] ?: error("")).distance(current.position) }
-                    .sortedBy { it.second }
-                    .take(10)
-
-
-            val candidates = pre
-                    .asSequence()
-                    .map { it.first }
-                    .map { it to current.pathToKey(it) }
-                    .filter { (_, result) -> result.second.steps[result.first] != null }
-                    .sortedBy { (_, result) -> -(result.second.steps[result.first] ?: 0) }
-                    .toList()
-
-            candidates.forEach { (key, pair) ->
-                val (keyLocation, result) = pair
-                val path = result.findPath(keyLocation).drop(1)
-                val newState = current.goTo(keyLocation, path)
-                if (newState.allKeysFound()) {
-//                    results.add(newState)
-                    if (newState.stepsCount < best) {
-                        best = newState.stepsCount
-                        println("Best result $best")
+    fun generateNodes(node: Node, grid: Grid): Sequence<Node> {
+        val (point, keys) = node
+        return point.adjacents().map { adj -> grid.tiles[adj]?.let { it to adj } }
+                .filterNotNull()
+                .map { pair ->
+                    when (val tile = pair.first) {
+                        is Tile.Wall -> null
+                        is Tile.Empty -> setOf<String>()
+                        is Tile.Key -> setOf(tile.id)
+                        is Tile.Door -> if (keys.contains(tile.id.toLowerCase())) setOf<String>() else null
+                    }?.let {
+                        pair.second to it
                     }
-                } else if (newState.stepsCount < 4682) {
-                    queue.addFirst(newState)
                 }
-            }
-        }
-        return best
+                .filterNotNull()
+                .map { Node(it.first, keys + it.second) }
     }
+
+    private fun fullDijkstra(state: State): Long {
+        val grid = state.grid
+        val start = Node(state.position, setOf())
+        val constraint: Constraint<Node> = CustomConstraint { node, steps ->
+            node.keys.size < grid.keys.size
+        }
+        val (steps, previous, lastNode) = Dijkstra.traverse(
+                start = start,
+                end = null,
+                nodeGenerator = { generateNodes(it, grid) },
+                distance = { _, _ -> 1L },
+                queue = JavaPriorityQueue(),
+                constraints = listOf(constraint, StepConstraint(4682))
+        )
+        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minBy { it.value }?.toPair()!!
+        return count
+    }
+
+
 
     fun solve1(lines: Sequence<String>): Int {
         val state = buildState(lines)
-        return collectAllKeys(state)
+        return fullDijkstra(state).toInt()
     }
 
     private fun buildState(lines: Sequence<String>): State {
