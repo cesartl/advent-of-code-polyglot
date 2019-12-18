@@ -3,8 +3,6 @@ package com.ctl.aoc.kotlin.y2019
 import com.ctl.aoc.kotlin.utils.InputUtils
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.Assertions.*
-
 internal class Day18Test {
 
     val puzzleInput = InputUtils.getLines(2019, 18)
@@ -15,9 +13,39 @@ internal class Day18Test {
 #d.....................#
 ########################""".splitToSequence('\n')
 
+    val example2 = """########################
+#...............b.C.D.f#
+#.######################
+#.....@.a.B.c.d.A.e.F.g#
+########################""".splitToSequence('\n')
+
+    val example3 = """#################
+#i.G..c...e..H.p#
+########.########
+#j.A..b...f..D.o#
+########@########
+#k.E..a...g..B.n#
+########.########
+#l.F..d...h..C.m#
+#################""".splitToSequence('\n')
+
+    val example4 = """########################
+#@..............ac.GI.b#
+###d#e#f################
+###A#B#C################
+###g#h#i################
+########################""".splitToSequence('\n')
+
     @Test
     fun solve1() {
-        println(Day18.solve1(example1))
+//        println("example 1")
+//        assertThat(Day18.solve1(example1)).isEqualTo(86)
+//        println("example 2")
+//        assertThat(Day18.solve1(example2)).isEqualTo(132)
+//        println("example 3")
+//        assertThat(Day18.solve1(example3)).isEqualTo(136)
+//        println("example 4")
+//        assertThat(Day18.solve1(example4)).isEqualTo(81)
         println(Day18.solve1(puzzleInput))
     }
 }
