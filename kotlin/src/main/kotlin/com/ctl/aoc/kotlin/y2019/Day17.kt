@@ -1,6 +1,5 @@
 package com.ctl.aoc.kotlin.y2019
 
-import java.lang.IllegalArgumentException
 import java.util.concurrent.atomic.AtomicInteger
 
 object Day17 {
@@ -163,7 +162,23 @@ object Day17 {
         }
     }
 
-    data class MainRoutine(val routines: List<Routine>)
+    data class MainRoutine(val definitions: List<Routine>, val routines: List<Routine>) {
+        fun toAscii(): List<Int> {
+            val asciis = mutableListOf<Int>()
+            routines.forEachIndexed { idx, routine ->
+                asciis.add(routine.char.toInt())
+                if (idx < routines.size - 1) {
+                    asciis.add(','.toInt())
+                }
+            }
+            asciis.add('\n'.toInt())
+            definitions.forEach {
+                asciis.addAll(it.toAscii())
+                asciis.add('\n'.toInt())
+            }
+            return asciis
+        }
+    }
 
     fun solve1(intCode: LongArray): Int {
         val state = buildGrid(intCode)
@@ -178,7 +193,7 @@ object Day17 {
     fun solve2(intCode: LongArray): Long {
         val state = buildGrid(intCode)
         val commands = visitAll(state)
-        println(commands.joinToString(","))
+//        println(commands.joinToString(separator = "\",\""))
         /*
         A = R12,R4,L12,L12
         b=R8,R10,R10
@@ -189,25 +204,13 @@ object Day17 {
         val A = Routine.parse("R12,R4,L12,L12", 'A')
         val B = Routine.parse("R8,R10,R10", 'B')
         val C = Routine.parse("R4,R8,R10,R12", 'C')
-        val mainRoutine = MainRoutine(listOf(B, C, B, A, B, C, A, B, C, A))
+        val mainRoutine = MainRoutine(listOf(A, B, C), listOf(B, C, B, A, B, C, A, B, C, A))
 
         val newIntCode = intCode.copyOf(9999)
         newIntCode[0] = 2
 
         val inputs = mutableListOf<Int>()
-        mainRoutine.routines.forEachIndexed { idx, routine ->
-            inputs.add(routine.char.toInt())
-            if (idx < mainRoutine.routines.size - 1) {
-                inputs.add(','.toInt())
-            }
-        }
-        inputs.add('\n'.toInt())
-        A.toAscii().forEach { inputs.add(it) }
-        inputs.add('\n'.toInt())
-        B.toAscii().forEach { inputs.add(it) }
-        inputs.add('\n'.toInt())
-        C.toAscii().forEach { inputs.add(it) }
-        inputs.add('\n'.toInt())
+        mainRoutine.toAscii().forEach { inputs.add(it) }
         inputs.add('n'.toInt())
         inputs.add('\n'.toInt())
 
@@ -219,7 +222,7 @@ object Day17 {
             println("sending $n (${n.toChar()})")
             n
         }, output = {
-            if(it == 88L){
+            if (it == 88L) {
                 throw IllegalArgumentException("Fell into space")
             }
             output.add(it)
@@ -230,7 +233,7 @@ object Day17 {
         return output.last()
     }
 
-    fun visitAll(state: State): List<Command> {
+    private fun visitAll(state: State): List<Command> {
         val toVisit = state.grid.values.filter { it == Tile.Scaffold }.count()
         val visited = mutableSetOf<Point>()
         var robot = state.robot
