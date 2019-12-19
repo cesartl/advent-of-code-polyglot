@@ -8,26 +8,66 @@ object Day19 {
     data class Point(val x: Long, val y: Long)
 
     fun solve1(intCode: LongArray): Int {
-        val grid = exploreGrid(intCode, 0, 0,50, 50)
+        val grid = exploreGrid(intCode, 0, 0, 50, 50)
         printGrid(grid)
-        return grid.count { it.value }
+        return grid.values.flatMap { it.values }.count { it }
     }
 
-    fun solve2(intCode: LongArray): Int {
-        val grid = exploreGrid(intCode, 300, 600, 500, 900)
+    fun exploreAndPrint(intCode: LongArray, minX: Long, minY: Long, maxX: Long, maxY: Long) {
+        val grid = exploreGrid(intCode, minX, minY, maxX, maxY)
         printGrid(grid)
-        return 0
     }
 
-    private fun printGrid(grid: MutableMap<Point, Boolean>) {
-        val maxY = grid.keys.maxBy { it.y }?.y ?: 0L
-        val minY = grid.keys.minBy { it.y }?.y ?: 0L
-        val maxX = grid.keys.maxBy { it.x }?.x ?: 0L
-        val minX = grid.keys.minBy { it.x }?.x ?: 0L
+    fun solve2(intCode: LongArray): Long {
+        var y = 3L
+        var x = 2L
+        assert(explore(x, y, intCode))
+        while (true) {
+            println("Doing y=$y")
+            assert(explore(x, y, intCode))
+            //find last x
+            var affected = false
+            do {
+                x++
+                affected = explore(x, y, intCode)
+            } while (affected)
+            x--
+
+//            println("x: $x")
+            assert(explore(x, y, intCode))
+            assert(!explore(x + 1, y, intCode))
+
+            if (squareFit(x, y, intCode)) {
+                assert(!squareFit(x, y - 1, intCode))
+                assert(!squareFit(x - 1, y, intCode))
+                break
+            }
+            y++
+            x++
+            while (!explore(x, y, intCode)) {
+                x--
+            }
+        }
+        return (x - 99) * 10000 + y
+    }
+
+    private fun squareFit(x: Long, y: Long, intCode: LongArray): Boolean {
+        val topRight = explore(x, y, intCode)
+        val topLeft = explore(x - 99, y, intCode)
+        val bottomLeft = explore(x - 99, y + 99, intCode)
+        val bottomRight = explore(x, y + 99, intCode)
+        return topRight && topLeft && bottomLeft && bottomRight
+    }
+
+    private fun printGrid(grid: Map<Long, Map<Long, Boolean>>) {
+        val maxY = grid.keys.maxBy { it } ?: 0L
+        val minY = grid.keys.minBy { it } ?: 0L
+        val maxX: Long = grid.values.flatMap { it.keys }.max() ?: 0L
+        val minX: Long = grid.values.flatMap { it.keys }.min() ?: 0L
 
         (minY..maxY).forEach { y ->
             (minX..maxX).forEach { x ->
-                if (grid[Point(x, y)] == true) {
+                if (grid[y]?.get(x) == true) {
                     print('#')
                 } else {
                     print('.')
@@ -37,26 +77,24 @@ object Day19 {
         }
     }
 
-    private fun exploreGrid(intCode: LongArray, minX: Long, minY: Long, maxX: Long, maxY: Long): MutableMap<Point, Boolean> {
-        val grid = mutableMapOf<Point, Boolean>()
-
+    private fun exploreGrid(intCode: LongArray, minX: Long, minY: Long, maxX: Long, maxY: Long, grid: MutableMap<Long, MutableMap<Long, Boolean>> = mutableMapOf()): MutableMap<Long, MutableMap<Long, Boolean>> {
         (minY until maxY).forEach { y ->
             (minX until maxX).forEach { x ->
-                grid[Point(x, y)] = explore(x, y, intCode)
+                grid.computeIfAbsent(y) { mutableMapOf() }[x] = explore(x, y, intCode)
             }
         }
         return grid
     }
 
-    private fun explore(maxX: Long, maxY: Long, intCode: LongArray): Boolean {
+    private fun explore(x: Long, y: Long, intCode: LongArray): Boolean {
         val n = AtomicInteger(0)
         val output = AtomicLong()
         val intCodeState = Day9.IntCodeState(intCode = intCode.copyOf(999),
                 input = {
                     if (n.getAndIncrement() % 2 == 0) {
-                        maxX
+                        x
                     } else {
-                        maxY
+                        y
                     }
                 },
                 output = {

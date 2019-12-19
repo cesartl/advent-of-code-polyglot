@@ -13,7 +13,12 @@ internal class Day19Test {
     }
 
     @Test
+    internal fun explore() {
+        println(Day19.exploreAndPrint(puzzleInput, 718 - 105, 947, 718 + 1, 958 + 100))
+    }
+
+    @Test
     fun solve2() {
-        println(Day19.solve2(puzzleInput))
+        println(Day19.solve2(puzzleInput)) // not 7180948
     }
 }
