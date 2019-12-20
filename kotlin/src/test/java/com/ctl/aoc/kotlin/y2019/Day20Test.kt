@@ -8,6 +8,8 @@ internal class Day20Test {
 
     val puzzleInput = InputUtils.getLines(2019, 20)
 
+    val part2Example = InputUtils.getLines("2019", "day20-ex.txt")
+
     val example1= """         A           
          A           
   #######.#########  
@@ -69,7 +71,11 @@ YN......#               VT..#....QG
     @Test
     fun solve1() {
         assertThat(Day20.solve1(example1)).isEqualTo(23)
-//        assertThat(Day20.solve1(example2)).isEqualTo(58)
         println(Day20.solve1(puzzleInput))
+    }
+
+    @Test
+    internal fun solve2() {
+        assertThat(Day20.solve2(part2Example)).isEqualTo(396)
     }
 }
