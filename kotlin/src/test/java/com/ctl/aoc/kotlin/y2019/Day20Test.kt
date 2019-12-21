@@ -76,6 +76,7 @@ YN......#               VT..#....QG
 
     @Test
     internal fun solve2() {
-        assertThat(Day20.solve2(part2Example)).isEqualTo(396)
+//        assertThat(Day20.solve2(part2Example)).isEqualTo(396)
+        println(Day20.solve2(puzzleInput))
     }
 }
