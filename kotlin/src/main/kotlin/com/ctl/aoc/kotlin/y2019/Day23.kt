@@ -25,7 +25,7 @@ object Day23 {
 
     private fun runNetwork(networkInterface: NetworkInterface, n: Int, intCode: LongArray) {
         networkInterface.init(n)
-        val threadPool = Executors.newFixedThreadPool(n)
+        val threadPool = Executors.newFixedThreadPool(n + 1)
         (0 until n).forEach { address ->
             val prgm = Day9.IntCodeState(intCode = intCode.copyOf(9999),
                     output = networkInterface.output(address),
@@ -36,8 +36,16 @@ object Day23 {
                 }
             }
         }
+        if (networkInterface.natLogic) {
+            threadPool.submit {
+                while (true) {
+                    networkInterface.checkNat()
+                    Thread.sleep(500)
+                }
+            }
+        }
         threadPool.shutdown()
-        threadPool.awaitTermination(5, TimeUnit.SECONDS)
+        threadPool.awaitTermination(60, TimeUnit.SECONDS)
     }
 
     data class Packet(val origin: Int, val x: Long, val y: Long)
@@ -47,7 +55,7 @@ object Day23 {
         private val outputBuffers = mutableMapOf<Int, Deque<Long>>()
         private val packetBuffers = mutableMapOf<Int, Deque<Packet>>()
         private val lock = Object()
-        private val inactiveComputers : MutableSet<Int> = ConcurrentHashMap.newKeySet()
+        private val inactiveComputers: MutableSet<Int> = ConcurrentHashMap.newKeySet()
         var lastZeroY: Long? = null
 
         private fun inputBuffer(address: Int): Deque<Long> = inputBuffers.computeIfAbsent(address) { ArrayDeque() }
@@ -60,12 +68,18 @@ object Day23 {
             }
         }
 
-        private fun checkNat() {
+        fun checkNat() {
+            println("Checking NAT ${inactiveComputers.size}")
             synchronized(lock) {
                 if (inactiveComputers.size == size && packetBuffer(255).isNotEmpty()) {
                     inactiveComputers.clear()
                     println("£££")
-                    packetBuffer(0).addFirst(packetBuffer(255).peekFirst().copy(origin = 255))
+                    val packet = packetBuffer(255).peekFirst().copy(origin = 255)
+                    if (packet.y == lastZeroY) {
+                        println("******** $lastZeroY")
+                    }
+                    lastZeroY = packet.y
+                    packetBuffer(0).addFirst(packet)
                 }
             }
         }
@@ -77,9 +91,9 @@ object Day23 {
             }
             if (inputBuffer.isEmpty()) {
                 inactiveComputers.add(address)
-                if (natLogic) {
-                    checkNat()
-                }
+//                if (natLogic) {
+//                    checkNat()
+//                }
                 -1L
             } else {
                 inactiveComputers.remove(address)
@@ -101,12 +115,6 @@ object Day23 {
                 if (packetBuffer.isNotEmpty()) {
                     val packet = packetBuffer.removeLast()
                     println("$address receives $packet")
-                    if (address == 0) {
-                        if (packet.y == lastZeroY) {
-                            println("******** $lastZeroY")
-                        }
-                        lastZeroY = packet.y
-                    }
                     inputBuffer(address).addFirst(packet.x)
                     inputBuffer(address).addFirst(packet.y)
                 }
