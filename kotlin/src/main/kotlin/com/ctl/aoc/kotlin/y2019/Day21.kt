@@ -9,7 +9,6 @@ object Day21 {
                 line.forEach { char -> asciis.add(char.toInt()) }
                 asciis.add('\n'.toInt())
             }
-            "WALK\n".forEach { asciis.add(it.toInt()) }
             val iterator = asciis.iterator()
             return {
                 iterator.next().toLong()
@@ -41,9 +40,7 @@ object Day21 {
     }
 
     fun solve1(puzzleInput: String): Int {
-        val intCode = puzzleInput.split(",").map { it.toLong() }.toLongArray()
-        val springScript = SpringScript(
-                """
+        val script = """
 //jump if !B!C
 //NOT B J
 //NOT C T
@@ -59,7 +56,42 @@ OR T J
 //
 // CHECK D before jumping
 AND D J
-""".split("\n").drop(1).dropLast(1).filter { !it.contains("//") }
+WALK
+"""
+        return runScript(puzzleInput, script)
+    }
+
+    fun solve2(puzzleInput: String): Int {
+        val script = """
+//jump if !B!C
+//NOT B J
+//NOT C T
+NOT B T
+OR T J
+// jump if !A
+NOT A T
+OR T J
+NOT C T
+OR T J
+NOT E T
+// jump if !BC
+//
+//
+// CHECK D before jumping
+AND D J
+NOT J T
+OR E T
+OR H T
+AND T J
+RUN
+"""
+        return runScript(puzzleInput, script)
+    }
+
+    private fun runScript(puzzleInput: String, script: String): Int {
+        val intCode = puzzleInput.split(",").map { it.toLong() }.toLongArray()
+        val springScript = SpringScript(
+                script.split("\n").drop(1).dropLast(1).filter { !it.contains("//") }
         )
         val output = Output()
         val intCodeState = Day9.IntCodeState(intCode = intCode.copyOf(9999), input = springScript.asInput(), output = { output.receiveOutput(it.toInt()) })
@@ -67,6 +99,6 @@ AND D J
             intCodeState.execute()
         }
         output.print()
-        return output.dmg?.toInt() ?: -1
+        return output.dmg ?: -1
     }
 }
