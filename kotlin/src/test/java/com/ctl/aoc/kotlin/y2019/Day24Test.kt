@@ -20,6 +20,11 @@ internal class Day24Test {
 #....
 .#...""".splitToSequence('\n')
 
+    val example2 = """....#
+#..#.
+#..##
+..#..
+#....""".splitToSequence('\n')
 
     @Test
     internal fun score() {
@@ -29,7 +34,14 @@ internal class Day24Test {
 
     @Test
     fun solve1() {
-        println(Day24.solve1(example1))
-        println(Day24.solve1(puzzleInput))
+        println(Day24.solve2(example1))
+        println(Day24.solve2(puzzleInput))
+    }
+
+    @Test
+    internal fun solve2() {
+//        println(Day24.solve2(example2, 10))
+        assertThat(Day24.solve2(example2, 10)).isEqualTo(99)
+        println(Day24.solve2(puzzleInput, 200))
     }
 }
