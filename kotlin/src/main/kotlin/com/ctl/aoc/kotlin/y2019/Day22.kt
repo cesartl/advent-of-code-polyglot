@@ -34,11 +34,11 @@ object Day22 {
         data class Deal(val n: Int) : ShuffleTechnique() {
             override fun shuffle(deck: Deck): Deck {
                 val old = deck.toList()
-                return sequence {
-                    old.indices.forEach { i ->
-                        yield(old[i * (old.size - n) % old.size])
-                    }
+                val new = old.toMutableList()
+                old.forEachIndexed { i, e ->
+                    new[i * n % old.size] = e
                 }
+                return new.asSequence()
             }
         }
 
@@ -83,6 +83,9 @@ object Day22 {
         val techniques = parse(lines, end + 1)
         val deck = (0..end).asSequence()
         val after = apply(deck, techniques)
+        println(after.toList()[2019])
+        val after2 = apply(after, techniques)
+        println(after2.toList()[2019])
         return after.indexOf(2019)
     }
 }

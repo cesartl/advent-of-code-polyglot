@@ -79,11 +79,8 @@ cut -1""".splitToSequence('\n')
 
     @Test
     fun solve1() {
-        val deck = (0..9).asSequence()
-        val toList = Day22.apply(deck, Day22.parse(example4, 10)).toList()
-        println(toList)
-        assertThat(toList)
-                .containsExactly(9, 2, 5, 8, 1, 4, 7, 0, 3, 6)
         println(Day22.solve1(puzzleInput)) // > 1156
     }
+
+
 }
