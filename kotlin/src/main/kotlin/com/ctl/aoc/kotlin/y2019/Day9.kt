@@ -1,7 +1,5 @@
 package com.ctl.aoc.kotlin.y2019
 
-import java.lang.IllegalArgumentException
-
 object Day9 {
 
     data class IntCodeState(val index: Int = 0, val intCode: LongArray, val terminated: Boolean = false, val input: () -> Long = { 0 }, val output: (Long) -> Unit = {}, val relativeBase: Long = 0L) {
@@ -175,8 +173,12 @@ object Day9 {
 
     fun IntCodeState.nextState(): IntCodeState {
         val oppCode = this.currentOpCode()
-        val next = oppCode.nextState(this)
-        return next
+        if(Thread.currentThread().isInterrupted){
+//            Thread.currentThread().interrupt()
+            println("Intcode machine interrupted")
+            return this.copy(terminated = true)
+        }
+        return oppCode.nextState(this)
     }
 
     tailrec fun IntCodeState.execute(): IntCodeState {
