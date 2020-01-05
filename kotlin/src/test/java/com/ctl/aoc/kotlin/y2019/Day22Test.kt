@@ -57,7 +57,12 @@ cut -1""".splitToSequence('\n')
         assertThat(Deal(3).shuffle(deck).toList())
                 .containsExactlyElementsOf(listOf(0, 7, 4, 1, 8, 5, 2, 9, 6, 3))
 
-
+        println((35 - 10007) % ( 10007))
+        val deck2 = (0..10006).asSequence()
+        println(Deal(35).shuffle(deck2).toList())
+        println((35 * 3431) % 10007)
+        println((35 * 3431) % 10007)
+        println((35 * 6862) % 10007)
     }
 
     @Test
@@ -79,8 +84,14 @@ cut -1""".splitToSequence('\n')
 
     @Test
     fun solve1() {
-        println(Day22.solve1(puzzleInput)) // > 1156
+        assertThat(Day22.solve1(puzzleInput)).isEqualTo(6831)
+        assertThat(Day22.solve1Bis(puzzleInput)).isEqualTo(6831)
     }
 
-
+    @Test
+    internal fun solve2() {
+        val n = 119315717514047L //119,315,717,514,047
+        val m = 101741582076661L //101,741,582,076,661
+        println(Day22.solve2(puzzleInput))
+    }
 }
