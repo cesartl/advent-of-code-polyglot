@@ -82,6 +82,8 @@ cut -1""".splitToSequence('\n')
                 .isEqualTo(listOf(9, 2, 5, 8, 1, 4, 7, 0, 3, 6))
     }
 
+
+
     @Test
     fun solve1() {
         assertThat(Day22.solve1(puzzleInput)).isEqualTo(6831)
@@ -90,8 +92,6 @@ cut -1""".splitToSequence('\n')
 
     @Test
     internal fun solve2() {
-        val n = 119315717514047L //119,315,717,514,047
-        val m = 101741582076661L //101,741,582,076,661
-        println(Day22.solve2(puzzleInput))
+        println(Day22.solve2(puzzleInput)) // not 41590987771550, not 87115848333010
     }
 }

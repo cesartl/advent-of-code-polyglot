@@ -111,7 +111,13 @@ object Day22 {
         return lcf.apply(ModInt(2019.toBigInteger(), size.toBigInteger())).value.toInt()
     }
 
-    fun solve2(lines: Sequence<String>): Int {
-        TODO()
+    fun solve2(lines: Sequence<String>): Long {
+        val size = 119315717514047.toBigInteger()
+        val techniques = parse(lines, 0)
+        val lcf = techniques.toLCF(size)
+        val k = 101741582076661.toBigInteger()
+        val multiLcf = lcf.applyK(k)
+        val y = ModInt(2020.toBigInteger(), size)
+        return multiLcf.reverseApply(y).value.toLong()
     }
 }

@@ -16,7 +16,7 @@ data class ModInt(val value: BigInteger, val modulus: BigInteger) {
 
     operator fun minus(other: ModInt): ModInt {
         assertModulus(other)
-        return ModInt(value.min(other.value).mod(modulus), modulus)
+        return ModInt(value.subtract(other.value).mod(modulus), modulus)
     }
 
     operator fun times(other: ModInt): ModInt {
@@ -27,5 +27,9 @@ data class ModInt(val value: BigInteger, val modulus: BigInteger) {
     operator fun div(other: ModInt): ModInt {
         assertModulus(other)
         return ModInt(value.times(other.value.modInverse(modulus)).mod(modulus), modulus)
+    }
+
+    fun pow(n: BigInteger): ModInt {
+        return copy(value = value.modPow(n, modulus))
     }
 }
