@@ -92,7 +92,7 @@ object Day22 {
     }
 
     private fun Sequence<ShuffleTechnique>.toLCF(m: BigInteger): LCF {
-        return this.map { it.toLCF(m) }.fold(LCF.identify(m)) { acc, lcf -> acc andThen lcf }
+        return this.map { it.toLCF(m) }.fold(LCF.identity(m)) { acc, lcf -> acc andThen lcf }
     }
 
     fun solve1(lines: Sequence<String>): Int {

@@ -25,11 +25,11 @@ data class LCF(val a: ModInt, val b: ModInt) {
     }
 
     companion object {
-        fun identify(m: BigInteger) = LCF(1L, 0, m)
+        fun identity(m: BigInteger) = LCF(1L, 0, m)
     }
 
     fun applyK(k: BigInteger): LCF {
-        val identify = identify(a.modulus)
+        val identify = identity(a.modulus)
         if (k == BigInteger.ZERO) {
             return identify
         }
