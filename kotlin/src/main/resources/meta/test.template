@@ -1,0 +1,21 @@
+package com.ctl.aoc.kotlin.y_YEAR_
+
+import com.ctl.aoc.kotlin.utils.InputUtils
+import org.junit.jupiter.api.Test
+
+import org.junit.jupiter.api.Assertions.*
+
+internal class Day_DAY_Test {
+
+    val puzzleInput = InputUtils.getLines(_YEAR_, _DAY_)
+
+    @Test
+    fun solve1() {
+        Day1.solve1(puzzleInput)
+    }
+
+    @Test
+    fun solve2() {
+        Day1.solve2(puzzleInput)
+    }
+}
