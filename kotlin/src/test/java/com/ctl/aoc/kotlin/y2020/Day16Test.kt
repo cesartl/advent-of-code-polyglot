@@ -9,11 +9,11 @@ internal class Day16Test {
 
     @Test
     fun solve1() {
-        Day1.solve1(puzzleInput)
+        Day16.solve1(puzzleInput)
     }
 
     @Test
     fun solve2() {
-        Day1.solve2(puzzleInput)
+        Day16.solve2(puzzleInput)
     }
 }
