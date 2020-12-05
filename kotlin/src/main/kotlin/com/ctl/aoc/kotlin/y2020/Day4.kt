@@ -33,7 +33,7 @@ object Day4 {
 
                 } ?: false
             },
-            "hcl" to { s -> hairColourRegex.matchEntire(s) != null },
+            "hcl" to { s -> s.matches(hairColourRegex) },
             "ecl" to { s -> setOf("amb", "blu", "brn", "gry", "grn", "hzl", "oth").contains(s) },
             "pid" to { s -> s.all { c -> c.isDigit() } && s.length == 9 }
     )
@@ -69,13 +69,11 @@ object Day4 {
             }
         }
         val entries = full + last
-
         return entries.map { entry ->
-            entry.trim().split(" ")
-                    .map { field ->
-                        val s = field.split(":")
-                        s[0] to s[1]
-                    }.toMap()
+            entry.trim().split(" ").map { field ->
+                val s = field.split(":")
+                s[0] to s[1]
+            }.toMap()
         }
     }
 }
