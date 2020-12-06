@@ -7,13 +7,30 @@ internal class Day6Test {
 
     val puzzleInput = InputUtils.getLines(2020, 6)
 
+    val example = """abc
+
+a
+b
+c
+
+ab
+ac
+
+a
+a
+a
+a
+
+b""".splitToSequence("\n")
+
     @Test
     fun solve1() {
-        Day6.solve1(puzzleInput)
+        println(Day6.solve1(example))
+        println(Day6.solve1(puzzleInput))
     }
 
     @Test
     fun solve2() {
-        Day6.solve2(puzzleInput)
+        println(Day6.solve2(puzzleInput))
     }
 }
