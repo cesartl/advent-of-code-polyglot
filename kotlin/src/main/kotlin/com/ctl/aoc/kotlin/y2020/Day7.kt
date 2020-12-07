@@ -42,14 +42,7 @@ object Day7 {
                 }
             }
         }
-        val colours = mutableSetOf<String>()
-        val dfs = graph.dfs("shiny gold") { node ->
-            val adjacency = graph.adjacencyMap[node] ?: setOf<String>()
-            if (adjacency.isEmpty()) {
-                colours.add(node)
-            }
-            node
-        }.toList()
+        val dfs = graph.dfs("shiny gold").toList()
         return dfs.size - 1
     }
 
