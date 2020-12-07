@@ -57,8 +57,8 @@ fun <T> traversal(startNode: T, storage: Storage<T>, index: (node: T) -> String 
 }
 
 class Graph<T> {
-    private val adjacencyMap: HashMap<T, HashSet<T>> = HashMap()
-    private val incomingMap: HashMap<T, HashSet<T>> = HashMap()
+    val adjacencyMap: HashMap<T, HashSet<T>> = HashMap()
+    val incomingMap: HashMap<T, HashSet<T>> = HashMap()
 
     fun outGoingSize(): Int = adjacencyMap.size
 
@@ -100,8 +100,8 @@ class Graph<T> {
         return traversal(startNode, storage, index, { adjacencyMap[it]?.asSequence() ?: emptySequence() })
     }
 
-    fun bfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Queue())
-    fun dfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Stack())
+    fun bfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Queue(), index)
+    fun dfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Stack(), index)
 }
 
 
