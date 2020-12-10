@@ -67,12 +67,4 @@ internal class Day10Test {
         println(r)
         println("${(e - s) / 1000.0 / 1000}ms")
     }
-
-    @Test
-    internal fun testList() {
-        val l = listOf(1, 2, 3)
-        println(l + 4)
-        println(l)
-
-    }
 }

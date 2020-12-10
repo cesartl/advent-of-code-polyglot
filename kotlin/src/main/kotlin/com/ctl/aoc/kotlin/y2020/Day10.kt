@@ -1,22 +1,16 @@
 package com.ctl.aoc.kotlin.y2020
 
+import com.ctl.aoc.kotlin.utils.frequency
+
 object Day10 {
     fun solve1(input: Sequence<String>): Int {
-        val (ones, threes) = count(input.map { it.toInt() })
-        println("ones $ones")
-        println("threes $threes")
-        return ones * threes
-    }
-
-    private fun count(chain: Sequence<Int>): Pair<Int, Int> {
-        val list = listOf(0) + chain.sorted().toList() + ((chain.max() ?: 0) + 3)
-        val frequencies = list
+        val raw = input.map { it.toInt() }.sorted().toList()
+        val all = listOf(0) + raw + ((raw.max() ?: 0) + 3)
+        val frequencies = all
                 .zipWithNext()
                 .map { (current, next) -> next - current }
-                .fold(mapOf<Int, Int>()) { freq, count ->
-                    freq + mapOf(count to (freq[count] ?: 0) + 1)
-                }
-        return (frequencies[1] ?: 0) to (frequencies[3] ?: 0)
+                .frequency()
+        return (frequencies[1] ?: 0) * (frequencies[3] ?: 0)
     }
 
     fun solve2(input: Sequence<String>): Long {
