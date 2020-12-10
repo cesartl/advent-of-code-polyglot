@@ -60,7 +60,19 @@ internal class Day10Test {
     @Test
     fun solve2() {
         println(Day10.solve2(example))
-//        println(Day10.solve2(bigExample))
-//        println(Day10.solve2(puzzleInput))
+        println(Day10.solve2(bigExample))
+        val s = System.nanoTime()
+        val r = Day10.solve2(puzzleInput)
+        val e = System.nanoTime()
+        println(r)
+        println("${(e - s) / 1000.0 / 1000}ms")
+    }
+
+    @Test
+    internal fun testList() {
+        val l = listOf(1, 2, 3)
+        println(l + 4)
+        println(l)
+
     }
 }
