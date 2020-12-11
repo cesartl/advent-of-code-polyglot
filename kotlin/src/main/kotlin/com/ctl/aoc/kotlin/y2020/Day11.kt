@@ -72,14 +72,11 @@ object Day11 {
         }
 
         private fun occupiedInSight(p: Position): Int {
-            return lineOfSights(p).map { occupiedInSight(it) }.sum()
+            return lineOfSights(p).count { firstInSight(it) is Cell.Occupied }
         }
 
-        private fun occupiedInSight(positions: Sequence<Position>): Int {
-            return when (positions.map { map[it] ?: Cell.Floor }.dropWhile { it is Cell.Floor }.firstOrNull()) {
-                Cell.Occupied -> 1
-                else -> 0
-            }
+        private fun firstInSight(positions: Sequence<Position>): Cell? {
+            return positions.map { map[it] ?: Cell.Floor }.dropWhile { it is Cell.Floor }.firstOrNull()
         }
 
         fun countOccupied(): Int {
