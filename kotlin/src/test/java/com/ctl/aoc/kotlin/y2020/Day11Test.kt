@@ -26,6 +26,8 @@ L.LLLLL.LL""".splitToSequence("\n")
 
     @Test
     fun solve2() {
-        Day11.solve2(puzzleInput)
+        val g = Day11.parseGrid(example)
+        println(Day11.solve2(example))
+        println(Day11.solve2(puzzleInput))
     }
 }
