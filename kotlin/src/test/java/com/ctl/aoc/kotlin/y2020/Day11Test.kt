@@ -7,9 +7,21 @@ internal class Day11Test {
 
     val puzzleInput = InputUtils.getLines(2020, 11)
 
+    val example = """L.LL.LL.LL
+LLLLLLL.LL
+L.L.L..L..
+LLLL.LL.LL
+L.LL.LL.LL
+L.LLLLL.LL
+..L.L.....
+LLLLLLLLLL
+L.LLLLLL.L
+L.LLLLL.LL""".splitToSequence("\n")
+
     @Test
     fun solve1() {
-        Day11.solve1(puzzleInput)
+        println(Day11.solve1(example))
+        println(Day11.solve1(puzzleInput))
     }
 
     @Test
