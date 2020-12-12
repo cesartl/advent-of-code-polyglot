@@ -7,6 +7,15 @@ data class Position(val x: Int, val y: Int) {
         return "(x=$x, y=$y)"
     }
 
+    operator fun plus(other: Position): Position {
+        return Position(x = x + other.x, y = y + other.y)
+    }
+
+    fun scalar(ratio: Int): Position {
+        return copy(x = x * ratio, y = y * ratio)
+    }
+
+
     companion object {
         fun parse(string: String): Position {
             val split = string.split(",")
@@ -16,12 +25,55 @@ data class Position(val x: Int, val y: Int) {
 }
 
 sealed class Orientation {
-    fun move(p: Position): Position {
+    fun move(p: Position, amount: Int = 1): Position {
         return when (this) {
-            is N -> Position(p.x, p.y - 1)
-            is E -> Position(p.x + 1, p.y)
-            is S -> Position(p.x, p.y + 1)
-            is W -> Position(p.x - 1, p.y)
+            is N -> Position(p.x, p.y - amount)
+            is E -> Position(p.x + amount, p.y)
+            is S -> Position(p.x, p.y + amount)
+            is W -> Position(p.x - amount, p.y)
+        }
+    }
+
+    fun moveTrigo(p: Position, amount: Int = 1): Position {
+        return when (this) {
+            is N -> Position(p.x, p.y + amount)
+            is E -> Position(p.x + amount, p.y)
+            is S -> Position(p.x, p.y - amount)
+            is W -> Position(p.x - amount, p.y)
+        }
+    }
+
+    fun rotate(degrees: Int): Orientation {
+        val d = (360 + degrees) % 360
+        return when (this) {
+            E -> when (d) {
+                0 -> E
+                90 -> N
+                180 -> W
+                270 -> S
+                else -> throw Error("degree: $degrees ($d)")
+            }
+            W -> when (d) {
+                0 -> W
+                90 -> S
+                180 -> E
+                270 -> N
+                else -> throw Error("degree: $degrees ($d)")
+            }
+            S -> when (d) {
+                0 -> S
+                90 -> E
+                180 -> N
+                270 -> W
+                else -> throw Error("degree: $degrees ($d)")
+            }
+            N -> when (d) {
+                0 -> N
+                90 -> W
+                180 -> S
+                270 -> E
+                else -> throw Error("degree: $degrees ($d)")
+            }
         }
     }
 

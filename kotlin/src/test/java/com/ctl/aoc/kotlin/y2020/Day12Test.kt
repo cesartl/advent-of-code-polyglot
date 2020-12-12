@@ -7,13 +7,21 @@ internal class Day12Test {
 
     val puzzleInput = InputUtils.getLines(2020, 12)
 
+    val example = """F10
+N3
+F7
+R90
+F11""".splitToSequence("\n")
+
     @Test
     fun solve1() {
-        Day12.solve1(puzzleInput)
+        println(Day12.solve1(example))
+        println(Day12.solve1(puzzleInput))
     }
 
     @Test
     fun solve2() {
-        Day12.solve2(puzzleInput)
+        println(Day12.solve2(example))
+        println(Day12.solve2(puzzleInput))
     }
 }
