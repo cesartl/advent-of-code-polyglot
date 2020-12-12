@@ -64,7 +64,6 @@ object Day12 {
     }
 
     private fun WaypointState.rotateAround(degrees: Int): WaypointState {
-        val (x, y) = this.relativePosition
         val m = when (val d = (360 + degrees) % 360) {
             0 -> Matrix22.identity
             90 -> Matrix22.rotate90
@@ -72,11 +71,11 @@ object Day12 {
             270 -> Matrix22.rotate270
             else -> throw Error("degree: degrees ($d)")
         }
-        val (newX, newY) = matrixMultiply(m, Matrix21(x, y))
+        val (newX, newY) = m x this.relativePosition
         return WaypointState(Position(newX, newY))
     }
 
-    fun WaypointState.modify(command: Command): WaypointState {
+    private fun WaypointState.modify(command: Command): WaypointState {
         val (x, y) = this.relativePosition
         return when (command) {
             is Command.N -> this.copy(relativePosition = N.moveTrigo(this.relativePosition, command.amount))
@@ -118,8 +117,8 @@ object Day12 {
         val start = Position(0, 0)
         val waypointStart = Position(10, 1)
         val withWaypoint = WithWaypoint(WaypointState(waypointStart), start)
-
-        val endState = input.map { Command.parse(it) }
+        val endState = input
+                .map { Command.parse(it) }
                 .fold(withWaypoint) { state, command -> state.modify(command) }
         println(endState)
         return endState.position.distance(start)

@@ -13,7 +13,8 @@ data class Matrix22(
         val rotate270 = Matrix22(0, 1, -1, 0)
     }
 
-    infix fun matrixMultiply(col: Matrix21) = com.ctl.aoc.kotlin.utils.matrixMultiply(this, col)
+    infix fun x(col: Matrix21) = matrixMultiply(this, col)
+    infix fun x(p: Position) = matrixMultiply(this, Matrix21(p.x, p.y))
 }
 
 data class Matrix21(val x00: Int, val x10: Int) {
