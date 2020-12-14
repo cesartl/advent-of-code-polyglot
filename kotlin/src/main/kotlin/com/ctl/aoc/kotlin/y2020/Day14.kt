@@ -4,16 +4,28 @@ import java.math.BigInteger
 
 object Day14 {
 
+    fun solve1(input: Sequence<String>): BigInteger {
+        val instructions = input.map { Instruction.parse(it) }.toList()
+        val state = instructions.fold(State()) { state, instruction -> state.apply(instruction) }
+        return state.memories.values.fold(BigInteger.ZERO) { acc, n -> acc + n }
+    }
+
+    fun solve2(input: Sequence<String>): BigInteger {
+        val instructions = input.map { Instruction.parse(it) }.toList()
+        val state = instructions.fold(State()) { state, instruction -> state.apply2(instruction) }
+        return state.memories.values.fold(BigInteger.ZERO) { acc, n -> acc + n }
+    }
+
     sealed class Instruction {
         data class Mem(val address: BigInteger, val value: BigInteger) : Instruction()
         data class Mask(val mask: List<Boolean?>) : Instruction()
 
         companion object {
-            val memRegex = """mem\[(\d+)\] = (\d+)""".toRegex()
+            private val memRegex = """mem\[(\d+)\] = (\d+)""".toRegex()
             fun parse(s: String): Instruction {
                 val memMatch = memRegex.matchEntire(s)
-                if (memMatch != null) {
-                    return Mem(memMatch.groupValues[1].toBigInteger(), memMatch.groupValues[2].toBigInteger())
+                return if (memMatch != null) {
+                    Mem(memMatch.groupValues[1].toBigInteger(), memMatch.groupValues[2].toBigInteger())
                 } else {
                     val maskString = s.split(" ")[2]
                     val mask = maskString.map { c ->
@@ -23,7 +35,7 @@ object Day14 {
                             else -> null
                         }
                     }
-                    return Mask(mask.reversed())
+                    Mask(mask.reversed())
                 }
             }
         }
@@ -34,22 +46,18 @@ object Day14 {
         return possibilities(floatingIndices, mapOf())
                 .map { changes ->
                     mask.foldIndexed(listOf<Boolean>()) { i, acc, current ->
-                        val changed = if (current == null) {
-                            changes[i] ?: throw Error("Odd")
-                        } else {
-                            current
-                        }
+                        val changed = current ?: (changes[i] ?: throw Error("Odd"))
                         acc + changed
                     }
                 }
     }
 
     private fun possibilities(indices: List<Int>, current: Map<Int, Boolean>): Sequence<Map<Int, Boolean>> {
-        if (indices.isEmpty()) {
-            return sequenceOf(current)
+        return if (indices.isEmpty()) {
+            sequenceOf(current)
         } else {
             val first = indices.first()
-            return sequence {
+            sequence {
                 yieldAll(possibilities(indices.drop(1), current + (first to true)))
                 yieldAll(possibilities(indices.drop(1), current + (first to false)))
             }
@@ -58,38 +66,27 @@ object Day14 {
 
     data class State(val memories: Map<BigInteger, BigInteger> = mapOf(), val mask: List<Boolean?> = listOf())
 
-    fun State.apply(instruction: Instruction): State {
+    private fun State.apply(instruction: Instruction): State {
         return when (instruction) {
             is Instruction.Mask -> this.copy(mask = instruction.mask)
             is Instruction.Mem -> {
-                val newValue = mask.foldIndexed(instruction.value) { i, n, m ->
-                    when (m) {
-                        true -> {
-                            n.setBit(i)
-                        }
-                        false -> {
-                            n.clearBit(i)
-                        }
-                        else -> {
-                            n
-                        }
-                    }
-                }
+                val newValue = applyMask(instruction.value, mask)
                 this.copy(memories = memories + (instruction.address to newValue))
             }
         }
     }
 
-    fun State.apply2(instruction: Instruction): State {
+    private fun BigInteger.toBits(indices: IntRange): List<Boolean> {
+        return indices.map { i -> this.testBit(i) }
+    }
+
+    private fun State.apply2(instruction: Instruction): State {
         return when (instruction) {
             is Instruction.Mask -> this.copy(mask = instruction.mask)
             is Instruction.Mem -> {
-                val bits = mask.indices.map { i -> instruction.address.testBit(i) }
-                val addressMask = applyMask(bits, mask)
-                val generateFloatingMasks = generateFloatingMasks(addressMask)
+                val addressMask = applyMaskV2(instruction.address, mask)
+                val newMemories = generateFloatingMasks(addressMask)
                         .map { applyMask(instruction.address, it) }
-                        .toList()
-                val newMemories = generateFloatingMasks
                         .fold(mutableMapOf<BigInteger, BigInteger>()) { acc, address ->
                             acc[address] = instruction.value
                             acc
@@ -99,8 +96,8 @@ object Day14 {
         }
     }
 
-    private fun applyMask(bits: List<Boolean>, mask: List<Boolean?>): List<Boolean?> {
-        return bits.zip(mask).map { (b, m) ->
+    private fun applyMaskV2(integer: BigInteger, mask: List<Boolean?>): List<Boolean?> {
+        return integer.toBits(mask.indices).zip(mask).map { (b, m) ->
             when (m) {
                 true -> {
                     true
@@ -129,17 +126,5 @@ object Day14 {
                 }
             }
         }
-    }
-
-    fun solve1(input: Sequence<String>): BigInteger {
-        val instructions = input.map { Instruction.parse(it) }.toList()
-        val state = instructions.fold(State()) { state, instruction -> state.apply(instruction) }
-        return state.memories.values.fold(BigInteger.ZERO) { acc, n -> acc + n }
-    }
-
-    fun solve2(input: Sequence<String>): BigInteger {
-        val instructions = input.map { Instruction.parse(it) }.toList()
-        val state = instructions.fold(State()) { state, instruction -> state.apply2(instruction) }
-        return state.memories.values.fold(BigInteger.ZERO) { acc, n -> acc + n }
     }
 }
