@@ -10,7 +10,7 @@ object Day15 {
     }
 
     private fun playGame(input: String, max: Int): Int {
-        val history: MutableMap<Int, Int> = HashMap(max + 1)
+        val history: Array<Int?> = Array(max + 1) { null }
         val startingNumbers = input.split(",").map { it.toInt() }
         startingNumbers.dropLast(1).forEachIndexed { turn, n -> history[n] = turn + 1 }
         var turn = startingNumbers.size + 1
