@@ -1,33 +1,27 @@
 package com.ctl.aoc.kotlin.y2020
 
 object Day15 {
-    fun solve1(input: String): Long {
-        val n = 2020L
-        return playGame(input, n)
+    fun solve1(input: String): Int {
+        return playGame(input, 2020)
     }
 
-    fun solve2(input: String): Long {
-        val n = 30000000L
-        return playGame(input, n)
+    fun solve2(input: String): Int {
+        return playGame(input, 30000000)
     }
 
-    private fun playGame(input: String, n: Long): Long {
-        val numbers = mutableMapOf<Long, List<Long>>()
-        val startingNumbers = input.split(",").map { it.toLong() }
-        startingNumbers.forEachIndexed { turn, n -> numbers[n] = listOf(turn.toLong() + 1) }
-        var turn = numbers.size + 1L
-        var previous = startingNumbers.last()
-        while (turn <= n) {
-            val previousTurns = numbers[previous] ?: listOf()
-            if (previousTurns.size <= 1) {
-                previous = 0
-            } else {
-                previous = previousTurns[0] - previousTurns[1]
-            }
-
-            numbers[previous] = listOf(turn) + (numbers[previous] ?: listOf()).take(1)
+    private fun playGame(input: String, max: Int): Int {
+        val history: MutableMap<Int, Int> = HashMap(max + 1)
+        val startingNumbers = input.split(",").map { it.toInt() }
+        startingNumbers.dropLast(1).forEachIndexed { turn, n -> history[n] = turn + 1 }
+        var turn = startingNumbers.size + 1
+        var previousNumber = startingNumbers.last()
+        while (turn <= max) {
+            val previousTurn = turn - 1
+            val next = history[previousNumber]?.let { lastSeenTurn -> previousTurn - lastSeenTurn } ?: 0
+            history[previousNumber] = previousTurn
+            previousNumber = next
             turn++
         }
-        return previous
+        return previousNumber
     }
 }
