@@ -13,6 +13,7 @@ object Day14 {
     fun solve2(input: Sequence<String>): BigInteger {
         val instructions = input.map { Instruction.parse(it) }.toList()
         val state = instructions.fold(State()) { state, instruction -> state.apply2(instruction) }
+        println(state.memories.size)
         return state.memories.values.fold(BigInteger.ZERO) { acc, n -> acc + n }
     }
 

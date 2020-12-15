@@ -1,7 +1,7 @@
 package com.ctl.aoc.kotlin.y2020
 
 import com.ctl.aoc.kotlin.utils.InputUtils
-import com.ctl.aoc.kotlin.utils.timed
+import com.ctl.aoc.kotlin.utils.timedNanos
 import org.junit.jupiter.api.Test
 
 internal class Day13Test {
@@ -19,9 +19,9 @@ internal class Day13Test {
     @Test
     fun solve2() {
         println(Day13.solve2(example))
-        println(timed { Day13.solve2(puzzleInput) })
+        println(timedNanos { Day13.solve2(puzzleInput) })
         println()
         println(Day13.solve2CRT(example))
-        println(timed { Day13.solve2CRT(puzzleInput) })
+        println(timedNanos { Day13.solve2CRT(puzzleInput) })
     }
 }
