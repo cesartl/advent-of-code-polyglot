@@ -23,11 +23,12 @@ object Day16 {
     }
 
     data class SearchState(val fields: List<Field>) {
+        val knownFields = fields.filterIsInstance(Field.Known::class.java).map { it.name }.toSet()
+
         companion object {
             fun build(rules: List<Rule>, validTickets: List<Ticket>): SearchState {
-                val allNames = rules.map { it.fieldName }
                 val rulesByName = rules.map { it.fieldName to it }.toMap()
-                val initialFields = validTickets.first().values.map { Field.Unknown(allNames) }
+                val initialFields = validTickets.first().values.map { Field.Unknown(rulesByName.keys.toList()) }
                 val newFields = initialFields.mapIndexed { idx, field ->
                     val actualValues = validTickets.map { it.values[idx] }
                     val filtered = field.possibleNames.filter { ruleName ->
@@ -42,26 +43,26 @@ object Day16 {
     }
 
     private tailrec fun SearchState.search(): SearchState {
-        val reduced = fields.map { field ->
+
+        val newFields = fields.map { field ->
+            when (field) {
+                is Field.Known -> field
+                is Field.Unknown -> Field.Unknown(field.possibleNames.filter { !knownFields.contains(it) })
+            }
+        }.map { field ->
             when (field) {
                 is Field.Unknown -> if (field.possibleNames.size == 1) Field.Known(field.possibleNames.first()) else field
                 is Field.Known -> field
             }
         }
-        val knownFields = reduced.filterIsInstance(Field.Known::class.java).map { it.name }.toSet()
-        val newFields = reduced.map { field ->
-            when (field) {
-                is Field.Known -> field
-                is Field.Unknown -> Field.Unknown(field.possibleNames.filter { !knownFields.contains(it) })
-            }
-        }
+
         return if (newFields == fields) {
             if (fields.any { it is Field.Unknown }) {
                 throw Error("Unresolved $fields")
             }
             return this
         } else {
-            this.copy(fields = newFields).search()
+            SearchState(newFields).search()
         }
     }
 
