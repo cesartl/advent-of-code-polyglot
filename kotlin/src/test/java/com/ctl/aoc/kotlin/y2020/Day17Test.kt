@@ -7,9 +7,22 @@ internal class Day17Test {
 
     val puzzleInput = InputUtils.getLines(2020, 17)
 
+    val example = """.#.
+..#
+###""".splitToSequence("\n")
+
+    @Test
+    internal fun p() {
+        val p = Day17.Position(0, 0, 0)
+        val n = p.neighbours().toList()
+        println(n.size)
+        println(n)
+    }
+
     @Test
     fun solve1() {
-        Day17.solve1(puzzleInput)
+        println(Day17.solve1(example))
+        println(Day17.solve1(puzzleInput))
     }
 
     @Test
