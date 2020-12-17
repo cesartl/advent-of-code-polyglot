@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2020
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timedMs
 import org.junit.jupiter.api.Test
 
 internal class Day17Test {
@@ -13,7 +14,7 @@ internal class Day17Test {
 
     @Test
     internal fun p() {
-        val p = Day17.Position(0, 0, 0)
+        val p = Day17.Position3D(0, 0, 0)
         val n = p.neighbours().toList()
         println(n.size)
         println(n)
@@ -22,11 +23,12 @@ internal class Day17Test {
     @Test
     fun solve1() {
         println(Day17.solve1(example))
-        println(Day17.solve1(puzzleInput))
+        println(timedMs {  Day17.solve1(puzzleInput)})
     }
 
     @Test
     fun solve2() {
-        Day17.solve2(puzzleInput)
+        println(Day17.solve2(example))
+        println(timedMs {  Day17.solve2(puzzleInput)})
     }
 }
