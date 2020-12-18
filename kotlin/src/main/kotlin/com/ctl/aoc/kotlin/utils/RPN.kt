@@ -4,7 +4,7 @@ import java.util.*
 
 interface RpnContext<T> {
     fun RpnOperator<T>.eval(left: T, right: T): T
-    fun Char.parseOperand(): T
+    fun String.parseLiteral(): T
 }
 
 interface RpnOperatorContext {
@@ -15,7 +15,7 @@ sealed class ParsableRpnToken<T> {
     companion object {
         fun <T> parse(c: Char, rpnContext: RpnContext<T>): ParsableRpnToken<T> {
             return when {
-                c.isDigit() -> rpnContext.run { RpnOperand(c.parseOperand()) }
+                c.isDigit() -> Digit(c)
                 c == '+' -> RpnOperator.Plus()
                 c == '-' -> RpnOperator.Minus()
                 c == '*' -> RpnOperator.Mult()
@@ -32,11 +32,12 @@ sealed class ParsableRpnToken<T> {
 class LeftParenthesis<T> : ParsableRpnToken<T>()
 class RightParenthesis<T> : ParsableRpnToken<T>()
 class Whitespace<T> : ParsableRpnToken<T>()
+class Digit<T>(val c: Char) : ParsableRpnToken<T>()
 
 sealed class RpnToken<T> : ParsableRpnToken<T>() {
     fun asString(): String {
         return when (this) {
-            is RpnOperand -> this.value.toString()
+            is Literal -> this.value.toString()
             is RpnOperator.Plus -> "+"
             is RpnOperator.Minus -> "-"
             is RpnOperator.Mult -> "*"
@@ -45,7 +46,7 @@ sealed class RpnToken<T> : ParsableRpnToken<T>() {
     }
 }
 
-data class RpnOperand<T>(val value: T) : RpnToken<T>()
+data class Literal<T>(val value: T) : RpnToken<T>()
 sealed class RpnOperator<T> : RpnToken<T>() {
     class Plus<T> : RpnOperator<T>()
     class Minus<T> : RpnOperator<T>()
@@ -55,17 +56,21 @@ sealed class RpnOperator<T> : RpnToken<T>() {
 
 
 private data class ShuntingYardState<T>(
+        val rpnContext: RpnContext<T>,
+        val operatorContext: RpnOperatorContext,
         val output: Deque<RpnToken<T>> = ArrayDeque(),
-        val operators: Deque<ParsableRpnToken<T>> = ArrayDeque()
+        val operators: Deque<ParsableRpnToken<T>> = ArrayDeque(),
+        val literalBuilder: StringBuilder = StringBuilder()
 ) {
-    fun addOperator(operator: RpnOperator<T>, operatorContext: RpnOperatorContext) {
-        while (shouldPopOperator(operator, operatorContext)) {
+    fun addOperator(operator: RpnOperator<T>) {
+        while (shouldPopOperator(operator)) {
             moveHeadOperatorToOutput()
         }
         operators.push(operator)
     }
 
     fun addRightParenthesis() {
+        flushLiteral()
         while (operators.isNotEmpty() && operators.peek() !is LeftParenthesis) {
             moveHeadOperatorToOutput()
         }
@@ -81,6 +86,19 @@ private data class ShuntingYardState<T>(
         }
     }
 
+    fun addDigit(c: Char) {
+        literalBuilder.append(c)
+    }
+
+    fun flushLiteral() {
+        if (literalBuilder.isNotEmpty()) {
+            rpnContext.run {
+                output.add(Literal(literalBuilder.toString().parseLiteral()))
+            }
+            literalBuilder.clear()
+        }
+    }
+
     private fun moveHeadOperatorToOutput() {
         when (val head = operators.pop()) {
             is RpnToken -> {
@@ -90,7 +108,7 @@ private data class ShuntingYardState<T>(
         }
     }
 
-    private fun shouldPopOperator(newOperator: RpnOperator<T>, operatorContext: RpnOperatorContext): Boolean = operatorContext.run {
+    private fun shouldPopOperator(newOperator: RpnOperator<T>): Boolean = operatorContext.run {
         if (operators.isEmpty()) {
             return false
         }
@@ -108,9 +126,15 @@ data class RPN<T>(val tokens: List<RpnToken<T>>, val rpnContext: RpnContext<T>) 
         val output = ArrayDeque<T>()
         tokens.forEach { token ->
             when (token) {
-                is RpnOperand -> output.push(token.value)
+                is Literal -> output.push(token.value)
                 is RpnOperator -> {
+                    if (output.isEmpty()) {
+                        throw Error("Could not get right operand for ${token.asString()} in  $this")
+                    }
                     val right = output.pop()
+                    if (output.isEmpty()) {
+                        throw Error("Could not get left operand for ${token.asString()} in  $this")
+                    }
                     val left = output.pop()
                     rpnContext.run {
                         output.push(token.eval(left, right))
@@ -118,7 +142,7 @@ data class RPN<T>(val tokens: List<RpnToken<T>>, val rpnContext: RpnContext<T>) 
                 }
             }
         }
-        assert(output.size == 1)
+        assert(output.size == 1) { "Output size is ${output.size}: ${output.toList()}. RPN is $this" }
         return output.pop()
     }
 
@@ -129,17 +153,27 @@ data class RPN<T>(val tokens: List<RpnToken<T>>, val rpnContext: RpnContext<T>) 
     companion object {
         fun <T> parse(input: String, rpnContext: RpnContext<T>, operatorContext: RpnOperatorContext = defaultRpnOperatorContext): RPN<T> {
             val finalState = input.map { ParsableRpnToken.parse(it, rpnContext) }
-                    .fold(ShuntingYardState<T>()) { state, token ->
+                    .fold(ShuntingYardState<T>(rpnContext, operatorContext)) { state, token ->
                         when (token) {
-                            is RpnOperand -> state.output.add(token)
-                            is RpnOperator -> state.addOperator(token, operatorContext)
-                            is LeftParenthesis -> state.operators.push(token)
+                            is Digit -> state.addDigit(token.c)
+                            is RpnOperator -> {
+                                state.flushLiteral()
+                                state.addOperator(token)
+                            }
+                            is LeftParenthesis -> {
+                                state.flushLiteral()
+                                state.operators.push(token)
+                            }
                             is RightParenthesis -> state.addRightParenthesis()
                             is Whitespace -> {
+                                state.flushLiteral()
+                            }
+                            is Literal -> {
                             }
                         }
                         state
                     }
+            finalState.flushLiteral()
             finalState.moveAllToOutput()
             return RPN(finalState.output.toList(), rpnContext)
         }
@@ -160,7 +194,7 @@ val longContext = object : RpnContext<Long> {
         }
     }
 
-    override fun Char.parseOperand(): Long = this.toString().toLong()
+    override fun String.parseLiteral(): Long = this.toLong()
 }
 
 val defaultRpnOperatorContext = object : RpnOperatorContext {

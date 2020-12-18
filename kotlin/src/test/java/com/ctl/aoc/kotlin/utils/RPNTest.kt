@@ -10,10 +10,12 @@ internal class RPNTest{
         assertRpn("1 + 2 + 3 * 5", 18)
         assertRpn("9 - 5", 4)
         assertRpn("3 * (8 + 2)", 30)
+        assertRpn("10 * (10 + 2)", 120)
     }
 
     fun assertRpn(input: String, expected: Long){
-        val eval = RPN.parse(input, longContext).eval()
-        assertEquals(expected, eval, "$input should be equal to $expected but found $eval")
+        val rpn = RPN.parse(input, longContext)
+        val eval = rpn.value
+        assertEquals(expected, eval, "$input should be equal to $expected with $rpn")
     }
 }
