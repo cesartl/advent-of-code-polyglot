@@ -4,12 +4,15 @@ import java.util.*
 
 object Day18 {
     fun solve1(input: Sequence<String>): Long {
-        return input.map { evaluateExpression(it) }.sum()
+        return input.map { evaluateExpression1(it) }.sum()
     }
 
     fun solve2(input: Sequence<String>): Long {
         return input.map { evaluateExpression2(it) }.sum()
     }
+
+    fun evaluateExpression1(string: String): Long = evaluateExpression(string, Operator::priority1)
+    fun evaluateExpression2(string: String): Long = evaluateExpression(string, Operator::priority2)
 
     sealed class Operator {
         object Plus : Operator()
@@ -24,7 +27,15 @@ object Day18 {
             }
         }
 
-        fun priority(): Int {
+        fun priority1(): Int {
+            return when (this) {
+                Plus -> 1
+                Mult -> 1
+                Blank -> 0
+            }
+        }
+
+        fun priority2(): Int {
             return when (this) {
                 Plus -> 2
                 Mult -> 1
@@ -33,104 +44,64 @@ object Day18 {
         }
     }
 
-    data class Evaluation(val acc: Long = 0L, val operator: Operator = Operator.Plus) {
-        fun eval(n: Long): Evaluation {
-            return this.copy(acc = operator.compute(acc, n))
-        }
-    }
 
-    fun evaluateExpression(string: String): Long {
-        val expression = string.replace(" ", "")
-        var idx = 0
-        var evaluation = Evaluation()
-        while (idx < expression.length) {
-            val c = expression[idx]
-            evaluation = when {
-                c == '+' -> {
-                    idx++
-                    evaluation.copy(operator = Operator.Plus)
-                }
-                c == '*' -> {
-                    idx++
-                    evaluation.copy(operator = Operator.Mult)
-                }
-                c.isDigit() -> {
-                    idx++
-                    val n = c.toString().toLong()
-                    evaluation.eval(n)
-                }
-                c == '(' -> {
-                    val endIdx = findClosingBracket(expression, idx)
-                    val bracketExpression = expression.substring((idx + 1) until (endIdx - 1))
-                    val n = evaluateExpression(bracketExpression)
-                    idx = endIdx
-                    evaluation.eval(n)
-                }
-                else -> {
-                    throw Error("Char: $c at $idx")
+    data class ExpressionStacks(
+            val numberStack: Deque<Long> = ArrayDeque(),
+            val operatorStack: Deque<Operator> = ArrayDeque(),
+            val priority: (Operator) -> Int) {
+        fun collapse(newOperator: Operator) {
+            while (operatorStack.isNotEmpty() && numberStack.size >= 2) {
+                if (priority(newOperator) <= priority(operatorStack.peek())) {
+                    val second = numberStack.pop()
+                    val first = numberStack.pop()
+                    val op = operatorStack.pop()
+                    val n = op.compute(first, second)
+                    numberStack.push(n)
+                } else {
+                    break
                 }
             }
         }
-//        println("$expression is ${evaluation.acc}")
-        return evaluation.acc
     }
 
-    fun evaluateExpression2(string: String): Long {
+    private fun evaluateExpression(string: String, priority: (Operator) -> Int): Long {
         val expression = string.replace(" ", "")
-//        println("Doing $expression")
         var idx = 0
-        val numberStack: Deque<Long> = ArrayDeque()
-        val operatorStack: Deque<Operator> = ArrayDeque()
+        val stacks = ExpressionStacks(priority = priority)
         while (idx < expression.length) {
             val c = expression[idx]
             when {
                 c == '+' -> {
                     idx++
                     val newOperator = Operator.Plus
-                    collapse(operatorStack, numberStack, newOperator)
-                    operatorStack.push(newOperator)
+                    stacks.collapse(newOperator)
+                    stacks.operatorStack.push(newOperator)
                 }
                 c == '*' -> {
                     idx++
                     val newOperator = Operator.Mult
-                    collapse(operatorStack, numberStack, newOperator)
-                    operatorStack.push(newOperator)
+                    stacks.collapse(newOperator)
+                    stacks.operatorStack.push(newOperator)
                 }
                 c.isDigit() -> {
                     idx++
                     val n = c.toString().toLong()
-                    numberStack.push(n)
+                    stacks.numberStack.push(n)
                 }
                 c == '(' -> {
                     val endIdx = findClosingBracket(expression, idx)
-                    val bracketExpression = expression.substring((idx + 1) until (endIdx - 1))
-                    val n = evaluateExpression2(bracketExpression)
-                    idx = endIdx
-                    numberStack.push(n)
+                    val bracketExpression = expression.substring((idx + 1) until endIdx)
+                    val n = evaluateExpression(bracketExpression, priority)
+                    idx = endIdx + 1
+                    stacks.numberStack.push(n)
                 }
                 else -> {
                     throw Error("Char: $c at $idx")
                 }
             }
         }
-        collapse(operatorStack, numberStack, Operator.Blank)
-        val result = numberStack.pop()
-//        println("$expression is $result")
-        return result
-    }
-
-    private fun collapse(operatorStack: Deque<Operator>, numberStack: Deque<Long>, newOperator: Operator) {
-        while (operatorStack.isNotEmpty() && numberStack.size >= 2) {
-            if (newOperator.priority() <= operatorStack.peek().priority()) {
-                val second = numberStack.pop()
-                val first = numberStack.pop()
-                val op = operatorStack.pop()
-                val n = op.compute(first, second)
-                numberStack.push(n)
-            } else {
-                break
-            }
-        }
+        stacks.collapse(Operator.Blank)
+        return stacks.numberStack.pop()
     }
 
     fun findClosingBracket(s: String, start: Int): Int {
@@ -145,6 +116,6 @@ object Day18 {
             }
             idx++
         }
-        return idx
+        return idx - 1
     }
 }

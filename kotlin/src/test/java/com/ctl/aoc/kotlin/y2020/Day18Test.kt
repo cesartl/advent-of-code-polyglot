@@ -11,9 +11,9 @@ internal class Day18Test {
 
     @Test
     internal fun eval() {
-        assertEquals(71, Day18.evaluateExpression("1 + 2 * 3 + 4 * 5 + 6"))
-        assertEquals(51, Day18.evaluateExpression("1 + (2 * 3) + (4 * (5 + 6))"))
-        assertEquals(13632, Day18.evaluateExpression("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"))
+        assertEquals(71, Day18.evaluateExpression1("1 + 2 * 3 + 4 * 5 + 6"))
+        assertEquals(51, Day18.evaluateExpression1("1 + (2 * 3) + (4 * (5 + 6))"))
+        assertEquals(13632, Day18.evaluateExpression1("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"))
     }
 
     @Test
