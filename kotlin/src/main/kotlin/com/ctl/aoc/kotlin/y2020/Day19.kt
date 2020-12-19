@@ -8,11 +8,43 @@ object Day19 {
         val rulesById = rules.map { it.id to it }.toMap()
 
         val rule0 = evaluateRule(rulesById[0] ?: error(""), mutableMapOf(), rulesById)
-        return messages.count { rule0.patternsSet.contains(it) }
+        return messages.count { rule0.matchRegex(it) }
     }
 
     fun solve2(input: String): Int {
-        TODO()
+        val (rules, messages) = Input.parse(input)
+
+        val rulesById = rules.map { it.id to it }.toMap().toMutableMap()
+        //        8: 42 | 42 8
+        //        11: 42 31 | 42 11 31
+        rulesById[8] = Rule.SubRule(8, listOf(listOf(42), listOf(42, 888)))
+        rulesById[11] = Rule.SubRule(11, listOf(listOf(42, 31), listOf(42, 999, 31)))
+        rulesById[888] = Rule.FixedRule(888, "K")
+        rulesById[999] = Rule.FixedRule(999, "L")
+
+        val evaluatedRules = mutableMapOf<Int, EvaluatedRule>()
+        val rule0 = evaluateRule(rulesById[0] ?: error(""), evaluatedRules, rulesById)
+
+        var baseRegex = rule0.regexPattern
+
+        val repeatK = evaluatedRules[8]?.let { it.regexPattern } ?: error("")
+        val repeatL = evaluatedRules[11]?.let { it.regexPattern } ?: error("")
+
+        var count = 0
+        var prevCount = -1
+        var regexPattern = ""
+        var i = 0
+        while (count != prevCount) {
+            prevCount = count
+            regexPattern = baseRegex.replace("L", "").replace("K", "K")
+            val regex = regexPattern.toRegex()
+            count = messages.count { it.matches(regex) }
+
+            baseRegex = baseRegex.replace("K", repeatK).replace("L", repeatL)
+            i++
+        }
+        println("Stopped after $i iterations")
+        return count
     }
 
     sealed class Rule {
@@ -22,47 +54,43 @@ object Day19 {
         data class SubRule(override val id: Int, val subRules: List<List<Int>>) : Rule()
     }
 
-    data class EvaluatedRule(val id: Int, val patterns: List<String>) {
-        val patternsSet by lazy {
-            patterns.toSet()
+    data class EvaluatedRule(val id: Int, val regexPattern: String = "") {
+
+        val pattern by lazy {
+            regexPattern.toRegex()
         }
+
+        fun matchRegex(message: String) = message.matches(pattern)
     }
 
 
-    private fun evaluateRule(rule: Rule, evaluatedRules: MutableMap<Int, EvaluatedRule>, rulesById: Map<Int, Rule>): EvaluatedRule {
+    fun evaluateRule(rule: Rule, evaluatedRules: MutableMap<Int, EvaluatedRule>, rulesById: Map<Int, Rule>): EvaluatedRule {
         val cached = evaluatedRules[rule.id]
         if (cached != null) {
             return cached
         }
         val evaluated = when (rule) {
             is Rule.FixedRule -> {
-                EvaluatedRule(rule.id, listOf(rule.r))
+                EvaluatedRule(rule.id, rule.r)
             }
             is Rule.SubRule -> {
                 val subRules = rule.subRules.map { ruleIds ->
                     ruleIds.map {
-                        val subRule = rulesById[it] ?: error("Could not find rule id $it")
-                        evaluateRule(subRule, evaluatedRules, rulesById)
+                        val cached = evaluatedRules[it]
+                        if (cached == null) {
+                            val subRule = rulesById[it] ?: error("Could not find rule id $it")
+                            evaluateRule(subRule, evaluatedRules, rulesById)
+                        } else {
+                            cached
+                        }
                     }
                 }
-                val patterns = subRules.flatMap { allPatterns(subRules = it).toList() }
-                EvaluatedRule(rule.id, patterns)
+                val regexPattern = subRules.joinToString(prefix = "(", postfix = ")", separator = "|") { rule -> rule.joinToString(prefix = "", postfix = "", separator = "") { it.regexPattern } }
+                EvaluatedRule(rule.id, regexPattern)
             }
         }
         evaluatedRules[evaluated.id] = evaluated
         return evaluated
-    }
-
-    fun allPatterns(prefix: String = "", subRules: List<EvaluatedRule>): Sequence<String> = sequence {
-        if (subRules.isEmpty()) {
-            yield(prefix)
-        } else {
-            val rule = subRules.first()
-            rule.patterns.forEach { pattern ->
-                yieldAll(allPatterns(prefix + pattern, subRules.drop(1)))
-            }
-
-        }
     }
 
     data class Input(val rules: List<Rule>, val messages: List<String>) {
