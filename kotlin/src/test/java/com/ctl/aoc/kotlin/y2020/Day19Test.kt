@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2020
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timedMs
 import org.junit.jupiter.api.Test
 
 internal class Day19Test {
@@ -70,15 +71,28 @@ aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"""
 
 
     @Test
+    internal fun name() {
+        val l1 = listOf(1, 2, 3)
+        val l2 = listOf(4, 5, 6)
+
+        println(l2 + l1.drop(1))
+    }
+
+    @Test
     fun solve1() {
-        println(Day19.solve1(example))
-        println(Day19.solve1(puzzleInput))
+        println(timedMs { Day19.solve1(example) })
+        println(timedMs { Day19.solve1(puzzleInput) })
+
+        println(timedMs { Day19.solve1Bis(example) })
+        println(timedMs { Day19.solve1Bis(puzzleInput) })
     }
 
 
     @Test
     fun solve2() {
-//        println(Day19.solve2(bigExample))
-        println(Day19.solve2(puzzleInput))
+        println("Solving with regex")
+        println(timedMs { Day19.solve2(puzzleInput) })
+        println("Solving with recursion")
+        println(timedMs { Day19.solve2Bis(puzzleInput) })
     }
 }

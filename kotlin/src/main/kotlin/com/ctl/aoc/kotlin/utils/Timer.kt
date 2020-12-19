@@ -7,9 +7,9 @@ fun <T> timedNanos(f: () -> T): Pair<Double, T>{
     return (end - start) / 1000.0 to r
 }
 
-fun <T> timedMs(f: () -> T): Pair<Long, T>{
+fun <T> timedMs(f: () -> T): Pair<String, T>{
     val start = System.currentTimeMillis()
     val r = f()
     val end = System.currentTimeMillis()
-    return (end - start) to r
+    return "${ end - start }ms" to r
 }

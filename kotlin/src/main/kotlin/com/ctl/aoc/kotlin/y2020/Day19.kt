@@ -11,12 +11,29 @@ object Day19 {
         return messages.count { rule0.matchRegex(it) }
     }
 
+    fun solve1Bis(input: String): Int {
+        val (rules, messages) = Input.parse(input)
+
+        val rulesById = rules.map { it.id to it }.toMap()
+
+        return messages.count { isMatch(it, listOf(rulesById.getValue(0)), rulesById) }
+    }
+
+    fun solve2Bis(input: String): Int {
+        val (rules, messages) = Input.parse(input)
+
+        val rulesById = rules.map { it.id to it }.toMap() +
+                listOf(8 to Rule.SubRule(8, listOf(listOf(42), listOf(42, 8))), 11 to Rule.SubRule(11, listOf(listOf(42, 31), listOf(42, 11, 31)))).toMap()
+
+        return messages.count { isMatch(it, listOf(rulesById.getValue(0)), rulesById) }
+    }
+
     fun solve2(input: String): Int {
         val (rules, messages) = Input.parse(input)
 
         val rulesById = rules.map { it.id to it }.toMap().toMutableMap()
-        //        8: 42 | 42 8
-        //        11: 42 31 | 42 11 31
+        //8: 42 | 42 8
+        //11: 42 31 | 42 11 31
         rulesById[8] = Rule.SubRule(8, listOf(listOf(42), listOf(42, 888)))
         rulesById[11] = Rule.SubRule(11, listOf(listOf(42, 31), listOf(42, 999, 31)))
         rulesById[888] = Rule.FixedRule(888, "K")
@@ -45,6 +62,31 @@ object Day19 {
         }
         println("Stopped after $i iterations")
         return count
+    }
+
+    fun isMatch(message: String, rules: List<Rule>, rulesById: Map<Int, Rule>): Boolean {
+        return when {
+            message.isEmpty() -> {
+                rules.isEmpty()
+            }
+            rules.isEmpty() -> {
+                false
+            }
+            else -> {
+                return when (val firstRule = rules.first()) {
+                    is Rule.FixedRule -> {
+                        if (message.startsWith(firstRule.r)) {
+                            isMatch(message.drop(1), rules.drop(1), rulesById)
+                        } else {
+                            false
+                        }
+                    }
+                    is Rule.SubRule -> firstRule.subRules.any { subRule ->
+                        isMatch(message, subRule.map { rulesById.getValue(it) } + rules.drop(1), rulesById)
+                    }
+                }
+            }
+        }
     }
 
     sealed class Rule {
