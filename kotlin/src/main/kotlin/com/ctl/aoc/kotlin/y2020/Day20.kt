@@ -2,19 +2,29 @@ package com.ctl.aoc.kotlin.y2020
 
 import com.ctl.aoc.kotlin.utils.Matrix22
 import com.ctl.aoc.kotlin.utils.Position
+import com.ctl.aoc.kotlin.utils.frequency
 import kotlin.math.sqrt
 
 
 object Day20 {
 
-    fun solve1(input: String): Int {
+    fun solve1(input: String): Long {
         val tiles = input.split("\n\n").map { Tile.parse(it) }
         println(tiles.size)
         val n = sqrt(tiles.size.toDouble()).toInt()
         println("n: $n")
-        val grid = generateAllGrids(currentGrid = Grid(listOf(), n), allTiles = tiles.toSet(), size = n).firstOrNull()
-        println(grid)
-        return 0
+//        val grid = generateAllGrids(currentGrid = Grid(listOf(), n), allTiles = tiles.toSet(), size = n).firstOrNull()
+//        println(grid)
+
+        val borders = mutableListOf<List<Boolean>>()
+        tiles.forEach {
+            borders.addAll(it.allBorders())
+        }
+        val freq = borders.toList().frequency()
+        return tiles.map { tile ->
+            tile.id to tile.allBorders().count { freq[it] == 1 }
+        }.filter { it.second == 4 }
+                .map { it.first }.fold(1L) { acc, i -> acc * i }
     }
 
     fun generateAllGrids(currentGrid: Grid, allTiles: Set<Tile>, size: Int): Sequence<Grid> = sequence {
@@ -44,9 +54,15 @@ object Day20 {
             val x = i % n
             val y = i / n
 //            val c1 = { getOrNull(x + 1, y)?.let { it.leftBorder == tile.rightBorder } ?: true }
-            val c2 = { getOrNull(x - 1, y)?.let { it.rightBorder == tile.leftBorder } ?: true }
+            val c2 = {
+                getOrNull(x - 1, y)?.let { it.rightBorder == tile.leftBorder || it.rightBorder.reversed() == tile.leftBorder }
+                        ?: true
+            }
 //            val c3 = { getOrNull(x, y + 1)?.let { it.topBorder == tile.bottomBorder } ?: true }
-            val c4 = { getOrNull(x, y - 1)?.let { it.bottomBorder == tile.topBorder } ?: true }
+            val c4 = {
+                getOrNull(x, y - 1)?.let { it.bottomBorder == tile.topBorder || it.bottomBorder.reversed() == tile.topBorder }
+                        ?: true
+            }
             return c2() && c4()
         }
 
@@ -92,6 +108,20 @@ object Day20 {
 
         val rightBorder: List<Boolean> by lazy {
             yRange.map { y -> hasPixel(xRange.last, y) }
+        }
+
+
+        fun allBorders(): List<List<Boolean>> {
+            val borders = mutableListOf<List<Boolean>>()
+            borders.add(this.topBorder)
+            borders.add(this.topBorder.reversed())
+            borders.add(this.rightBorder)
+            borders.add(this.rightBorder.reversed())
+            borders.add(this.bottomBorder)
+            borders.add(this.bottomBorder.reversed())
+            borders.add(this.leftBorder)
+            borders.add(this.leftBorder.reversed())
+            return borders
         }
 
         fun hasPixel(x: Int, y: Int) = pixels.contains(Position(x, y))
