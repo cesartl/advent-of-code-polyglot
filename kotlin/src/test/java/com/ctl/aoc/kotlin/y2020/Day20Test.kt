@@ -5,15 +5,40 @@ import org.junit.jupiter.api.Test
 
 internal class Day20Test {
 
-    val puzzleInput = InputUtils.getLines(2020, 20)
+    val puzzleInput = InputUtils.getString(2020, 20)
+    val example = InputUtils.getString("2020", "day20-example.txt")
+
+    val tileExample = """Tile 2311:
+..##.#..#.
+##..#.....
+#...##..#.
+####.#...#
+##.##.###.
+##...#.###
+.#.#.#..##
+..#....#..
+###...#.#.
+..###..###"""
+
+    @Test
+    internal fun tile() {
+        val tile = Day20.Tile.parse(tileExample)
+        val variations = tile.allVariations()
+        println(variations.count())
+        println(variations.toSet().size)
+        variations.map { it.topBorder }.forEach {
+            println(it)
+        }
+    }
 
     @Test
     fun solve1() {
-        Day20.solve1(puzzleInput)
+        println(Day20.solve1(example))
+        println(Day20.solve1(puzzleInput))
     }
 
     @Test
     fun solve2() {
-        Day20.solve2(puzzleInput)
+        println(Day20.solve2(puzzleInput))
     }
 }
