@@ -20,15 +20,24 @@ internal class Day20Test {
 ###...#.#.
 ..###..###"""
 
+    val tileExample2 = """Tile 999:
+..#
+..#
+#.#"""
+
     @Test
     internal fun tile() {
-        val tile = Day20.Tile.parse(tileExample)
+        val tile0 = Day20.Tile.parse(tileExample)
+        tile0.normalise().print()
+        val tile = Day20.Tile.parse(tileExample2)
         val variations = tile.allVariations()
-        println(variations.count())
-        println(variations.toSet().size)
-        variations.map { it.topBorder }.forEach {
-            println(it)
-        }
+        tile.normalise().print()
+        tile.flipV().normalise().print()
+        tile.flipH().normalise().print()
+//        tile.removeBorders().print()
+//        tile.rotate90().normalise().print()
+//        tile.rotate180().normalise().print()
+//        tile.rotate270().normalise().print()
     }
 
     @Test
@@ -38,7 +47,15 @@ internal class Day20Test {
     }
 
     @Test
+    internal fun name() {
+        (0 until 3).forEach {
+            println(it)
+        }
+    }
+
+    @Test
     fun solve2() {
+        println(Day20.solve2(example))
         println(Day20.solve2(puzzleInput))
     }
 }

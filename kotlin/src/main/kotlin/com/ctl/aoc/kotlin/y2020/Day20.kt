@@ -13,77 +13,109 @@ object Day20 {
         println(tiles.size)
         val n = sqrt(tiles.size.toDouble()).toInt()
         println("n: $n")
-//        val grid = generateAllGrids(currentGrid = Grid(listOf(), n), allTiles = tiles.toSet(), size = n).firstOrNull()
-//        println(grid)
 
         val borders = mutableListOf<List<Boolean>>()
         tiles.forEach {
             borders.addAll(it.allBorders())
         }
         val freq = borders.toList().frequency()
-        return tiles.map { tile ->
+        val corners = tiles.map { tile ->
             tile.id to tile.allBorders().count { freq[it] == 1 }
-        }.filter { it.second == 4 }
-                .map { it.first }.fold(1L) { acc, i -> acc * i }
+        }.filter { it.second == 4 }.map { it.first }
+        println("Corners: $corners")
+        return corners.fold(1L) { acc, i -> acc * i }
     }
 
-    fun generateAllGrids(currentGrid: Grid, allTiles: Set<Tile>, size: Int): Sequence<Grid> = sequence {
-        if (allTiles.isEmpty()) {
-            yield(currentGrid)
-        } else {
-            allTiles.forEach { tile ->
-                val nextTiles = allTiles - tile
-                tile.allVariations().forEach { variation ->
-                    if (currentGrid.canAdd(variation)) {
-                        yieldAll(generateAllGrids(currentGrid.copy(tiles = currentGrid.tiles + variation), nextTiles, size))
-                    }
-                }
+    fun solve2(input: String): Int {
+        val tiles = input.split("\n\n").map { Tile.parse(it) }
+        val n = sqrt(tiles.size.toDouble()).toInt()
+
+        val tilesByBorder = mutableMapOf<List<Boolean>, MutableList<Tile>>()
+        tiles.forEach { tile ->
+            tile.allBorders().forEach { border ->
+                tilesByBorder.computeIfAbsent(border) { mutableListOf() }.add(tile)
             }
+        }
+        val corners = tiles.filter { tile ->
+            tile.allBorders().filter { (tilesByBorder[it] ?: mutableListOf()).size == 1 }.count() == 4
+        }
+        println("Corners: ${corners.map { it.id }}")
+
+        val tilesSearch = TilesSearch(tilesByBorder)
+        val grid = corners.asSequence()
+                .flatMap { it.allVariations() }
+                .mapNotNull { buildGrid(it, tilesSearch, n) }
+//                .filter { it.corners().map { it.id }.sorted() == corners.map { it.id }.sorted() }
+                .firstOrNull() ?: error("not found")
+
+        println(grid.corners().map { it.id })
+        println(grid.corners().map { it.id }.fold(1L) { acc, i -> acc * i })
+//        grid.tiles.forEach { it.removeBorders().print() }
+        val merged = grid.merge()
+        merged.print()
+
+
+        val (finalTile, positions) = merged.allVariations()
+                .map { it to it.findPattern(Tile.seaMonsterPositions) }
+                .find { (tile, positions) -> positions.isNotEmpty() }
+                ?: error("not found")
+
+        val seaMonsters = positions.flatMap { (xOffset, yOffset) ->
+            Tile.seaMonsterPositions.map { (x, y) -> Position(x + xOffset, y + yOffset) }
+        }
+        println("Sea monsters: $positions")
+        return (finalTile.pixels - seaMonsters).size
+    }
+
+    fun buildGrid(start: Tile, tilesSearch: TilesSearch, n: Int): Grid? {
+        val currentGrid = Grid(mutableListOf(), n)
+        var current = start
+        var firstInRow: Tile
+        (0 until n).forEach { k ->
+            firstInRow = current
+            currentGrid.tiles.add(firstInRow)
+            (0 until n - 1).forEach { _ ->
+                val matchingTile = tilesSearch.findMatch(current, { it.rightBorder }, { it.leftBorder })
+                        ?: return null
+                val tile = matchingTile.allVariations().find { it.leftBorder == current.rightBorder }
+                        ?: error("Could not rotate tile to match")
+                currentGrid.tiles.add(tile)
+                current = tile
+            }
+            if (k < n - 1) {
+                val matchingNextRow = tilesSearch.findMatch(firstInRow, { it.bottomBorder }, { it.topBorder })
+                        ?: return null
+                current = matchingNextRow.allVariations().find { it.topBorder == matchingNextRow.bottomBorder }
+                        ?: error("Could not rotate tile to match")
+            }
+        }
+        return currentGrid
+    }
+
+    data class TilesSearch(val tilesByBorder: Map<List<Boolean>, List<Tile>>) {
+        fun findMatch(tile: Tile, from: (Tile) -> List<Boolean>, to: (Tile) -> List<Boolean>): Tile? {
+            val fromBorder = from(tile)
+            return listOf(fromBorder, fromBorder.reversed())
+                    .mapNotNull { border -> tilesByBorder[border]?.let { tiles -> tiles.firstOrNull { it.id != tile.id } } }
+                    .filter { to(it) == fromBorder }
+                    .firstOrNull()
         }
     }
 
-    data class Grid(val tiles: List<Tile>, val n: Int) {
-
-        fun isValid(): Boolean {
-            return allRowsValid() && allColumnsValid()
+    data class Grid(val tiles: MutableList<Tile>, val n: Int) {
+        fun merge(): Tile {
+            val k = 8
+            val mergedPixels = tiles.mapIndexed { index, tile ->
+                val xOffset = (index % n) * k
+                val yOffset = (n - 1 - index / n) * k
+                tile.removeBorders().pixels.map { (x, y) -> Position(x + xOffset, y + yOffset) }
+            }.flatten().toSet()
+            return Tile(0, mergedPixels)
         }
 
-        fun canAdd(tile: Tile): Boolean {
-            val i = tiles.size
-//            println("i $i")
-            val x = i % n
-            val y = i / n
-//            val c1 = { getOrNull(x + 1, y)?.let { it.leftBorder == tile.rightBorder } ?: true }
-            val c2 = {
-                getOrNull(x - 1, y)?.let { it.rightBorder == tile.leftBorder || it.rightBorder.reversed() == tile.leftBorder }
-                        ?: true
-            }
-//            val c3 = { getOrNull(x, y + 1)?.let { it.topBorder == tile.bottomBorder } ?: true }
-            val c4 = {
-                getOrNull(x, y - 1)?.let { it.bottomBorder == tile.topBorder || it.bottomBorder.reversed() == tile.topBorder }
-                        ?: true
-            }
-            return c2() && c4()
-        }
-
-        private fun allRowsValid() = (0 until n).all { isRowValid(it) }
-        private fun allColumnsValid() = (0 until n).all { isColumnValid(it) }
-
-        private fun isRowValid(y: Int): Boolean {
-            return (0 until n - 1).all { x -> get(x, y).rightBorder == get(x + 1, y).leftBorder }
-        }
-
-        private fun isColumnValid(x: Int): Boolean {
-            return (0 until n - 1).all { y -> get(x, y).bottomBorder == get(x, y + 1).topBorder }
-        }
-
-        private fun getOrNull(x: Int, y: Int): Tile? {
-            return tiles.getOrNull(x + n * y)
-        }
-
-        private fun get(x: Int, y: Int): Tile {
-            return tiles[x + n * y]
-        }
+        fun corners(): List<Tile> = listOf(
+                tiles[0], tiles[n - 1], tiles[n * n - n], tiles[n * n - 1]
+        )
     }
 
     data class Tile(val id: Long, val pixels: Set<Position>) {
@@ -108,6 +140,28 @@ object Day20 {
 
         val rightBorder: List<Boolean> by lazy {
             yRange.map { y -> hasPixel(xRange.last, y) }
+        }
+
+        fun normalise(): Tile {
+            var xOffset = 0
+            val delta = xRange.last - xRange.first
+            xOffset += (-xRange.first).coerceAtLeast(0)
+            xOffset -= (delta - xRange.last).coerceAtMost(0)
+
+            var yOffset = 0
+            yOffset += (-yRange.first).coerceAtLeast(0)
+            yOffset -= (delta - yRange.last).coerceAtMost(0)
+            return this.copy(pixels = pixels.map { (x, y) -> Position(x + xOffset, y + yOffset) }.toSet())
+        }
+
+        fun removeBorders(): Tile {
+            return this.copy(pixels = pixels.mapNotNull { (x, y) ->
+                if (x == xRange.first || x == xRange.last || y == yRange.first || y == yRange.last) {
+                    null
+                } else {
+                    Position(x - 1, y - 1)
+                }
+            }.toSet())
         }
 
 
@@ -154,6 +208,19 @@ object Day20 {
             val flipH = flipH()
             yield(flipH.rotate90())
             yield(flipH.rotate180())
+        }.map { it.normalise() }
+
+        fun findPattern(positions: Set<Position>): Set<Position> {
+            val found = mutableSetOf<Position>()
+            (yRange).reversed().forEach { yOffset ->
+                (xRange).forEach { xOffset ->
+                    val ps = positions.map { (x, y) -> Position(x + xOffset, y + yOffset) }
+                    if (pixels.containsAll(ps)) {
+                        found.add(Position(xOffset, yOffset))
+                    }
+                }
+            }
+            return found
         }
 
         fun print() {
@@ -173,23 +240,30 @@ object Day20 {
 
         companion object {
             private val idRegex = """Tile ([\d]+):""".toRegex()
+
+            val pattern = """                  # 
+#    ##    ##    ###
+ #  #  #  #  #  #"""
+
+            val seaMonsterPositions = parsePixels(pattern.split("\n"))
+
             fun parse(s: String): Tile {
                 val lines = s.split("\n")
                 val id = idRegex.matchEntire(lines[0])?.let { it.groupValues[1].toLong() } ?: error(lines[0])
+                return Tile(id, parsePixels(lines))
+            }
+
+            fun parsePixels(lines: List<String>): Set<Position> {
                 val pixels = mutableSetOf<Position>()
-                lines.drop(1).forEachIndexed { y, line ->
+                lines.forEachIndexed { y, line ->
                     line.forEachIndexed { x, c ->
                         if (c == '#') {
-                            pixels.add(Position(x, 9 - y))
+                            pixels.add(Position(x, lines.size - 1 - y))
                         }
                     }
                 }
-                return Tile(id, pixels)
+                return pixels
             }
         }
-    }
-
-    fun solve2(input: String): Int {
-        TODO()
     }
 }
