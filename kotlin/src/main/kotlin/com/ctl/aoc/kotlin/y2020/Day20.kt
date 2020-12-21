@@ -57,7 +57,8 @@ object Day20 {
                 .find { (tile, positions) -> positions.isNotEmpty() }
                 ?: error("not found")
         val seaMonsters = positions.flatMap { (xOffset, yOffset) ->
-            Tile.seaMonsterPositions.map { (x, y) -> Position(x + xOffset, y + yOffset) }
+            val offset = Position(xOffset, yOffset)
+            Tile.seaMonsterPositions.map { it + offset }
         }
         println("Sea monsters: $positions")
         merged.print(seaMonsters.toSet())
@@ -165,7 +166,9 @@ object Day20 {
             var yOffset = 0
             yOffset += (-yRange.first).coerceAtLeast(0)
             yOffset -= (delta - yRange.last).coerceAtMost(0)
-            return this.copy(pixels = pixels.map { (x, y) -> Position(x + xOffset, y + yOffset) }.toSet())
+
+            val offset = Position(xOffset, yOffset)
+            return this.copy(pixels = pixels.map { it + offset }.toSet())
         }
 
         fun removeBorders(): Tile {
@@ -227,7 +230,8 @@ object Day20 {
             val found = mutableSetOf<Position>()
             (yRange).reversed().forEach { yOffset ->
                 (xRange).forEach { xOffset ->
-                    val ps = positions.asSequence().map { (x, y) -> Position(x + xOffset, y + yOffset) }
+                    val offset = Position(xOffset, yOffset)
+                    val ps = positions.asSequence().map { it + offset }
                     if (ps.all { pixels.contains(it) }) {
                         found.add(Position(xOffset, yOffset))
                     }
