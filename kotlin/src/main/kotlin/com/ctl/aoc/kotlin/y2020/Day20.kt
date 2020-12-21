@@ -3,6 +3,7 @@ package com.ctl.aoc.kotlin.y2020
 import com.ctl.aoc.kotlin.utils.Matrix22
 import com.ctl.aoc.kotlin.utils.Position
 import com.ctl.aoc.kotlin.utils.frequency
+import com.ctl.aoc.kotlin.utils.timedMs
 import kotlin.math.sqrt
 
 
@@ -10,9 +11,6 @@ object Day20 {
 
     fun solve1(input: String): Long {
         val tiles = input.split("\n\n").map { Tile.parse(it) }
-        println(tiles.size)
-        val n = sqrt(tiles.size.toDouble()).toInt()
-        println("n: $n")
 
         val borders = mutableListOf<List<Boolean>>()
         tiles.forEach {
@@ -34,7 +32,6 @@ object Day20 {
         tiles.forEach { tile ->
             tile.allBorders().forEach { border ->
                 tilesByBorder.computeIfAbsent(border) { mutableListOf() }.add(tile)
-                tilesByBorder.computeIfAbsent(border.reversed()) { mutableListOf() }.add(tile)
             }
         }
         val corners = tiles.filter { tile ->
@@ -52,16 +49,20 @@ object Day20 {
         println(grid.corners().map { it.id })
         println(grid.corners().map { it.id }.fold(1L) { acc, i -> acc * i })
         val merged = grid.merge()
-        merged.print()
+//        merged.print()
         val (finalTile, positions) = merged.allVariations()
-                .map { it to it.findPattern(Tile.seaMonsterPositions) }
+                .map {
+                    val (time, positions) = timedMs { it.findPattern(Tile.seaMonsterPositions) }
+                    println("Found sea monsters in $time")
+                    it to positions
+                }
                 .find { (tile, positions) -> positions.isNotEmpty() }
                 ?: error("not found")
-
         val seaMonsters = positions.flatMap { (xOffset, yOffset) ->
             Tile.seaMonsterPositions.map { (x, y) -> Position(x + xOffset, y + yOffset) }
         }
         println("Sea monsters: $positions")
+        merged.print(seaMonsters.toSet())
         return (finalTile.pixels - seaMonsters).size
     }
 
@@ -244,8 +245,8 @@ object Day20 {
             val found = mutableSetOf<Position>()
             (yRange).reversed().forEach { yOffset ->
                 (xRange).forEach { xOffset ->
-                    val ps = positions.map { (x, y) -> Position(x + xOffset, y + yOffset) }
-                    if (pixels.containsAll(ps)) {
+                    val ps = positions.asSequence().map { (x, y) -> Position(x + xOffset, y + yOffset) }
+                    if (ps.all { pixels.contains(it) }) {
                         found.add(Position(xOffset, yOffset))
                     }
                 }
@@ -253,14 +254,20 @@ object Day20 {
             return found
         }
 
-        fun print() {
+        fun print(specialPositions: Set<Position> = setOf()) {
             println("x:$xRange y:$yRange")
             (yRange).reversed().forEach { y ->
                 (xRange).forEach { x ->
-                    if (hasPixel(x, y)) {
-                        print('#')
-                    } else {
-                        print('.')
+                    when {
+                        specialPositions.contains(Position(x, y)) -> {
+                            print('O')
+                        }
+                        hasPixel(x, y) -> {
+                            print('#')
+                        }
+                        else -> {
+                            print('.')
+                        }
                     }
                 }
                 println()
