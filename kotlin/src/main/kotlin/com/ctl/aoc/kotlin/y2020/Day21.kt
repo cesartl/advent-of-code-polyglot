@@ -4,6 +4,50 @@ object Day21 {
 
     fun solve1(input: Sequence<String>): Int {
         val inputs = input.map { Input.parse(it) }.toList()
+        val noAllergen = findNoAllergen(inputs)
+        return inputs.map { (ingredients, _) -> ingredients.count { ingredient -> noAllergen.contains(ingredient) } }.sum()
+    }
+
+    fun solve2(input: Sequence<String>): String {
+        val inputs = input.map { Input.parse(it) }.toList()
+        val noAllergen = findNoAllergen(inputs).toSet()
+        val validIngredients = inputs.flatMap { it.ingredients }.filter { !noAllergen.contains(it) }.toSet()
+        val allergens = inputs.flatMap { it.allergens }.toSet()
+        var assignments = allCombinations(validIngredients, allergens).filter { it.isValid(inputs) }.toList()
+
+        val finalAssignments = mutableMapOf<String, String>()
+        while (finalAssignments.size < validIngredients.size) {
+            val byIngredients = assignments.groupBy { it.ingredient }
+            byIngredients.filterValues { it.size == 1 }.forEach { (ingredient, allergens) ->
+                finalAssignments[ingredient] = allergens.first().allergen
+            }
+            assignments = assignments.filter { !finalAssignments.contains(it.ingredient) && !finalAssignments.containsValue(it.allergen) }
+        }
+        println(finalAssignments)
+        return finalAssignments.toList().sortedBy { it.second }.map { it.first }.joinToString(",")
+    }
+
+    data class Assignment(val ingredient: String, val allergen: String) {
+        fun isValid(inputs: List<Input>): Boolean {
+            return inputs.all { (ingredients, allergens) ->
+                if (allergens.contains(allergen)) {
+                    ingredients.contains(ingredient)
+                } else {
+                    true
+                }
+            }
+        }
+    }
+
+    private fun allCombinations(validIngredients: Set<String>, allergens: Set<String>): Sequence<Assignment> = sequence {
+        validIngredients.forEach { ingredient ->
+            allergens.forEach { allergen ->
+                yield(Assignment(ingredient, allergen))
+            }
+        }
+    }
+
+    private fun findNoAllergen(inputs: List<Input>): List<String> {
         val ingredientToAllergens: MutableMap<String, MutableSet<String>> = mutableMapOf()
         val allergenToInput: MutableMap<String, MutableList<Input>> = mutableMapOf()
         inputs.forEach { input ->
@@ -15,74 +59,70 @@ object Day21 {
                 ingredientToAllergens.computeIfAbsent(ingredient) { mutableSetOf() }.addAll(allergens)
             }
         }
-        val noAllergen = ingredientToAllergens.keys.filter { ingredient ->
+        return ingredientToAllergens.keys.filter { ingredient ->
             !(ingredientToAllergens[ingredient] ?: mutableSetOf()).any { allergen ->
                 (allergenToInput[allergen] ?: mutableListOf()).all { input -> input.ingredients.contains(ingredient) }
             }
         }
-        return inputs.map { (ingredients, _) -> ingredients.count { ingredient -> noAllergen.contains(ingredient) } }.sum()
-    }
-
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
     }
 
 
-    data class IngredientSearch(val ingredients: List<Ingredient>) {
-        fun isKnownAllergen(allergen: String): Boolean {
-            return ingredients.filterIsInstance(Ingredient.KnownAllergen::class.java).any { it.allergen == allergen }
-        }
+    data class AllergenSearch(val allergens: List<Allergen>) {
+        fun isIngredientAllowed(ingredient: String) = allergens.none { it is Allergen.KnownIngredient && it.ingredient == ingredient }
     }
 
-    tailrec fun IngredientSearch.search(): IngredientSearch {
-        val newIngredients = ingredients.map { ingredient ->
-            when (ingredient) {
-                is Ingredient.UnKnownAllergen -> ingredient.copy(allergens = ingredient.allergens.filter { !isKnownAllergen(it) })
-                else -> ingredient
+    tailrec fun AllergenSearch.search(): AllergenSearch {
+        val newAllergens = allergens.map { allergen ->
+            when (allergen) {
+                is Allergen.UnKnownIngredient -> allergen.copy(ingredients = allergen.ingredients.filter { isIngredientAllowed(it) })
+                is Allergen.KnownIngredient -> allergen
             }
-        }.map { ingredient ->
-            when (ingredient) {
-                is Ingredient.UnKnownAllergen -> {
-                    when (ingredient.allergens.size) {
-                        0 -> Ingredient.NoAllergen(ingredient.name)
-                        1 -> Ingredient.KnownAllergen(ingredient.name, ingredient.allergens.first())
-                        else -> ingredient
-                    }
-                }
-                else -> ingredient
+        }.map { allergen ->
+            when (allergen) {
+                is Allergen.UnKnownIngredient -> if (allergen.ingredients.size == 1) Allergen.KnownIngredient(allergen.name, allergen.ingredients.first()) else allergen
+                is Allergen.KnownIngredient -> allergen
             }
         }
-        return if (newIngredients == ingredients) {
+        return if (allergens == newAllergens) {
             return this
         } else {
-            IngredientSearch(newIngredients).search()
+            AllergenSearch(newAllergens).search()
         }
     }
 
-    sealed class Ingredient {
+    sealed class Allergen {
         abstract val name: String
 
-        data class KnownAllergen(override val name: String, val allergen: String) : Ingredient()
-        data class UnKnownAllergen(override val name: String, val allergens: List<String>) : Ingredient()
-        data class NoAllergen(override val name: String) : Ingredient()
+        data class KnownIngredient(override val name: String, val ingredient: String) : Allergen()
+        data class UnKnownIngredient(override val name: String, val ingredients: List<String>) : Allergen()
 
         companion object {
-            fun build(inputs: List<Input>): List<Ingredient> {
-                val result = mutableListOf<Ingredient>()
-                val ingredientMap = mutableMapOf<String, MutableList<String>>()
+            fun build(inputs: List<Input>, noAllergen: Set<String>): List<Allergen> {
+                val allergenMap = mutableMapOf<String, MutableSet<String>>()
                 inputs.forEach { (ingredients, allergens) ->
-                    ingredients.forEach { ingredient ->
-                        ingredientMap.computeIfAbsent(ingredient) { mutableListOf() }.addAll(allergens)
+                    allergens.forEach { allergen ->
+                        allergenMap.computeIfAbsent(allergen) { mutableSetOf() }.addAll(ingredients.filter { !noAllergen.contains(it) })
                     }
                 }
-                return ingredientMap.map { entry ->
-                    UnKnownAllergen(entry.key, entry.value)
+                return allergenMap.map { entry ->
+                    UnKnownIngredient(entry.key, entry.value.toList())
                 }
+            }
+        }
+    }
+
+    fun isAssignmentValid(inputs: List<Input>, ingredient: String, allergen: String): Boolean {
+        return inputs.all { (ingredients, allergens) ->
+            if (allergens.contains(allergen)) {
+                ingredients.contains(ingredient)
+            } else {
+                true
             }
         }
     }
 
     data class Input(val ingredients: List<String>, val allergens: List<String>) {
+
         companion object {
             val containsRegex = """\(contains ([\w ,]+)\)""".toRegex()
             fun parse(line: String): Input {

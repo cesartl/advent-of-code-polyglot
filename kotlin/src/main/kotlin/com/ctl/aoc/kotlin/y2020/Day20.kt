@@ -34,27 +34,25 @@ object Day20 {
         tiles.forEach { tile ->
             tile.allBorders().forEach { border ->
                 tilesByBorder.computeIfAbsent(border) { mutableListOf() }.add(tile)
+                tilesByBorder.computeIfAbsent(border.reversed()) { mutableListOf() }.add(tile)
             }
         }
         val corners = tiles.filter { tile ->
-            tile.allBorders().filter { (tilesByBorder[it] ?: mutableListOf()).size == 1 }.count() == 4
+            tile.allBorders().filter { (tilesByBorder[it] ?: mutableListOf()).size == 2 }.count() == 4
         }
         println("Corners: ${corners.map { it.id }}")
 
         val tilesSearch = TilesSearch(tilesByBorder)
+
         val grid = corners.asSequence()
                 .flatMap { it.allVariations() }
                 .mapNotNull { buildGrid(it, tilesSearch, n) }
-//                .filter { it.corners().map { it.id }.sorted() == corners.map { it.id }.sorted() }
                 .firstOrNull() ?: error("not found")
 
         println(grid.corners().map { it.id })
         println(grid.corners().map { it.id }.fold(1L) { acc, i -> acc * i })
-//        grid.tiles.forEach { it.removeBorders().print() }
         val merged = grid.merge()
         merged.print()
-
-
         val (finalTile, positions) = merged.allVariations()
                 .map { it to it.findPattern(Tile.seaMonsterPositions) }
                 .find { (tile, positions) -> positions.isNotEmpty() }
@@ -67,7 +65,7 @@ object Day20 {
         return (finalTile.pixels - seaMonsters).size
     }
 
-    fun buildGrid(start: Tile, tilesSearch: TilesSearch, n: Int): Grid? {
+    private fun buildGrid(start: Tile, tilesSearch: TilesSearch, n: Int): Grid? {
         val currentGrid = Grid(mutableListOf(), n)
         var current = start
         var firstInRow: Tile
@@ -75,30 +73,48 @@ object Day20 {
             firstInRow = current
             currentGrid.tiles.add(firstInRow)
             (0 until n - 1).forEach { _ ->
-                val matchingTile = tilesSearch.findMatch(current, { it.rightBorder }, { it.leftBorder })
+                val matchingTile = tilesSearch.findMatch(current, currentGrid) { it.rightBorder }
                         ?: return null
-                val tile = matchingTile.allVariations().find { it.leftBorder == current.rightBorder }
+                val matches = matchingTile.allVariations().filter { it.leftBorder == current.rightBorder }
+                if (matches.count() > 1) {
+                    error("too many matches: ${matches.count()}")
+                }
+                val tile = matches
+                        .firstOrNull()
                         ?: error("Could not rotate tile to match")
                 currentGrid.tiles.add(tile)
                 current = tile
             }
             if (k < n - 1) {
-                val matchingNextRow = tilesSearch.findMatch(firstInRow, { it.bottomBorder }, { it.topBorder })
+                val matchingNextRow = tilesSearch.findMatch(firstInRow, currentGrid) { it.bottomBorder }
                         ?: return null
-                current = matchingNextRow.allVariations().find { it.topBorder == matchingNextRow.bottomBorder }
+                val matches = matchingNextRow.allVariations()
+                        .filter { it.topBorder == firstInRow.bottomBorder }
+                if (matches.count() > 1) {
+                    error("too many matches: ${matches.count()}")
+                }
+                current = matches
+                        .firstOrNull()
                         ?: error("Could not rotate tile to match")
             }
         }
+        println("Found grid with ${currentGrid.tiles.size}")
         return currentGrid
     }
 
     data class TilesSearch(val tilesByBorder: Map<List<Boolean>, List<Tile>>) {
-        fun findMatch(tile: Tile, from: (Tile) -> List<Boolean>, to: (Tile) -> List<Boolean>): Tile? {
+        fun findMatch(tile: Tile, grid: Grid, from: (Tile) -> List<Boolean>): Tile? {
             val fromBorder = from(tile)
-            return listOf(fromBorder, fromBorder.reversed())
-                    .mapNotNull { border -> tilesByBorder[border]?.let { tiles -> tiles.firstOrNull { it.id != tile.id } } }
-                    .filter { to(it) == fromBorder }
-                    .firstOrNull()
+            val matches = listOf(fromBorder, fromBorder.reversed())
+                    .flatMap { border ->
+                        tilesByBorder[border]?.let { tiles -> tiles.filter { it.id != tile.id && !grid.usedTiles().contains(it.id) } }
+                                ?: listOf()
+                    }
+                    .distinct()
+            if (matches.size > 1) {
+                error("too many matches: ${matches.size}")
+            }
+            return matches.firstOrNull()
         }
     }
 
@@ -116,6 +132,20 @@ object Day20 {
         fun corners(): List<Tile> = listOf(
                 tiles[0], tiles[n - 1], tiles[n * n - n], tiles[n * n - 1]
         )
+
+        fun usedTiles(): Set<Long> = tiles.map { it.id }.toSet()
+
+    }
+
+    data class Grid2(val rows: MutableList<MutableList<Tile>>) {
+        fun merge(): Tile {
+            TODO()
+        }
+
+        fun corners(): List<Tile> = listOf()
+
+        fun size() = rows.flatten().size
+
     }
 
     data class Tile(val id: Long, val pixels: Set<Position>) {

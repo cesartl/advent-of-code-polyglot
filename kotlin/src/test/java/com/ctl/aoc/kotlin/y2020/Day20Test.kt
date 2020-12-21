@@ -28,16 +28,12 @@ internal class Day20Test {
     @Test
     internal fun tile() {
         val tile0 = Day20.Tile.parse(tileExample)
-        tile0.normalise().print()
-        val tile = Day20.Tile.parse(tileExample2)
-        val variations = tile.allVariations()
-        tile.normalise().print()
-        tile.flipV().normalise().print()
-        tile.flipH().normalise().print()
-//        tile.removeBorders().print()
-//        tile.rotate90().normalise().print()
-//        tile.rotate180().normalise().print()
-//        tile.rotate270().normalise().print()
+        val tile1 = Day20.Tile.parse(tileExample2)
+        tile1.allVariations().toList().forEach {
+            it.print()
+        }
+
+        tile0.allBorders().toSet()
     }
 
     @Test

@@ -20,6 +20,7 @@ sqjhc mxmxvkd sbzzf (contains fish)""".splitToSequence("\n")
 
     @Test
     fun solve2() {
-        Day21.solve2(puzzleInput)
+        println(Day21.solve2(example))
+        println(Day21.solve2(puzzleInput))
     }
 }
