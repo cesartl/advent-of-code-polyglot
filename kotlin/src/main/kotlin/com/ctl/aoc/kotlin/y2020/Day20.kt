@@ -1,6 +1,5 @@
 package com.ctl.aoc.kotlin.y2020
 
-import com.ctl.aoc.kotlin.utils.Matrix22
 import com.ctl.aoc.kotlin.utils.Position
 import com.ctl.aoc.kotlin.utils.frequency
 import com.ctl.aoc.kotlin.utils.timedMs
@@ -49,7 +48,6 @@ object Day20 {
         println(grid.corners().map { it.id })
         println(grid.corners().map { it.id }.fold(1L) { acc, i -> acc * i })
         val merged = grid.merge()
-//        merged.print()
         val (finalTile, positions) = merged.allVariations()
                 .map {
                     val (time, positions) = timedMs { it.findPattern(Tile.seaMonsterPositions) }
@@ -80,9 +78,7 @@ object Day20 {
                 if (matches.count() > 1) {
                     error("too many matches: ${matches.count()}")
                 }
-                val tile = matches
-                        .firstOrNull()
-                        ?: error("Could not rotate tile to match")
+                val tile = matches.firstOrNull() ?: error("Could not rotate tile to match")
                 currentGrid.tiles.add(tile)
                 current = tile
             }
@@ -94,9 +90,7 @@ object Day20 {
                 if (matches.count() > 1) {
                     error("too many matches: ${matches.count()}")
                 }
-                current = matches
-                        .firstOrNull()
-                        ?: error("Could not rotate tile to match")
+                current = matches.firstOrNull() ?: error("Could not rotate tile to match")
             }
         }
         println("Found grid with ${currentGrid.tiles.size}")
@@ -135,17 +129,6 @@ object Day20 {
         )
 
         fun usedTiles(): Set<Long> = tiles.map { it.id }.toSet()
-
-    }
-
-    data class Grid2(val rows: MutableList<MutableList<Tile>>) {
-        fun merge(): Tile {
-            TODO()
-        }
-
-        fun corners(): List<Tile> = listOf()
-
-        fun size() = rows.flatten().size
 
     }
 
@@ -212,14 +195,13 @@ object Day20 {
         fun hasPixel(x: Int, y: Int) = pixels.contains(Position(x, y))
 
 
-        private fun rotate(matrix22: Matrix22): Tile {
-            val newPixels = pixels.map { matrix22 x it }.map { (x00, x10) -> Position(x00, x10) }.toSet()
+        private fun rotate(r: (Position) -> Position): Tile {
+            val newPixels = pixels.map { r(it) }.toSet()
             return this.copy(pixels = newPixels)
         }
 
-        fun rotate90() = rotate(Matrix22.rotate90)
-        fun rotate180() = rotate(Matrix22.rotate180)
-        fun rotate270() = rotate(Matrix22.rotate270)
+        private fun rotate90() = rotate { it.rotate90() }
+        private fun rotate180() = rotate { it.rotate180() }
 
         fun flipH(): Tile {
             return this.copy(pixels = pixels.map { (x, y) -> Position(x, -y) }.toSet())
@@ -229,7 +211,7 @@ object Day20 {
             return this.copy(pixels = pixels.map { (x, y) -> Position(-x, y) }.toSet())
         }
 
-        fun allRotated(): Sequence<Tile> = generateSequence(this) { it.rotate90() }.take(4)
+        private fun allRotated(): Sequence<Tile> = generateSequence(this) { it.rotate90() }.take(4)
 
         fun allVariations(): Sequence<Tile> = sequence {
             yieldAll(allRotated())
@@ -278,11 +260,11 @@ object Day20 {
         companion object {
             private val idRegex = """Tile ([\d]+):""".toRegex()
 
-            val pattern = """                  # 
+            private const val seaMonsterPattern = """                  # 
 #    ##    ##    ###
  #  #  #  #  #  #"""
 
-            val seaMonsterPositions = parsePixels(pattern.split("\n"))
+            val seaMonsterPositions = parsePixels(seaMonsterPattern.split("\n"))
 
             fun parse(s: String): Tile {
                 val lines = s.split("\n")
@@ -290,7 +272,7 @@ object Day20 {
                 return Tile(id, parsePixels(lines))
             }
 
-            fun parsePixels(lines: List<String>): Set<Position> {
+            private fun parsePixels(lines: List<String>): Set<Position> {
                 val pixels = mutableSetOf<Position>()
                 lines.forEachIndexed { y, line ->
                     line.forEachIndexed { x, c ->

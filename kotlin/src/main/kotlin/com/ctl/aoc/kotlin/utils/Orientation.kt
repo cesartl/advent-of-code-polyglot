@@ -15,6 +15,12 @@ data class Position(val x: Int, val y: Int) {
         return copy(x = x * ratio, y = y * ratio)
     }
 
+    fun rotate90(): Position = rotate(Matrix22.rotate90)
+    fun rotate180(): Position = rotate(Matrix22.rotate180)
+    fun rotate270(): Position = rotate(Matrix22.rotate270)
+
+    private fun rotate(matrix22: Matrix22): Position = (matrix22 x this).let { (x, y) -> Position(x, y) }
+
 
     companion object {
         fun parse(string: String): Position {
