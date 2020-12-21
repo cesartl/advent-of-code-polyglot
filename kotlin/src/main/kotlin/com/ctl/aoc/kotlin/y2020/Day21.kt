@@ -111,15 +111,6 @@ object Day21 {
         }
     }
 
-    fun isAssignmentValid(inputs: List<Input>, ingredient: String, allergen: String): Boolean {
-        return inputs.all { (ingredients, allergens) ->
-            if (allergens.contains(allergen)) {
-                ingredients.contains(ingredient)
-            } else {
-                true
-            }
-        }
-    }
 
     data class Input(val ingredients: List<String>, val allergens: List<String>) {
 
