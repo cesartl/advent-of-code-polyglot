@@ -28,6 +28,7 @@ Player 2:
 
     @Test
     fun solve2() {
-        Day22.solve2(puzzleInput)
+        println(Day22.solve2(example))
+        println(Day22.solve2(puzzleInput))
     }
 }
