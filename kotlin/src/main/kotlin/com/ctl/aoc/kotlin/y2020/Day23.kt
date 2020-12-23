@@ -1,55 +1,72 @@
 package com.ctl.aoc.kotlin.y2020
 
+import com.ctl.aoc.kotlin.utils.CircularLinkedList
+
 object Day23 {
 
     fun solve1(input: String, n: Int = 100): String {
-        val cups = Cups(input.map { it.toString().toInt() }.toIntArray())
-        (0 until n).forEach {
-            cups.next()
+        val numbers = input.map { it.toString().toInt() }
+        var current = CircularLinkedList.of(numbers.first())
+        numbers.drop(1).reversed().forEach { current.insert(it) }
+        val max = 9
+        current = play(n, current, max)
+        while (current.value != 1) {
+            current = current.nextNode()
         }
-        val l = cups.cups.toList()
-        return (l + l).dropWhile { it != 1 }.drop(1).take(l.size - 1).joinToString("")
+        current = current.nextNode()
+        var result = mutableListOf<Int>()
+        (0 until numbers.size - 1).forEach {
+            result.add(current.value)
+            current = current.nextNode()
+        }
+        return result.joinToString("")
     }
 
     fun solve2(input: String): Int {
+        val numbers = input.map { it.toString().toInt() }
+        var current = CircularLinkedList.of(numbers.first())
+        numbers.drop(1).reversed().forEach { current.insert(it) }
+        val last = current.nextNode(numbers.size - 1)
+        generateSequence(1000000) { it - 1 }.take(1000000 - numbers.size).forEach {
+            last.insert(it)
+        }
+        play(10000000, current, 1000000)
         TODO()
     }
 
-    data class Cup(val value: Int, val index: Int)
 
-    data class Cups(var cups: IntArray) {
-        var currentCupIdx = 0
-        fun next() {
-            val selected = (0..3).map { (it + currentCupIdx) % cups.size }
-                    .map { Cup(cups[it], it) }
-            val destination = findDestination(cups[currentCupIdx] - 1, selected.map { it.value })
-            val list = cups.toList()
-            if (destination.index > currentCupIdx) {
-                val newList = list.subList(0, currentCupIdx + 1) +
-                        list.subList(currentCupIdx + 4, destination.index + 1) +
-                        list.subList(currentCupIdx + 1, currentCupIdx + 4) +
-                        list.subList(destination.index + 1, list.size)
-                currentCupIdx = (currentCupIdx + 1) % cups.size
-                cups = (newList.subList(currentCupIdx, newList.size) + newList.subList(0, currentCupIdx)).toIntArray()
-                currentCupIdx = 0
-            } else {
-                error("")
+    private fun play(n: Int, current: CircularLinkedList<Int>, max: Int): CircularLinkedList<Int> {
+        var current1 = current
+        var searching = 0L
+        var startTime = System.currentTimeMillis()
+        (0 until n).forEach { i ->
+            if (i % 1000 == 0) {
+                println("i: $i, spent searching: $searching ms / ${System.currentTimeMillis() - startTime})")
             }
-
+            //            println(current.print())
+            val toMove = listOf(current1.removeNext(), current1.removeNext(), current1.removeNext())
+            var target = if (current1.value == 1) max else (current1.value - 1)
+            while (toMove.contains(target)) {
+                target--
+                if (target <= 0) {
+                    target = max
+                }
+            }
+            val start = current1
+//            println("Looking for $target")
+            var count = 0
+            searching -= System.currentTimeMillis()
+            while (current1.value != target) {
+                current1 = current1.previousNode()
+                count++
+            }
+            searching += System.currentTimeMillis()
+//            println("Found after $count count")
+            toMove.reversed().forEach {
+                current1.insert(it)
+            }
+            current1 = start.nextNode()
         }
-
-        tailrec fun findDestination(target: Int, forbidden: List<Int>): Cup {
-            if (target <= 0) {
-                return findDestination(9, forbidden)
-            }
-            if (forbidden.contains(target)) {
-                return findDestination(target - 1, forbidden)
-            }
-            val idx = cups.indexOf(target)
-            if (idx == -1) {
-                return findDestination(target - 1, forbidden)
-            }
-            return Cup(cups[idx], idx)
-        }
+        return current1
     }
 }
