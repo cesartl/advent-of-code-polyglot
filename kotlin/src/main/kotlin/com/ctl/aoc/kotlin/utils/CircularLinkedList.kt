@@ -1,9 +1,7 @@
 package com.ctl.aoc.kotlin.utils
 
-import java.lang.StringBuilder
 
-
-data class CircularLinkedList<T>(val value: T, private var previous: CircularLinkedList<T>?, private var next: CircularLinkedList<T>?) {
+data class CircularLinkedList<T>(val value: T, var previous: CircularLinkedList<T>?, var next: CircularLinkedList<T>?) {
 
 
     fun previousNode(): CircularLinkedList<T> = previous ?: this

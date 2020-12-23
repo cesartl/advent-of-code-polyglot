@@ -36,10 +36,6 @@ object Day23 {
 
     private fun play(n: Int, circular: CircularLinkedList<Int>, max: Int): Pair<CircularLinkedList<Int>, MutableMap<Int, CircularLinkedList<Int>>> {
         var current = circular
-        var searching = 0L
-        var startTime = System.currentTimeMillis()
-        var previous: CircularLinkedList<Int>
-        var next: CircularLinkedList<Int>
         val cache = mutableMapOf<Int, CircularLinkedList<Int>>()
 
         var toCache = current
@@ -48,38 +44,32 @@ object Day23 {
             toCache = toCache.nextNode()
         }
         (0 until n).forEach { i ->
-            if (i % 100000 == 0) {
-                println("i: $i, spent searching: $searching ms / ${System.currentTimeMillis() - startTime})")
+            if (i % 1000000 == 0) {
+                println("i: $i")
             }
-//            println(current.print())
-            val toMove = listOf(current.removeNext(), current.removeNext(), current.removeNext())
-            toMove.forEach { cache.remove(it) }
+
+            val firstToMove = current.nextNode()
+            val lastToMove = current.nextNode(3)
+
+
+            current.next = lastToMove.next
+            lastToMove.next!!.previous = current
+
             var target = if (current.value == 1) max else (current.value - 1)
-            while (toMove.contains(target)) {
+            while (target == firstToMove.value || target == firstToMove.nextNode().value || target == firstToMove.nextNode(2).value ) {
                 target--
                 if (target <= 0) {
                     target = max
                 }
             }
-//            println("Looking for $target")
-            var count = 0
-            searching -= System.currentTimeMillis()
 
-//            previous = current
-//            next = current
-//            while ((previous.value != target) && (next.value != target)) {
-//                next = next.nextNode()
-//                previous = previous.previousNode()
-//                count++
-//            }
-//            val toInsert = if(previous.value == target) previous else next
             val toInsert = cache[target]!!
+            val toInsertNext = toInsert.nextNode()
+            toInsert.next = firstToMove
+            firstToMove.previous = toInsert
 
-            searching += System.currentTimeMillis()
-
-            toMove.reversed().forEach {
-                cache[it] = toInsert.insert(it)
-            }
+            lastToMove.next = toInsertNext
+            toInsertNext.previous = lastToMove
             current = current.nextNode()
         }
         return current to cache
