@@ -16,7 +16,20 @@ internal class Day23Test {
     }
 
     @Test
+    fun solve1bis() {
+        println(Day23.solve1bis(example, 10))
+        println(Day23.solve1bis(example, 100))
+        println(Day23.solve1bis(puzzleInput))
+    }
+
+    @Test
     fun solve2() {
         println(Day23.solve2(puzzleInput))
+    }
+
+
+    @Test
+    fun solve2bis() {
+        println(Day23.solve2bis(puzzleInput))
     }
 }

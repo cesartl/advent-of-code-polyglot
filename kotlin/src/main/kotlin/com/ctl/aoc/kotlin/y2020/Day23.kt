@@ -20,6 +20,17 @@ object Day23 {
         return result.joinToString("")
     }
 
+    fun solve1bis(input: String, n: Int = 100): String {
+        val numbers = input.map { it.toString().toInt() }
+        val nextMap = IntArray(10)
+        numbers.zipWithNext().forEach { (i, next) ->
+            nextMap[i] = next
+        }
+        nextMap[numbers.last()] = numbers.first()
+        play(numbers.first(), n, nextMap, 9)
+        return generateSequence(nextMap[1]){i -> nextMap[i]}.take(numbers.size -1).joinToString("")
+    }
+
     fun solve2(input: String): Long {
         val numbers = input.map { it.toString().toInt() }
         var current = CircularLinkedList.of(numbers.first())
@@ -33,13 +44,51 @@ object Day23 {
         return one.nextNode().value.toLong() * one.nextNode().nextNode().value.toLong()
     }
 
+    fun solve2bis(input: String): Long {
+        val numbers = input.map { it.toString().toInt() }
+        val nextMap = IntArray(1000001)
+        (numbers + generateSequence(numbers.max()!! + 1) { it + 1 }.take(1000000 - numbers.size).toList()).zipWithNext().forEach { (i, next) ->
+            nextMap[i] = next
+        }
+        nextMap[1000000] = numbers.first()
+        val t = System.currentTimeMillis()
+        play(numbers.first(),10000000, nextMap, 1000000)
+        println("Took ${System.currentTimeMillis() - t}")
+        val n1 = nextMap[1]
+        val n2 = nextMap[n1]
+        return n1.toLong() * n2.toLong()
+    }
 
-    private fun play(n: Int, circular: CircularLinkedList<Int>, max: Int): Pair<CircularLinkedList<Int>, MutableMap<Int, CircularLinkedList<Int>>> {
+    private fun play(start: Int, n: Int, nextMap: IntArray, max: Int) {
+        var current = start
+        var firstRemove: Int
+        var secondRemove: Int
+        var thirdRemove: Int
+        var target: Int
+        (0 until n).forEach { _ ->
+            firstRemove = nextMap[current]
+            secondRemove = nextMap[firstRemove]
+            thirdRemove = nextMap[secondRemove]
+            target = if (current == 1) max else current - 1
+            while (target == firstRemove || target == secondRemove || target == thirdRemove) {
+                target--
+                if (target <= 0) {
+                    target = max
+                }
+            }
+            nextMap[current] = nextMap[thirdRemove]
+            nextMap[thirdRemove] = nextMap[target]
+            nextMap[target] = firstRemove
+            current = nextMap[current]
+        }
+    }
+
+    private fun play(n: Int, circular: CircularLinkedList<Int>, max: Int): Pair<CircularLinkedList<Int>, Array<CircularLinkedList<Int>?>> {
         var current = circular
-        val cache = mutableMapOf<Int, CircularLinkedList<Int>>()
+        val cache = Array<CircularLinkedList<Int>?>(max + 1){null}
 
         var toCache = current
-        while (cache.size < max) {
+        (0 until max).forEach {
             cache[toCache.value] = toCache
             toCache = toCache.nextNode()
         }
@@ -56,7 +105,7 @@ object Day23 {
             lastToMove.next!!.previous = current
 
             var target = if (current.value == 1) max else (current.value - 1)
-            while (target == firstToMove.value || target == firstToMove.nextNode().value || target == firstToMove.nextNode(2).value ) {
+            while (target == firstToMove.value || target == firstToMove.nextNode().value || target == firstToMove.nextNode(2).value) {
                 target--
                 if (target <= 0) {
                     target = max
@@ -66,10 +115,10 @@ object Day23 {
             val toInsert = cache[target]!!
             val toInsertNext = toInsert.nextNode()
             toInsert.next = firstToMove
-            firstToMove.previous = toInsert
+//            firstToMove.previous = toInsert
 
             lastToMove.next = toInsertNext
-            toInsertNext.previous = lastToMove
+//            toInsertNext.previous = lastToMove
             current = current.nextNode()
         }
         return current to cache
