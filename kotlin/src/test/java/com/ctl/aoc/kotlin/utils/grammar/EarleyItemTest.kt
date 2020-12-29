@@ -19,8 +19,11 @@ internal class EarleyItemTest {
 
     @Test
     internal fun verifyTest() {
-        val parser = EarleyParser(simpleGrammar)
-        parser.buildEarleyItems("1+(2*3+4)")
-        println(parser.earlyItems)
+        simpleGrammar.run {
+            println(earleyMatch("1+(2*3+4)"))
+            println(earleyMatch("1+(2%3+4)"))
+        }
+        println("1+(2*3+4)".matches(simpleGrammar))
+        println("1+(2%3+4)".matches(simpleGrammar))
     }
 }
