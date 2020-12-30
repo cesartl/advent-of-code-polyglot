@@ -1,8 +1,12 @@
 package com.ctl.aoc.kotlin.y2020
 
+import com.ctl.aoc.kotlin.utils.grammar.Grammar
+import com.ctl.aoc.kotlin.utils.grammar.grammar
+import com.ctl.aoc.kotlin.utils.grammar.matches
+
 object Day19 {
 
-    fun solve1(input: String): Int {
+    fun solve1Regex(input: String): Int {
         val (rules, messages) = Input.parse(input)
 
         val rulesById = rules.map { it.id to it }.toMap()
@@ -11,7 +15,7 @@ object Day19 {
         return messages.count { rule0.matchRegex(it) }
     }
 
-    fun solve1Bis(input: String): Int {
+    fun solve1Recursion(input: String): Int {
         val (rules, messages) = Input.parse(input)
 
         val rulesById = rules.map { it.id to it }.toMap()
@@ -19,7 +23,16 @@ object Day19 {
         return messages.count { isMatch(it, listOf(rulesById.getValue(0)), rulesById) }
     }
 
-    fun solve2Bis(input: String): Int {
+    fun solve1Grammar(input: String): Int {
+        val (rules, messages) = Input.parse(input)
+
+        val grammar = buildGrammar(rules).copy(startRuleName = "0")
+
+        return messages.count { it.matches(grammar) }
+    }
+
+
+    fun solve2Recursion(input: String): Int {
         val (rules, messages) = Input.parse(input)
 
         val rulesById = rules.map { it.id to it }.toMap() +
@@ -28,7 +41,18 @@ object Day19 {
         return messages.count { isMatch(it, listOf(rulesById.getValue(0)), rulesById) }
     }
 
-    fun solve2(input: String): Int {
+    fun solve2Grammar(input: String): Int {
+        val (rules, messages) = Input.parse(input)
+
+        val rulesById = rules.map { it.id to it }.toMap() +
+                listOf(8 to Rule.SubRule(8, listOf(listOf(42), listOf(42, 8))), 11 to Rule.SubRule(11, listOf(listOf(42, 31), listOf(42, 11, 31)))).toMap()
+
+        val grammar = buildGrammar(rulesById.values).copy(startRuleName = "0")
+
+        return messages.count { it.matches(grammar) }
+    }
+
+    fun solve2Regex(input: String): Int {
         val (rules, messages) = Input.parse(input)
 
         val rulesById = rules.map { it.id to it }.toMap().toMutableMap()
@@ -154,5 +178,24 @@ object Day19 {
                 return Input(rules, s[1].split("\n"))
             }
         }
+    }
+
+    private fun buildGrammar(rules: Collection<Rule>): Grammar {
+        return grammar {
+            rules.forEach { rule ->
+                when (rule) {
+                    is Rule.FixedRule -> rule.id.toString() `=` { char(rule.r.first()) }
+                    is Rule.SubRule -> {
+                        rule.subRules.forEach { subRules ->
+                            rule.id.toString() `=` {
+                                subRules.forEach {
+                                    !it.toString()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }.build()
     }
 }

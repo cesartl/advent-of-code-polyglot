@@ -80,19 +80,29 @@ aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"""
 
     @Test
     fun solve1() {
-        println(timedMs { Day19.solve1(example) })
-        println(timedMs { Day19.solve1(puzzleInput) })
+        println("Using regex")
+        println(timedMs { Day19.solve1Regex(example) })
+        println(timedMs { Day19.solve1Regex(puzzleInput) })
 
-        println(timedMs { Day19.solve1Bis(example) })
-        println(timedMs { Day19.solve1Bis(puzzleInput) })
+        println("Using recursion")
+        println(timedMs { Day19.solve1Recursion(example) })
+        println(timedMs { Day19.solve1Recursion(puzzleInput) })
+
+        println("Using Grammar")
+        println(timedMs { Day19.solve1Grammar(example) })
+        println(timedMs { Day19.solve1Grammar(puzzleInput) })
     }
 
 
     @Test
     fun solve2() {
-        println("Solving with regex")
-        println(timedMs { Day19.solve2(puzzleInput) })
-        println("Solving with recursion")
-        println(timedMs { Day19.solve2Bis(puzzleInput) })
+        println("Using regex")
+        println(timedMs { Day19.solve2Regex(puzzleInput) })
+
+        println("Using recursion")
+        println(timedMs { Day19.solve2Recursion(puzzleInput) })
+
+        println("Using Grammar")
+        println(timedMs { Day19.solve2Grammar(puzzleInput) })
     }
 }
