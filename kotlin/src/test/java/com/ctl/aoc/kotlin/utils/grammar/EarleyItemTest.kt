@@ -28,13 +28,6 @@ internal class EarleyItemTest {
         "Number" `=` { +('0'..'9') }
     }.build()
 
-    val cesar: Int.(Int) -> Int = { other -> plus(other) }
-
-    @Test
-    internal fun cesar() {
-        println(123.cesar(5))
-    }
-
     @Test
     internal fun verifyTest() {
         simpleGrammar.run {

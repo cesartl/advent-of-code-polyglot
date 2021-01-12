@@ -1,5 +1,6 @@
 package com.ctl.aoc.kotlin.utils.grammar
 
+// see https://loup-vaillant.fr/tutorials/earley-parsing/recogniser
 
 data class EarleyItem(val rule: GrammarRule, val startIdx: Int, val nextIdx: Int) {
     val nextElement: GrammarElement? by lazy {
