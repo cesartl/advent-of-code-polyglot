@@ -1,6 +1,6 @@
-package com.ctl.aoc.kotlin.y_YEAR_
+package com.ctl.aoc.kotlin.y2021
 
-object Day_DAY_ {
+object Day15 {
     fun solve1(input: Sequence<String>): Int {
         TODO()
     }
