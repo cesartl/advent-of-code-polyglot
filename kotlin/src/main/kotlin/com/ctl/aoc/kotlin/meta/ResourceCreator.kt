@@ -14,7 +14,7 @@ object ResourceCreator {
     private fun createResources(year: Int, day: Int){
         createObjectFile(year, day)
         createTestFile(year, day)
-        createInputFile(year, day)
+//        createInputFile(year, day)
     }
 
     private fun createObjectFile(year: Int, day: Int) {

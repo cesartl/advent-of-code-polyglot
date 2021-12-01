@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 
 internal class Day15Test {
 
-    val puzzleInput = InputUtils.getLines(2021, 15)
+    val puzzleInput = InputUtils.downloadAndGetLines(2021, 15)
 
     @Test
     fun solve1() {
