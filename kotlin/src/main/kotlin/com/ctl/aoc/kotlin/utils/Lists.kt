@@ -9,6 +9,35 @@ val <T> List<T>.head: T
 
 fun <T> List<T>.frequency() = Lists.frequency(this)
 
+
+fun <T> List<T>.mostFrequent(): T? {
+    val sorted = this.frequency()
+            .toList()
+            .sortedBy { -it.second }
+    if (sorted.size > 1) {
+        if (sorted.first().second == sorted.drop(1).first().second) {
+            return null;
+        }
+    }
+    return sorted
+            .first()
+            .first
+}
+
+fun <T> List<T>.leastFrequent(): T? {
+    val sorted = this.frequency()
+            .toList()
+            .sortedBy { it.second }
+    if (sorted.size > 1) {
+        if (sorted.first().second == sorted.drop(1).first().second) {
+            return null;
+        }
+    }
+    return sorted
+            .first()
+            .first
+}
+
 object Lists {
     fun <T> weave(first: List<T>, second: List<T>, prefix: List<T> = listOf()): List<List<T>> {
         if (first.isEmpty()) {
