@@ -1,5 +1,7 @@
 package com.ctl.aoc.kotlin.utils
 
+import java.math.BigInteger
+
 data class Position(val x: Int, val y: Int) {
     fun adjacent(): Sequence<Position> = sequenceOf(N, S, E, W).map { it.move(this) }
     fun distance(other: Position): Int = Math.abs(other.x - x) + Math.abs(other.y - y)
@@ -11,8 +13,29 @@ data class Position(val x: Int, val y: Int) {
         return Position(x = x + other.x, y = y + other.y)
     }
 
+    operator fun minus(other: Position): Position {
+        return Position(x = x - other.x, y = y - other.y)
+    }
+
     fun scalar(ratio: Int): Position {
         return copy(x = x * ratio, y = y * ratio)
+    }
+
+    fun normalise(): Position {
+        val bigX = BigInteger.valueOf(x.toLong()).abs()
+        val bigY = BigInteger.valueOf(y.toLong()).abs()
+        val gcd = bigX.gcd(bigY)
+        return when {
+            gcd != BigInteger.ZERO -> {
+                copy(x = x / gcd.toInt(), y = y / gcd.toInt())
+            }
+            this.x == 0 -> {
+                copy(y = 1)
+            }
+            else -> {
+                copy(x = 1)
+            }
+        }
     }
 
     fun rotate90(): Position = rotate(Matrix22.rotate90)
