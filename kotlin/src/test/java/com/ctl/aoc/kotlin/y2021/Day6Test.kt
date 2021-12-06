@@ -21,8 +21,9 @@ internal class Day6Test {
 
     @Test
     fun solve2() {
-//        println(Day6.solve2("3"))
         println(Day6.solve2(example))
         println(Day6.solve2(puzzleInput))
+        println(Day6.solve2Bis(example))
+        println(Day6.solve2Bis(puzzleInput))
     }
 }
