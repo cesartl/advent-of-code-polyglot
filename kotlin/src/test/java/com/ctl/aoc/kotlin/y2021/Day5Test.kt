@@ -20,7 +20,7 @@ internal class Day5Test {
 
     @Test
     fun testLine() {
-       val line = Day5.Line.parse("1,1 -> 1,3")
+        val line = Day5.Line.parse("1,1 -> 1,10")
         println(line.points().toList())
     }
 

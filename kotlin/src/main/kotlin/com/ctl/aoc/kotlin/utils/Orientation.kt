@@ -24,10 +24,10 @@ data class Position(val x: Int, val y: Int) {
     fun normalise(): Position {
         val bigX = BigInteger.valueOf(x.toLong()).abs()
         val bigY = BigInteger.valueOf(y.toLong()).abs()
-        val gcd = bigX.gcd(bigY)
+        val gcd = bigX.gcd(bigY).toInt()
         return when {
-            gcd != BigInteger.ZERO -> {
-                copy(x = x / gcd.toInt(), y = y / gcd.toInt())
+            gcd != 0 -> {
+                copy(x = x / gcd, y = y / gcd)
             }
             this.x == 0 -> {
                 copy(y = 1)
