@@ -76,20 +76,5 @@ object Day6 {
             newGeneration[6] += birthers
             return Population(newGeneration)
         }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Population
-
-            if (!generations.contentEquals(other.generations)) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            return generations.contentHashCode()
-        }
     }
 }
