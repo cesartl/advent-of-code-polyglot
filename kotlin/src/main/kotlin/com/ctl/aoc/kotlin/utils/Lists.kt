@@ -95,4 +95,22 @@ object Lists {
         }
         return map
     }
+
+    fun List<Int>.median(): Int {
+        val numArray = this.sorted()
+        return if (numArray.size % 2 == 0) {
+            (numArray[numArray.size / 2] + numArray[(numArray.size / 2) - 1]) / 2
+        } else {
+            numArray[(numArray.size) / 2]
+        }
+    }
+
+    fun List<Long>.median(): Long {
+        val numArray = this.sorted()
+        return if (numArray.size % 2 == 0) {
+            (numArray[numArray.size / 2] + numArray[(numArray.size / 2) - 1]) / 2
+        } else {
+            numArray[(numArray.size) / 2]
+        }
+    }
 }
