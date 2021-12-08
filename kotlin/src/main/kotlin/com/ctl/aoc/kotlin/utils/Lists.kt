@@ -38,6 +38,11 @@ fun <T> List<T>.leastFrequent(): T? {
             .first
 }
 
+/**
+ * Returns all the {collection.size}! endomorphisms from the given collection onto itself
+ */
+fun <T> Collection<T>.allMappings(): Sequence<Map<T, T>> = Lists.allMappings(this)
+
 object Lists {
     fun <T> weave(first: List<T>, second: List<T>, prefix: List<T> = listOf()): List<List<T>> {
         if (first.isEmpty()) {
@@ -86,6 +91,26 @@ object Lists {
                 }
             }
         }
+    }
+
+    /**
+     * Returns all the {collection.size}! endomorphisms from the given collection onto itself
+     */
+    fun <T> allMappings(collection: Collection<T>): Sequence<Map<T, T>> {
+        fun go(current: Collection<T>, remaining: Collection<T>): Sequence<Map<T, T>> = sequence {
+            if(current.size == 1){
+                yield(mapOf(current.first() to remaining.first()))
+            }
+            if (current.isNotEmpty()) {
+                val first = current.first()
+                remaining.forEach { x ->
+                    go(current.drop(1), remaining - x).forEach { r ->
+                        yield(mapOf(first to x) + r)
+                    }
+                }
+            }
+        }
+        return go(collection, collection)
     }
 
     fun <T> frequency(list: List<T>): Map<T, Int> {
