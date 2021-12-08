@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2021
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timedMs
 import org.junit.jupiter.api.Test
 
 internal class Day8Test {
@@ -37,7 +38,9 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
 
     @Test
     fun solve2() {
-        println(Day8.solve2(example))
-        println(Day8.solve2(puzzleInput))
+        println(timedMs {Day8.solve2(example)})
+        println(timedMs {Day8.solve2Bis(example)})
+        println(timedMs {Day8.solve2(puzzleInput)})
+        println(timedMs {Day8.solve2Bis(puzzleInput)})
     }
 }
