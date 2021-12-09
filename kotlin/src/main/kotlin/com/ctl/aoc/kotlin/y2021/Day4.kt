@@ -4,15 +4,12 @@ import com.ctl.aoc.kotlin.utils.Position
 
 object Day4 {
 
-    data class Grid(val numbers: Map<Position, Long>, val marked: Set<Position> = setOf()) {
+    data class Grid(val numbers: Map<Position, Long>, val size: Int) {
 
         private val reversedNumber: Map<Long, Position> = numbers.map { it.value to it.key }.toMap()
 
-        private val size: Int = numbers.keys.maxBy { it.x }?.x ?: 0 - 1
-
         val unmarkedSum: Long by lazy {
-            numbers.filterNot { marked.contains(it.key) }
-                    .map { it.value }.sum()
+            numbers.map { it.value }.sum()
         }
 
         fun play(number: Long): Grid {
@@ -22,22 +19,24 @@ object Day4 {
         }
 
         private fun mark(p: Position): Grid {
-            return this.copy(marked = marked + p)
+            return this.copy(numbers = numbers - p)
         }
 
         fun winning(): Boolean = checkRows() || checkColumn()
 
 
         private fun checkRows(): Boolean {
-            return numbers.entries
+            val x = numbers.entries
                     .groupBy { it.key.y }
-                    .any { row -> row.value.map { it.key }.all { marked.contains(it) } }
+                    .size
+//            println("size $size vs $x")
+            return x < size
         }
 
         private fun checkColumn(): Boolean {
             return numbers.entries
                     .groupBy { it.key.x }
-                    .any { row -> row.value.map { it.key }.all { marked.contains(it) } }
+                    .size < size
         }
 
         companion object {
@@ -49,7 +48,7 @@ object Day4 {
                 }.mapIndexed { y, row ->
                     row.map { (x, n) -> Position(x, y) to n }
                 }.flatten().toMap()
-                return Grid(numbers)
+                return Grid(numbers, (numbers.keys.maxBy { it.x }?.x ?: 0) + 1)
             }
         }
     }
@@ -101,6 +100,7 @@ object Day4 {
             state = play.first
         }
         val winning = state.grids.winningGrid()
+        println("number $number")
         val unmarkedSum = winning.unmarkedSum
         return number * unmarkedSum
     }
