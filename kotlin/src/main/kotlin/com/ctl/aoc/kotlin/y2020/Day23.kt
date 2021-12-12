@@ -47,7 +47,7 @@ object Day23 {
     fun solve2bis(input: String): Long {
         val numbers = input.map { it.toString().toInt() }
         val nextMap = IntArray(1000001)
-        (numbers + generateSequence(numbers.max()!! + 1) { it + 1 }.take(1000000 - numbers.size).toList()).zipWithNext().forEach { (i, next) ->
+        (numbers + generateSequence(numbers.maxOrNull()!! + 1) { it + 1 }.take(1000000 - numbers.size).toList()).zipWithNext().forEach { (i, next) ->
             nextMap[i] = next
         }
         nextMap[1000000] = numbers.first()

@@ -1,7 +1,5 @@
 package com.ctl.aoc.kotlin.y2018
 
-import java.lang.IllegalArgumentException
-import java.lang.StringBuilder
 import java.util.regex.Pattern
 
 object Day10 {
@@ -23,10 +21,10 @@ object Day10 {
 
     data class Board(val map: MutableMap<Int, MutableMap<Int, List<Point>>>, val time: Int) {
 
-        val maxY = map.keys.max() ?: 0
-        val minY = map.keys.min() ?: 0
-        val maxX = map.values.flatMap { it.keys }.max() ?: 0
-        val minX = map.values.flatMap { it.keys }.min() ?: 0
+        val maxY = map.keys.maxOrNull() ?: 0
+        val minY = map.keys.minOrNull() ?: 0
+        val maxX = map.values.flatMap { it.keys }.maxOrNull() ?: 0
+        val minX = map.values.flatMap { it.keys }.minOrNull() ?: 0
 
         val width = maxX - minX
         val height = maxY - minY

@@ -41,7 +41,7 @@ object Day13 {
 
         val guests = happinessMap.keys.flatMap { listOf(it.first, it.second) }.toSet().toList()
 
-        return Lists.permutations(guests).map { SeatingPlan(it, happinessMap) }.maxBy { it.happiness }?.happiness ?: 0
+        return Lists.permutations(guests).map { SeatingPlan(it, happinessMap) }.maxByOrNull { it.happiness }?.happiness ?: 0
     }
 
     fun solve2(lines: Sequence<String>): Int {
@@ -51,6 +51,6 @@ object Day13 {
 
         val guests = happinessMap.keys.flatMap { listOf(it.first, it.second) }.toSet().toList() + "me"
 
-        return Lists.permutations(guests).map { SeatingPlan(it, happinessMap) }.maxBy { it.happiness }?.happiness ?: 0
+        return Lists.permutations(guests).map { SeatingPlan(it, happinessMap) }.maxByOrNull { it.happiness }?.happiness ?: 0
     }
 }

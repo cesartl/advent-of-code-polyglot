@@ -53,7 +53,7 @@ object Day17 {
 
         private fun range(f: (Position3D) -> Int): IntRange {
             val coordinates = cells.map { f(it) }
-            return (coordinates.min()!! - 1)..(coordinates.max()!! + 1)
+            return (coordinates.minOrNull()!! - 1)..(coordinates.maxOrNull()!! + 1)
         }
 
         private fun countActiveNeighbours(p: Position3D): Int {
@@ -117,7 +117,7 @@ object Day17 {
 
         private fun range(f: (Position4D) -> Int): IntRange {
             val coordinates = cells.map { f(it) }
-            return (coordinates.min()!! - 1)..(coordinates.max()!! + 1)
+            return (coordinates.minOrNull()!! - 1)..(coordinates.maxOrNull()!! + 1)
         }
 
         private fun countActiveNeighbours(p: Position4D): Int {

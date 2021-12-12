@@ -40,7 +40,7 @@ object Day9 {
             score.merge(player.toInt(), circle.addMarble(marble)) { t, l -> t + l }
         }
 
-        val max = score.maxBy { it.value.sum() }!!
+        val max = score.maxByOrNull { it.value.sum() }!!
         println(max)
         return max.value.sum()
     }
@@ -62,7 +62,7 @@ object Day9 {
             progress = newProgress
         }
 
-        val max = score.maxBy { it.value }!!
+        val max = score.maxByOrNull { it.value }!!
         return max.value
     }
 }

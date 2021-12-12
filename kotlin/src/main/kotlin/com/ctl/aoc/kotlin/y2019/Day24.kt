@@ -61,8 +61,8 @@ object Day24 {
 
         fun next(): RecursiveState {
             val nextLevels = mutableMapOf<Int, BooleanArray>()
-            val minLevel = levels.keys.min()!!
-            val maxLevel = levels.keys.max()!!
+            val minLevel = levels.keys.minOrNull()!!
+            val maxLevel = levels.keys.maxOrNull()!!
             levels.forEach { (level, tiles) ->
                 nextLevels[level] = tiles.copyOf()
             }

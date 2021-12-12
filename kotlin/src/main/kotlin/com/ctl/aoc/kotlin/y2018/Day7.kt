@@ -1,7 +1,6 @@
 package com.ctl.aoc.kotlin.y2018
 
 import com.ctl.aoc.kotlin.utils.BuildOrder
-import java.lang.IllegalArgumentException
 import java.util.regex.Pattern
 
 object Day7 {
@@ -31,6 +30,6 @@ object Day7 {
         val allNodes = steps.flatMap { listOf(it.first, it.second) }.toSet()
 
         val inOrder = BuildOrder.buildOrder(allNodes, steps, nWorkers, time)
-        return (inOrder.maxBy { it.second }?.second ?: 0)
+        return (inOrder.maxByOrNull { it.second }?.second ?: 0)
     }
 }

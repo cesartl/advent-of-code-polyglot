@@ -1,8 +1,5 @@
 package com.ctl.aoc.kotlin.y2018
 
-import java.lang.IllegalArgumentException
-import java.lang.StringBuilder
-
 
 sealed class Direction {
     override fun toString(): String = this.javaClass.simpleName
@@ -193,10 +190,10 @@ object Day13 {
 
         fun print(): String {
             val builder = StringBuilder()
-            val yMax = track.trackMap.keys.max() ?: 0
+            val yMax = track.trackMap.keys.maxOrNull() ?: 0
             for (y in 0..yMax) {
                 val row = track.trackMap[y]!!
-                for (x in 0..(row.keys.max() ?: 0)) {
+                for (x in 0..(row.keys.maxOrNull() ?: 0)) {
                     builder.append(carts[y]?.get(x)?.direction?.print() ?: track.trackElement(x, y)?.print() ?: " ")
                 }
                 builder.append("\n")

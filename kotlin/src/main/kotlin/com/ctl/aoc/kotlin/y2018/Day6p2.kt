@@ -26,8 +26,8 @@ object Day6p2 {
     private fun Point.distance(other: Point): Int = Math.abs(this.x - other.x) + Math.abs(this.y - other.y)
 
     private fun buildGrid(points: Sequence<Point>): Grid {
-        val maxX = points.maxBy { it.x }?.x ?: 0
-        val maxY = points.maxBy { it.y }?.y ?: 0
+        val maxX = points.maxByOrNull { it.x }?.x ?: 0
+        val maxY = points.maxByOrNull { it.y }?.y ?: 0
         val map = points.mapIndexed { idx, p -> p to CoordinateValue("${'a' + idx}", 0) }.toMap()
         return Grid(maxX + 1, maxY + 1, map.toMutableMap(), map.keys.toList())
     }

@@ -54,10 +54,10 @@ object Day17 {
     }
 
     data class Ground(val map: MutableMap<Int, MutableMap<Int, Terrain>>) {
-        val minX = map.values.flatMap { it.keys }.min() ?: 0
-        val maxX = map.values.flatMap { it.keys }.max() ?: 0
-        val maxY = map.keys.max() ?: 0
-        val minY = map.keys.min() ?: 0
+        val minX = map.values.flatMap { it.keys }.minOrNull() ?: 0
+        val maxX = map.values.flatMap { it.keys }.maxOrNull() ?: 0
+        val maxY = map.keys.maxOrNull() ?: 0
+        val minY = map.keys.minOrNull() ?: 0
 
 
         fun print(): String {

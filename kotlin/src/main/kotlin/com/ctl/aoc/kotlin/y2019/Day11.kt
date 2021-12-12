@@ -1,7 +1,5 @@
 package com.ctl.aoc.kotlin.y2019
 
-import java.lang.IllegalArgumentException
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 
@@ -107,13 +105,13 @@ object Day11 {
 
     private fun displayHull(hullState: HullState) {
         val (rx, ry) = hullState.robot.position
-//        val maxX = rx.coerceAtLeast(hullState.painedBlocks.keys.maxBy { it.x }!!.x)
+//        val maxX = rx.coerceAtLeast(hullState.painedBlocks.keys.maxByOrNull { it.x }!!.x)
         val maxX = 42
-//        val maxY = ry.coerceAtLeast(hullState.painedBlocks.keys.maxBy { it.y }!!.y)
+//        val maxY = ry.coerceAtLeast(hullState.painedBlocks.keys.maxByOrNull { it.y }!!.y)
         val maxY = 0
-//        val minX = rx.coerceAtMost(hullState.painedBlocks.keys.minBy { it.x }!!.x)
+//        val minX = rx.coerceAtMost(hullState.painedBlocks.keys.minByOrNull { it.x }!!.x)
         val minX = 0
-//        val minY = ry.coerceAtMost(hullState.painedBlocks.keys.minBy { it.y }!!.y)
+//        val minY = ry.coerceAtMost(hullState.painedBlocks.keys.minByOrNull { it.y }!!.y)
         val minY = -5
 
         (maxY downTo minY).forEach { y ->

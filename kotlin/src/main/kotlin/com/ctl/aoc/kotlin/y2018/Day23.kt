@@ -30,7 +30,7 @@ object Day23 {
     fun solve1(lines: Sequence<String>): Int {
         val bots = lines.map { parse(it) }
 
-        val strongest = bots.maxBy { it.r }!!
+        val strongest = bots.maxByOrNull { it.r }!!
 
         return bots.count { it.distance(strongest) <= strongest.r }
     }
@@ -44,7 +44,7 @@ object Day23 {
         val origin = Nanobot(0, 0, 0, 0)
         val bots = lines.map { parse(it) }.toList()
 
-        val maxDistance = bots.maxBy { it.d0 }?.d0 ?: 0L
+        val maxDistance = bots.maxByOrNull { it.d0 }?.d0 ?: 0L
         println("maxDistance $maxDistance")
         var max = 0
         var bestDistance = 0L
@@ -99,7 +99,7 @@ object Day23 {
             }
         }
 
-//        val min = listOf(avg.x, avg.y, avg.z).min()!!
+//        val min = listOf(avg.x, avg.y, avg.z).minOrNull()!!
 //        val vect = avg.copy(x = -avg.x / min, y = -avg.y / min, z = -avg.z / min)
 //        println(vect)
 //
@@ -119,7 +119,7 @@ object Day23 {
     fun solve2bis(lines: Sequence<String>) {
         val bots = lines.map { parse(it) }.toList()
 
-        val bestSet = bots.map { b -> bots.filter { it.intersect(b) } }.maxBy { it.size }!!
+        val bestSet = bots.map { b -> bots.filter { it.intersect(b) } }.maxByOrNull { it.size }!!
         println(bestSet.size)
         println(bestSet)
     }

@@ -60,10 +60,10 @@ object Day19 {
     }
 
     private fun printGrid(grid: Map<Long, Map<Long, Boolean>>) {
-        val maxY = grid.keys.maxBy { it } ?: 0L
-        val minY = grid.keys.minBy { it } ?: 0L
-        val maxX: Long = grid.values.flatMap { it.keys }.max() ?: 0L
-        val minX: Long = grid.values.flatMap { it.keys }.min() ?: 0L
+        val maxY = grid.keys.maxByOrNull { it } ?: 0L
+        val minY = grid.keys.minByOrNull { it } ?: 0L
+        val maxX: Long = grid.values.flatMap { it.keys }.maxOrNull() ?: 0L
+        val minX: Long = grid.values.flatMap { it.keys }.minOrNull() ?: 0L
 
         (minY..maxY).forEach { y ->
             (minX..maxX).forEach { x ->

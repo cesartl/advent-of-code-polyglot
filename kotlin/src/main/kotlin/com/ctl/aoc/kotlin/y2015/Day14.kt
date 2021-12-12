@@ -52,7 +52,7 @@ object Day14 {
     }
 
     fun solve1(lines: Sequence<String>, seconds: Int): Int {
-        return lines.map { Reindeer.parse(it) }.map { it to it.distanceAfterT(seconds) }.maxBy { it.second }?.second
+        return lines.map { Reindeer.parse(it) }.map { it to it.distanceAfterT(seconds) }.maxByOrNull { it.second }?.second
                 ?: 0
     }
 
@@ -62,11 +62,11 @@ object Day14 {
         var t = 1
         while (t <= seconds) {
             states = states.map { it.move(t) }
-            val best = states.maxBy { it.distanceTravelled }?.distanceTravelled!!
+            val best = states.maxByOrNull { it.distanceTravelled }?.distanceTravelled!!
             val (first, other) = states.partition { it.distanceTravelled == best }
             states = first.map { it.givePoint() } + other
             t++
         }
-        return states.maxBy { it.points }?.points ?: 0
+        return states.maxByOrNull { it.points }?.points ?: 0
     }
 }

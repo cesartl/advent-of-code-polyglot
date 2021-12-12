@@ -53,8 +53,8 @@ object Day22 {
             val builder = StringBuilder()
 
             val avg = map.values.map { it.used }.average().toInt()
-            val xMax = map.values.map { it.x }.max()!!
-            val yMax = map.values.map { it.y }.max()!!
+            val xMax = map.values.map { it.x }.maxOrNull()!!
+            val yMax = map.values.map { it.y }.maxOrNull()!!
             for (y in 0..yMax){
                 for(x in 0..xMax){
                     val node = map[Position(x, y)]!!
@@ -102,7 +102,7 @@ object Day22 {
     }
 
     fun findSteps(grid: Grid): State {
-        val goalNode = grid.map.filter { it.key.y == 0 }.maxBy { it.key.x }!!
+        val goalNode = grid.map.filter { it.key.y == 0 }.maxByOrNull { it.key.x }!!
         val zero = grid.map.values.first { it.avail >= goalNode.value.used }
 
         println("goalNode: $goalNode")

@@ -1,6 +1,5 @@
 package com.ctl.aoc.kotlin.y2019
 
-import java.lang.IllegalArgumentException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.sign
@@ -66,8 +65,8 @@ object Day13 {
 
     data class GameState(val grid: Map<Point, Tile>, val score: Long = 0) {
         fun rows(): List<List<TileAtPoint>> {
-            val maxX = grid.keys.maxBy { it.x }?.x ?: 0
-            val maxY = grid.keys.maxBy { it.y }?.y ?: 0
+            val maxX = grid.keys.maxByOrNull { it.x }?.x ?: 0
+            val maxY = grid.keys.maxByOrNull { it.y }?.y ?: 0
             val rows = mutableListOf<List<TileAtPoint>>()
             (0..maxY).forEach { y ->
                 val row = mutableListOf<TileAtPoint>()

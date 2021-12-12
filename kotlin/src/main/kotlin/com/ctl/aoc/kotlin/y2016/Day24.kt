@@ -73,12 +73,12 @@ object Day24 {
     fun solve1(lines: Sequence<String>): Long {
         val grid = PathedGrid(Grid.parse(lines))
         val targets = grid.grid.targets.filter { it.key > 0 }.values.toList()
-        return Lists.permutations(targets).map { grid.cost(it) }.min() ?: 0
+        return Lists.permutations(targets).map { grid.cost(it) }.minOrNull() ?: 0
     }
 
     fun solve2(lines: Sequence<String>): Long {
         val grid = PathedGrid(Grid.parse(lines))
         val targets = grid.grid.targets.filter { it.key > 0 }.values.toList()
-        return Lists.permutations(targets).map { it + grid.grid.targets[0]!! }.map { grid.cost(it) }.min() ?: 0
+        return Lists.permutations(targets).map { it + grid.grid.targets[0]!! }.map { grid.cost(it) }.minOrNull() ?: 0
     }
 }

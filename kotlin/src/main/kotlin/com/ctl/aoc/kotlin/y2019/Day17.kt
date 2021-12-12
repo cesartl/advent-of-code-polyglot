@@ -74,10 +74,10 @@ object Day17 {
     data class State(val grid: MutableMap<Point, Tile>, var robot: Robot) {
 
         fun print() {
-            val maxY = grid.keys.maxBy { it.y }?.y ?: 0
-            val minY = grid.keys.minBy { it.y }?.y ?: 0
-            val maxX = grid.keys.maxBy { it.x }?.x ?: 0
-            val minX = grid.keys.minBy { it.x }?.x ?: 0
+            val maxY = grid.keys.maxByOrNull { it.y }?.y ?: 0
+            val minY = grid.keys.minByOrNull { it.y }?.y ?: 0
+            val maxX = grid.keys.maxByOrNull { it.x }?.x ?: 0
+            val minX = grid.keys.minByOrNull { it.x }?.x ?: 0
             (minY..maxY).forEach { y ->
                 (minX..maxX).forEach { x ->
                     if (Point(x, y) == robot.position) {

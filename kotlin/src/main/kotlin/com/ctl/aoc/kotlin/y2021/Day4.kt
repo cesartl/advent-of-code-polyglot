@@ -48,7 +48,7 @@ object Day4 {
                 }.mapIndexed { y, row ->
                     row.map { (x, n) -> Position(x, y) to n }
                 }.flatten().toMap()
-                return Grid(numbers, (numbers.keys.maxBy { it.x }?.x ?: 0) + 1)
+                return Grid(numbers, (numbers.keys.maxByOrNull { it.x }?.x ?: 0) + 1)
             }
         }
     }

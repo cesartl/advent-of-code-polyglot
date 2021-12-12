@@ -3,7 +3,6 @@ package com.ctl.aoc.kotlin.y2015
 import com.ctl.aoc.kotlin.y2015.Day22.Spell.ActionSpell.Drain
 import com.ctl.aoc.kotlin.y2015.Day22.Spell.ActionSpell.MagicMissile
 import com.ctl.aoc.kotlin.y2015.Day22.Spell.EffectSpell.*
-import java.lang.IllegalArgumentException
 import java.util.*
 import kotlin.math.max
 
@@ -211,7 +210,7 @@ object Day22 {
             }
         }
         println("Wining ${winingStates.size}")
-        val leastMana = winingStates.minBy { it.totalMana }
+        val leastMana = winingStates.minByOrNull { it.totalMana }
         println(leastMana?.spells?.map { it.javaClass.simpleName })
         println(leastMana?.spells?.map { it.manaCost }?.sum())
         return leastMana?.totalMana

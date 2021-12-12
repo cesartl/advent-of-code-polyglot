@@ -45,15 +45,15 @@ object Day24 {
         }
 
         val xRange by lazy {
-            (xs.min()!! - 1)..(xs.max()!! + 1)
+            (xs.minOrNull()!! - 1)..(xs.maxOrNull()!! + 1)
         }
 
         val yRange by lazy {
-            (ys.min()!! - 1)..(ys.max()!! + 1)
+            (ys.minOrNull()!! - 1)..(ys.maxOrNull()!! + 1)
         }
 
         val zRange by lazy {
-            (zs.min()!! - 1)..(zs.max()!! + 1)
+            (zs.minOrNull()!! - 1)..(zs.maxOrNull()!! + 1)
         }
 
         fun countSurroundingBlack(cubeCoordinates: CubeCoordinates): Int {

@@ -89,7 +89,7 @@ object Day20 {
     fun solve1(regex: String): Int {
         val start = Position(0, 0)
         val distances = computePaths(regex, start)
-        return distances.values.max() ?: 0
+        return distances.values.maxOrNull() ?: 0
     }
 
     fun solve2(regex: String): Int {

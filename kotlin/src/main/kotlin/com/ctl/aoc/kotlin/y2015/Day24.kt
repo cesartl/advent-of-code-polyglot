@@ -3,13 +3,13 @@ package com.ctl.aoc.kotlin.y2015
 object Day24 {
     fun solve1(packages: List<Long>): Long {
         val groups = buildGroups(packages.reversed(), 3)
-        val firstGroup: List<Long>? = groups.minWith(comparator)
+        val firstGroup: List<Long>? = groups.minWithOrNull(comparator)
         return firstGroup?.let { qc(it) } ?: 0
     }
 
     fun solve2(packages: List<Long>): Long {
         val groups = buildGroups(packages.reversed(), 4)
-        val firstGroup: List<Long>? = groups.minWith(comparator)
+        val firstGroup: List<Long>? = groups.minWithOrNull(comparator)
         return firstGroup?.let { qc(it) } ?: 0
     }
 

@@ -96,13 +96,13 @@ object Day21 {
     }
 
     fun solve1(boss: Character): Int {
-        val config = allGameConfigurations().filter { it.playerWins(100, boss) }.minBy { it.cost }!!
+        val config = allGameConfigurations().filter { it.playerWins(100, boss) }.minByOrNull { it.cost }!!
         println("Config $config")
         return config.cost
     }
 
     fun solve2(boss: Character): Int {
-        val config = allGameConfigurations().filter { !it.playerWins(100, boss) }.maxBy { it.cost }!!
+        val config = allGameConfigurations().filter { !it.playerWins(100, boss) }.maxByOrNull { it.cost }!!
         println("Config $config")
         return config.cost
     }

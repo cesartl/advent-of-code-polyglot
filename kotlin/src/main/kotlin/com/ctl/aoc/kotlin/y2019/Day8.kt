@@ -8,7 +8,7 @@ object Day8 {
         val image = input.map { it.toInt() - '0'.toInt() }.toList()
         val layers = buildLayers(width, height, image)
 
-        val layer = layers.map { it.frequency() }.minBy { it[0] ?: 0 }!!
+        val layer = layers.map { it.frequency() }.minByOrNull { it[0] ?: 0 }!!
         return (layer[1] ?: 0) * (layer[2] ?: 0)
     }
 

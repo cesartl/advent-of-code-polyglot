@@ -21,7 +21,7 @@ object Day9p2Bis {
                 score.merge(player.toInt(), marble + removed) { t, l -> t + l }
             }
         }
-        return score.maxBy { it.value }?.value ?: 0
+        return score.maxByOrNull { it.value }?.value ?: 0
     }
 
 }

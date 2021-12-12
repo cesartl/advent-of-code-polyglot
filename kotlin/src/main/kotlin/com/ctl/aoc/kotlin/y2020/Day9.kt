@@ -39,7 +39,7 @@ object Day9 {
             }
             candidates.removeAt(candidates.size - 1)
             if (candidates.sum() == target) {
-                return (candidates.min() ?: 0L) + (candidates.max() ?: 0L)
+                return (candidates.minOrNull() ?: 0L) + (candidates.maxOrNull() ?: 0L)
             }
         }
         throw Error("Not found")

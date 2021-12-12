@@ -5,7 +5,7 @@ import com.ctl.aoc.kotlin.utils.frequency
 object Day10 {
     fun solve1(input: Sequence<String>): Int {
         val raw = input.map { it.toInt() }.sorted().toList()
-        val all = listOf(0) + raw + ((raw.max() ?: 0) + 3)
+        val all = listOf(0) + raw + ((raw.maxOrNull() ?: 0) + 3)
         val frequencies = all
                 .zipWithNext()
                 .map { (current, next) -> next - current }

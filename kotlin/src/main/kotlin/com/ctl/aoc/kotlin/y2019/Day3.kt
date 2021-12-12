@@ -1,6 +1,5 @@
 package com.ctl.aoc.kotlin.y2019
 
-import java.lang.IllegalArgumentException
 import java.util.*
 import kotlin.math.abs
 
@@ -81,7 +80,7 @@ object Day3 {
                 .map { points -> points.drop(1).toSet() }.toList()
 
         val intersect = wirePoints[0].intersect(wirePoints[1])
-        val (distance, point) = intersect.map { it.distance(Point(0, 0)) to it }.minBy { it.first }!!
+        val (distance, point) = intersect.map { it.distance(Point(0, 0)) to it }.minByOrNull { it.first }!!
         return distance
     }
 
@@ -103,7 +102,7 @@ object Day3 {
 
         val intersect = wirePoints[0].intersect(wirePoints[1])
 
-        val (distance, point) = intersect.map { (maps[0][it]!! + maps[1][it]!!) to it }.minBy { it.first }!!
+        val (distance, point) = intersect.map { (maps[0][it]!! + maps[1][it]!!) to it }.minByOrNull { it.first }!!
 
         return distance
     }

@@ -10,7 +10,7 @@ object Day5 {
         allTypes.addAll(polymer.map { it.toLowerCase() }.toCharArray().asSequence())
 
         val allReduced = allTypes.map { removeTypeAndReduce(it, polymer) }
-        return allReduced.minBy { it.length } !!
+        return allReduced.minByOrNull { it.length } !!
     }
 
     fun removeTypeAndReduce(type: Char, polymer: String): String{

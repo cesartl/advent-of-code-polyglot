@@ -43,13 +43,13 @@ object Day9 {
         val distanceMap = DistanceMap.from(lines.map { Distance.parse(it) })
         val destinations = distanceMap.cities.toList()
         println(destinations)
-        return Lists.permutations(destinations).map { distanceMap.distance(it) }.min() ?: 0
+        return Lists.permutations(destinations).map { distanceMap.distance(it) }.minOrNull() ?: 0
     }
 
     fun solve2(lines: Sequence<String>): Int {
         val distanceMap = DistanceMap.from(lines.map { Distance.parse(it) })
         val destinations = distanceMap.cities.toList()
         println(destinations)
-        return Lists.permutations(destinations).map { distanceMap.distance(it) }.max() ?: 0
+        return Lists.permutations(destinations).map { distanceMap.distance(it) }.minOrNull() ?: 0
     }
 }

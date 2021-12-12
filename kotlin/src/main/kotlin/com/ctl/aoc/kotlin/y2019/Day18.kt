@@ -126,7 +126,7 @@ object Day18 {
                 queue = JavaPriorityQueue(),
                 constraints = listOf(constraint)
         )
-        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minBy { it.value }?.toPair()!!
+        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minByOrNull { it.value }?.toPair()!!
         println("Cache rate ${cacheHit.toDouble() / (cacheHit + cacheMiss)}")
         return count
     }
@@ -155,7 +155,7 @@ object Day18 {
                 queue = JavaPriorityQueue(),
                 constraints = listOf(constraint)
         )
-        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minBy { it.value }?.toPair()!!
+        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minByOrNull { it.value }?.toPair()!!
         return count
     }
 

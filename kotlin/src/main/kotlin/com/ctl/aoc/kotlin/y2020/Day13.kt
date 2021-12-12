@@ -10,7 +10,7 @@ object Day13 {
         val (bus, time) = times.map { t ->
             val q = start / t
             t to ((q + 1) * t)
-        }.minBy { it.second }!!
+        }.minByOrNull { it.second }!!
         println("bus $bus, $time")
         val wait = time - start
         println("Wait: $wait")

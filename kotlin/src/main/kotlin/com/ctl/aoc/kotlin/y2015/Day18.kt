@@ -77,8 +77,8 @@ object Day18 {
                         }
                     }
                 }
-                val maxX = lights.maxBy { it.x }?.x!!
-                val maxY = lights.maxBy { it.y }?.y!!
+                val maxX = lights.maxByOrNull { it.x }?.x!!
+                val maxY = lights.maxByOrNull { it.y }?.y!!
                 return Grid(lights, Position(maxX, maxY))
             }
         }

@@ -16,14 +16,14 @@ object Day5 {
     }
 
     fun solve1(input: Sequence<String>): Int? {
-        return input.map { Seat.parse(it).id }.max()
+        return input.map { Seat.parse(it).id }.maxOrNull()
     }
 
     fun solve2(input: Sequence<String>): Int? {
         val seats = input.map { Seat.parse(it) }.sortedBy { it.id }.toList()
         val ids = seats.map { it.id }.toSet()
-        val min = seats.minBy { it.id }!!
-        val max = seats.maxBy { it.id }!!
+        val min = seats.minByOrNull { it.id }!!
+        val max = seats.maxByOrNull { it.id }!!
         println("min $min ${min.id}")
         println("max $max ${max.id}")
         val start = Seat(min.row, 7).id + 1

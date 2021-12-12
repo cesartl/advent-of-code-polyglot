@@ -24,6 +24,6 @@ object Day17 {
     fun solve2(containers: List<Int>, n: Int): Int {
         val sortedContainers = containers.sorted()
         val s = nWays2(n, sortedContainers)
-        return s.groupBy { it }.minBy { it.key }?.value?.size ?: 0
+        return s.groupBy { it }.minByOrNull { it.key }?.value?.size ?: 0
     }
 }

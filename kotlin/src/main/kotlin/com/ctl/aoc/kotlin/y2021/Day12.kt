@@ -4,14 +4,17 @@ import com.ctl.aoc.kotlin.utils.Graph
 
 object Day12 {
 
-    data class Cave(val id: String) {
-        val isSmall: Boolean = id.matches("[a-z]+".toRegex())
+    private val smallRegex = "[a-z]+".toRegex()
+
+    @JvmInline
+    value class Cave(val id: String) {
+        val isSmall: Boolean
+            get() = id.matches(smallRegex)
     }
 
-    data class Path(val caves: List<Cave>, val allowSmallTwice: Boolean) {
-        val last: Cave by lazy { caves[caves.size - 1] }
+    data class Path(val last: Cave, val allowSmallTwice: Boolean, val visitedSmallCaves: Set<Cave>) {
         fun canVisit(cave: Cave): Boolean {
-            return !(cave.isSmall && caves.contains(cave))
+            return !(cave.isSmall && visitedSmallCaves.contains(cave))
         }
 
         fun canVisit2(cave: Cave): Boolean {
@@ -19,20 +22,19 @@ object Day12 {
                 return false
             }
             if (cave.id == "end") {
-                return !caves.contains(cave)
+                return !visitedSmallCaves.contains(cave)
             }
-            return allowSmallTwice || !(cave.isSmall && caves.contains(cave))
+            return allowSmallTwice || !(cave.isSmall && visitedSmallCaves.contains(cave))
         }
 
         fun with(cave: Cave): Path {
-            val allowSmallTwice = this.allowSmallTwice && (!cave.isSmall || !caves.contains(cave))
-            return Path(caves + cave, allowSmallTwice)
+            val allowSmallTwice = this.allowSmallTwice && (!cave.isSmall || !visitedSmallCaves.contains(cave))
+            return Path(cave, allowSmallTwice, if (cave.isSmall) (visitedSmallCaves + cave) else visitedSmallCaves)
         }
 
-        fun print(): String = caves.joinToString(separator = "-") { it.id }
 
         companion object {
-            fun start(): Path = Path(listOf(Cave("start")), true)
+            fun start(): Path = Path(Cave("start"), true, setOf(Cave("start")))
         }
     }
 
@@ -68,17 +70,11 @@ object Day12 {
 
     fun solve1(input: Sequence<String>): Int {
         val caveGraph = CaveGraph.parse(input)
-        val paths = caveGraph.allPaths { path, cave -> path.canVisit(cave) }
-                .map { it.print() }
-                .toList()
-        return paths.size
+        return caveGraph.allPaths { path, cave -> path.canVisit(cave) }.count()
     }
 
     fun solve2(input: Sequence<String>): Int {
         val caveGraph = CaveGraph.parse(input)
-        val paths = caveGraph.allPaths { path, cave -> path.canVisit2(cave) }
-                .map { it.print() }
-                .toList()
-        return paths.size
+        return caveGraph.allPaths { path, cave -> path.canVisit2(cave) }.count()
     }
 }

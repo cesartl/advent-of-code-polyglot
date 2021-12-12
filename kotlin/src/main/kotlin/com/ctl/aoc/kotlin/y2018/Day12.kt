@@ -1,6 +1,5 @@
 package com.ctl.aoc.kotlin.y2018
 
-import java.lang.IllegalArgumentException
 import java.util.regex.Pattern
 
 object Day12 {
@@ -14,8 +13,8 @@ object Day12 {
         }
 
         fun print(): String {
-            val start = (plants.keys.min() ?: 0)
-            val end = (plants.keys.max() ?: 0)
+            val start = (plants.keys.minOrNull() ?: 0)
+            val end = (plants.keys.maxOrNull() ?: 0)
             return (start..end).map { if (plantAt(it)) '#' else '.' }.joinToString(separator = "")
         }
 
@@ -41,8 +40,8 @@ object Day12 {
 
     fun nextGeneration(state: State, rules: Sequence<Rule>): State {
         val map = mutableMapOf<Long, Boolean>()
-        val start = (state.plants.keys.min() ?: 0) - 2
-        val end = (state.plants.keys.max() ?: 0) + 2
+        val start = (state.plants.keys.minOrNull() ?: 0) - 2
+        val end = (state.plants.keys.maxOrNull() ?: 0) + 2
         for (p in start..end) {
             val matched = rules.find { state.ruleMatched(p, it) }
             if (matched != null) {

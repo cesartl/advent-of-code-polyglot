@@ -137,8 +137,8 @@ object Day20 {
 
         val xs by lazy { pixels.map { it.x } }
         val ys by lazy { pixels.map { it.y } }
-        val xRange by lazy { (xs.min() ?: 0)..(xs.max() ?: 0) }
-        val yRange by lazy { (ys.min() ?: 0)..(ys.max() ?: 0) }
+        val xRange by lazy { (xs.minOrNull() ?: 0)..(xs.maxOrNull() ?: 0) }
+        val yRange by lazy { (ys.minOrNull() ?: 0)..(ys.maxOrNull() ?: 0) }
 
 
         val topBorder: List<Boolean> by lazy {

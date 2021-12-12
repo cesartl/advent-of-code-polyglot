@@ -59,8 +59,8 @@ object Day11 {
         fun lineOfSights(): Sequence<Sequence<Position>> = allDirections.map { direction -> generateSequence(this, direction::move).drop(1) }
     }
 
-    data class Grid(val map: Map<Position, Cell>, val max: Position = Position(map.keys.map { it.x }.max()
-            ?: 0, map.keys.map { it.y }.max() ?: 0)) {
+    data class Grid(val map: Map<Position, Cell>, val max: Position = Position(map.keys.map { it.x }.maxOrNull()
+            ?: 0, map.keys.map { it.y }.maxOrNull() ?: 0)) {
 
         private fun adjacents(p: Position): Sequence<Position> = p.adjacents().filter { isPositionValid(it) }
         private fun lineOfSights(p: Position): Sequence<Sequence<Position>> = p.lineOfSights().map { line -> line.takeWhile { isPositionValid(it) } }

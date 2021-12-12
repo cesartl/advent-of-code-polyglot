@@ -15,9 +15,9 @@ object Day7 {
 
     fun solve2(input: String): Int {
         val crabs = input.split(",").map { it.toInt() }
-        val min = crabs.min() ?: 0
-        val max = crabs.max() ?: 0
-        return (min..max).map { it to crabs.fuel2(it) }.minBy { it.second }?.second ?: 0
+        val min = crabs.minOrNull() ?: 0
+        val max = crabs.maxOrNull() ?: 0
+        return (min..max).map { it to crabs.fuel2(it) }.minByOrNull { it.second }?.second ?: 0
     }
 
     private fun List<Int>.fuel2(p: Int): Int {

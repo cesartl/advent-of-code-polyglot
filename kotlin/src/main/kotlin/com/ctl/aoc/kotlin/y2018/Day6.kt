@@ -30,8 +30,8 @@ object Day6 {
     private fun Point.distance(other: Point): Int = Math.abs(this.x - other.x) + Math.abs(this.y - other.y)
 
     private fun buildGrid(points: Sequence<Point>): Grid {
-        val maxX = points.maxBy { it.x }?.x ?: 0
-        val maxY = points.maxBy { it.y }?.y ?: 0
+        val maxX = points.maxByOrNull { it.x }?.x ?: 0
+        val maxY = points.maxByOrNull { it.y }?.y ?: 0
         val map = points.mapIndexed { idx, p -> p to CoordinateValue("${'a' + idx}", 0) }.toMap()
         return Grid(maxX + 1, maxY + 1, map.toMutableMap())
     }
@@ -75,7 +75,7 @@ object Day6 {
         disqualified.addAll(grid.map.filter { it.key.y == grid.maxY -1 }.map { it.value.coordinate })
         println(disqualified)
         val grouped = grid.map.filter { !disqualified.contains(it.value.coordinate) }.asSequence().groupingBy { it.value.coordinate }
-        return grouped.eachCount().maxBy { it.value }?.value ?: 0
+        return grouped.eachCount().maxByOrNull { it.value }?.value ?: 0
     }
 
     fun solve1(lines: Sequence<String>): Int {

@@ -131,8 +131,8 @@ object Day20 {
         }
 
         fun print() {
-            val maxX = tiles.keys.maxBy { it.x }?.x!! + 2
-            val maxY = tiles.keys.maxBy { it.y }?.y!! + 2
+            val maxX = tiles.keys.maxByOrNull { it.x }?.x!! + 2
+            val maxY = tiles.keys.maxByOrNull { it.y }?.y!! + 2
             (0..maxY).forEach { y ->
                 (0..maxX).forEach { x ->
                     val p = Point(x, y)

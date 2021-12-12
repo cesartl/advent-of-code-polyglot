@@ -1,7 +1,6 @@
 package com.ctl.aoc.kotlin.y2019
 
 import com.ctl.aoc.kotlin.utils.Lists
-import java.lang.IllegalArgumentException
 import java.util.*
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -12,13 +11,13 @@ object Day7 {
     fun solve1(intCode: IntArray): Int {
         return Lists.permutations(listOf(0, 1, 2, 3, 4))
                 .map { phases -> runWithPhases(intCode, phases) }
-                .max() ?: 0
+                .maxOrNull() ?: 0
     }
 
     fun solve2(intCode: IntArray): Int {
         return Lists.permutations((5..9).toList())
                 .map { phases -> runWithFeedbackLoop(intCode, phases) }
-                .max() ?: 0
+                .maxOrNull() ?: 0
     }
 
     fun runWithPhases(intCode: IntArray, phases: List<Int>): Int {

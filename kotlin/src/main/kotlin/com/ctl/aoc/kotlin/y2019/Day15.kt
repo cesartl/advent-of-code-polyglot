@@ -1,6 +1,5 @@
 package com.ctl.aoc.kotlin.y2019
 
-import java.lang.IllegalArgumentException
 import java.util.*
 
 object Day15 {
@@ -96,10 +95,10 @@ object Day15 {
         }
 
         fun printState() {
-            val minX = visitedTiles.keys.minBy { it.x }?.x ?: 0
-            val maxX = visitedTiles.keys.maxBy { it.x }?.x ?: 0
-            val minY = visitedTiles.keys.minBy { it.y }?.y ?: 0
-            val maxY = visitedTiles.keys.maxBy { it.y }?.y ?: 0
+            val minX = visitedTiles.keys.minByOrNull { it.x }?.x ?: 0
+            val maxX = visitedTiles.keys.maxByOrNull { it.x }?.x ?: 0
+            val minY = visitedTiles.keys.minByOrNull { it.y }?.y ?: 0
+            val maxY = visitedTiles.keys.maxByOrNull { it.y }?.y ?: 0
 
             (minY..maxY).forEach { y ->
                 (minX..maxX).forEach { x ->

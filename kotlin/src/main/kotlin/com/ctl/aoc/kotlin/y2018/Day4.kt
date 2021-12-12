@@ -1,12 +1,8 @@
 package com.ctl.aoc.kotlin.y2018
 
-import com.ctl.aoc.kotlin.utils.head
-import com.ctl.aoc.kotlin.utils.tail
-import java.lang.IllegalArgumentException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalUnit
 import java.util.regex.Pattern
 
 sealed class LogEntry {
@@ -96,12 +92,12 @@ object Day4 {
             map + (e.id to e.minutesisAsleep() + (map[e.id] ?: 0))
         }
 
-        val longestGuardAsleep = totalSleep.maxBy { it.value }?.key!!
+        val longestGuardAsleep = totalSleep.maxByOrNull { it.value }?.key!!
 
         val minuteCounts = guardSleepLogs.filter { it.id == longestGuardAsleep }.flatMap { g -> g.sleepLogs.asSequence().flatMap { it.minutes() } }
                 .groupingBy { it }.eachCount()
 
-        val mostMinute = minuteCounts.maxBy { it.value }?.key!!
+        val mostMinute = minuteCounts.maxByOrNull { it.value }?.key!!
         return mostMinute * longestGuardAsleep
     }
 
@@ -121,10 +117,10 @@ object Day4 {
 
         println(x)
 
-        val y = x.mapValues { it.value.maxBy { it.value }?.toPair() }
+        val y = x.mapValues { it.value.maxByOrNull { it.value }?.toPair() }
         println(y)
 
-        val z = y.maxBy { it.value?.second ?: 0 }!!.toPair()
+        val z = y.maxByOrNull { it.value?.second ?: 0 }!!.toPair()
         println(z)
 
 

@@ -81,7 +81,7 @@ object Day10 {
 
     private fun findBest(grid: Grid): Pair<Position, Int> {
         val (asteroids, bottomRight) = grid
-        return asteroids.map { it to countLineOfSight(it, asteroids, bottomRight) }.maxBy { it.second }!!
+        return asteroids.map { it to countLineOfSight(it, asteroids, bottomRight) }.maxByOrNull { it.second }!!
     }
 
     data class Vector(val aX: Int, val bY: Int) {
