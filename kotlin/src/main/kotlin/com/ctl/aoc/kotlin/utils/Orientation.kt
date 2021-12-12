@@ -4,6 +4,17 @@ import java.math.BigInteger
 
 data class Position(val x: Int, val y: Int) {
     fun adjacent(): Sequence<Position> = sequenceOf(N, S, E, W).map { it.move(this) }
+    fun neighbours(): Sequence<Position> = sequence {
+        yield(Position(x, y - 1))
+        yield(Position(x + 1, y - 1))
+        yield(Position(x + 1, y))
+        yield(Position(x + 1, y + 1))
+        yield(Position(x, y + 1))
+        yield(Position(x - 1, y + 1))
+        yield(Position(x - 1, y))
+        yield(Position(x - 1, y - 1))
+    }
+
     fun distance(other: Position): Int = Math.abs(other.x - x) + Math.abs(other.y - y)
     override fun toString(): String {
         return "(x=$x, y=$y)"
