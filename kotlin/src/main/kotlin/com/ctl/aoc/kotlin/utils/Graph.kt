@@ -1,8 +1,6 @@
 package com.ctl.aoc.kotlin.utils
 
 import java.util.*
-import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 
 
 interface Storage<T> {
@@ -97,7 +95,7 @@ class Graph<T> {
     }.toString()
 
     fun traversal(startNode: T, storage: Storage<T>, index: (node: T) -> String = { it.toString() }): Sequence<T> {
-        return traversal(startNode, storage, index, { adjacencyMap[it]?.asSequence() ?: emptySequence() })
+        return traversal(startNode, storage, index) { adjacencyMap[it]?.asSequence() ?: emptySequence() }
     }
 
     fun bfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Queue(), index)
