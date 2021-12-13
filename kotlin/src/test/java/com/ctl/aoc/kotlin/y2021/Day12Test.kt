@@ -70,4 +70,6 @@ start-RW""".splitToSequence("\n")
             println(Day12.solve2(puzzleInput))
         }.let { println(it.first) }
     }
+
+
 }

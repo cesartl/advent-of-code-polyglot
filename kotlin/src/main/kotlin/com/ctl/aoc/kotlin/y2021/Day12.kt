@@ -1,20 +1,21 @@
 package com.ctl.aoc.kotlin.y2021
 
 import com.ctl.aoc.kotlin.utils.Graph
+import com.ctl.aoc.kotlin.utils.IntSet
+import com.ctl.aoc.kotlin.utils.IntSetMapper
+import java.util.*
 
 object Day12 {
 
     private val smallRegex = "[a-z]+".toRegex()
 
-    @JvmInline
-    value class Cave(val id: String) {
-        val isSmall: Boolean
-            get() = id.matches(smallRegex)
+    data class Cave(val id: String) {
+        val isSmall: Boolean by lazy { id.matches(smallRegex) }
     }
 
-    data class Path(val last: Cave, val allowSmallTwice: Boolean, val visitedSmallCaves: Set<Cave>) {
+    data class Path(val last: Cave, val allowSmallTwice: Boolean, val visitedSmallCaves: IntSet, val intSetMapper: IntSetMapper<Cave>) {
         fun canVisit(cave: Cave): Boolean {
-            return !(cave.isSmall && visitedSmallCaves.contains(cave))
+            return !cave.isSmall || !intSetMapper.run { visitedSmallCaves.contains(cave) }
         }
 
         fun canVisit2(cave: Cave): Boolean {
@@ -22,38 +23,59 @@ object Day12 {
                 return false
             }
             if (cave.id == "end") {
-                return !visitedSmallCaves.contains(cave)
+                return !intSetMapper.run { visitedSmallCaves.contains(cave) }
             }
-            return allowSmallTwice || !(cave.isSmall && visitedSmallCaves.contains(cave))
+            return allowSmallTwice || (!cave.isSmall || !intSetMapper.run { visitedSmallCaves.contains(cave) })
         }
 
         fun with(cave: Cave): Path {
-            val allowSmallTwice = this.allowSmallTwice && (!cave.isSmall || !visitedSmallCaves.contains(cave))
-            return Path(cave, allowSmallTwice, if (cave.isSmall) (visitedSmallCaves + cave) else visitedSmallCaves)
+            val allowSmallTwice = this.allowSmallTwice && (!cave.isSmall || !intSetMapper.run { visitedSmallCaves.contains(cave) })
+            return Path(cave, allowSmallTwice, if (cave.isSmall) (intSetMapper.run { visitedSmallCaves.add(cave) }) else visitedSmallCaves, intSetMapper)
         }
 
 
         companion object {
-            fun start(): Path = Path(Cave("start"), true, setOf(Cave("start")))
+            fun start(allCaves: Collection<Cave>): Path {
+                val intSetMapper = IntSetMapper<Cave>()
+                allCaves.filter { it.isSmall }.forEach { intSetMapper.add(it) }
+                val start = Cave("start")
+                return Path(start, true, intSetMapper.run { IntSet().add(start) }, intSetMapper)
+            }
         }
     }
 
     data class CaveGraph(val graph: Graph<Cave>) {
 
         fun allPaths(canVisit: (Path, Cave) -> Boolean): Sequence<Path> {
-            fun go(currentPath: Path): Sequence<Path> = sequence {
-                val last = currentPath.last
-                if (last.id == "end") {
-                    yield(currentPath)
-                } else {
-                    graph.outgoingNodes(last)
-                            .filter { canVisit(currentPath, it) }
-                            .forEach { next ->
-                                yieldAll(go(currentPath.with(next)))
-                            }
+            val queue = ArrayDeque<Path>()
+            queue.push(Path.start(graph.adjacencyMap.keys))
+            return sequence {
+                while (queue.isNotEmpty()) {
+                    val current = queue.pop()
+                    if (current.last.id == "end") {
+                        yield(current)
+                    } else {
+                        graph.outgoingNodes(current.last)
+                                .filter { canVisit(current, it) }
+                                .forEach { next ->
+                                    queue.add(current.with(next))
+                                }
+                    }
                 }
             }
-            return go(Path.start())
+//            fun go(currentPath: Path): Sequence<Path> = sequence {
+//                val last = currentPath.last
+//                if (last.id == "end") {
+//                    yield(currentPath)
+//                } else {
+//                    graph.outgoingNodes(last)
+//                            .filter { canVisit(currentPath, it) }
+//                            .forEach { next ->
+//                                yieldAll(go(currentPath.with(next)))
+//                            }
+//                }
+//            }
+//            return go(Path.start(graph.adjacencyMap.keys))
         }
 
         companion object {
