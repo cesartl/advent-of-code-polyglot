@@ -4,62 +4,60 @@ import com.ctl.aoc.kotlin.utils.frequency
 
 object Day14 {
 
-    @JvmInline
-    value class Polymer(val poly: String)
 
-    data class Rule(val pattern: String, val output: String) {
-        val regex = pattern.toRegex()
-        fun findAllMatches(poly: String): Sequence<Int> = sequence {
-            yieldAll(findOneIndex(0, poly))
-        }
+    data class PolymerPlus(val pairs: Map<Pair<Char, Char>, Long>, val charCounts: Map<Char, Long>) {
 
-        fun findOneIndex(start: Int, poly: String): Sequence<Int> = sequence {
-//            println("start $start: ${poly.drop(start)}")
-            val i = poly.indexOf(string = pattern, startIndex = start)
-//            println("i $i")
-            if (i >= 0) {
-                yield(i)
-                yieldAll(findOneIndex(i + 1, poly))
+        companion object {
+            fun parse(s: String): PolymerPlus {
+                val pairs = s.zipWithNext()
+                        .groupBy { it }
+                        .mapValues { it.value.size.toLong() }
+                return PolymerPlus(pairs, s.toList().frequency().mapValues { it.value.toLong() })
             }
         }
-
     }
 
-    fun String.insertAt(i: Int, s: String): String {
-        return this.slice(0 until i) + s + this.drop(i)
-    }
-
-    fun Polymer.applyRules(rules: List<Rule>): Polymer {
-        val matches = rules.flatMap { rule ->
-            rule.findAllMatches(poly).map { rule to it }
-        }.sortedBy { it.second }
-        val newPoly = matches.foldIndexed(poly) { index, acc, (rule, ruleIdx) ->
-            acc.insertAt(index + ruleIdx + 1, rule.output)
+    fun PolymerPlus.applyRules(reactions: Map<Pair<Char, Char>, Char>): PolymerPlus {
+        val (newPairs, newCount) = pairs.entries.fold(mapOf<Pair<Char, Char>, Long>() to charCounts) { (acc, countMap), entry ->
+            val pair = entry.key
+            val count = entry.value
+            reactions[pair]?.let { product ->
+                val p1 = pair.first to product
+                val p2 = product to pair.second
+                val newAcc = acc + (p1 to count + (acc[p1] ?: 0L)) + (p2 to count + (acc[p2] ?: 0L))
+                val newCountMap = countMap + (product to (countMap[product] ?: 0L) + count)
+                newAcc to newCountMap
+            } ?: acc to countMap
         }
-        return Polymer(newPoly)
+        return PolymerPlus(newPairs, newCount)
     }
 
-    fun solve1(input: Sequence<String>): Int {
-        val (polymer, rules) = parse(input)
-        val result = generateSequence(polymer) { it.applyRules(rules) }
-                .drop(10)
+    fun solve1(input: Sequence<String>): Long {
+        return runSteps(input, 10)
+    }
+
+    fun solve2(input: Sequence<String>): Long {
+        return runSteps(input, 40)
+    }
+
+    private fun runSteps(input: Sequence<String>, n: Int): Long {
+        val (polymer2, ruleMap) = parse(input)
+        val result = generateSequence(polymer2) { it.applyRules(ruleMap) }
+                .drop(n)
                 .first()
-        val frequency = result.poly.toList().frequency()
+        val frequency = result.charCounts
         return frequency.maxByOrNull { it.value }!!.value - frequency.minByOrNull { it.value }!!.value
     }
 
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
-    }
 
-    fun parse(lines: Sequence<String>): Pair<Polymer, List<Rule>> {
-        val polymer = Polymer(lines.first())
+    fun parse(lines: Sequence<String>): Pair<PolymerPlus, Map<Pair<Char, Char>, Char>> {
+        val polymer = PolymerPlus.parse(lines.first())
         val rules = lines.drop(2)
                 .map { line ->
                     val parts = line.split(" -> ")
-                    Rule(parts[0], parts[1])
+                    parts[0] to parts[1]
                 }
                 .toList()
-        return polymer to rules
+        return polymer to rules.associate { (it.first[0] to it.first[1]) to it.second[0] }
     }
 }

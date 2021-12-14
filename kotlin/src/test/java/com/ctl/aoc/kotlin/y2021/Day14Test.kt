@@ -1,8 +1,6 @@
 package com.ctl.aoc.kotlin.y2021
 
 import com.ctl.aoc.kotlin.utils.InputUtils
-import com.ctl.aoc.kotlin.y2021.Day14.insertAt
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day14Test {
@@ -28,17 +26,6 @@ BC -> B
 CC -> N
 CN -> C""".splitToSequence("\n")
 
-    @Test
-    internal fun testInsert() {
-        assertEquals("ABC", "AC".insertAt(1, "B"))
-    }
-
-    @Test
-    fun findALl() {
-        val rule = Day14.Rule("BB", "C")
-        assertEquals(listOf(5, 6, 12), rule.findAllMatches("NBCCNBBBCBHCBB").toList())
-//        assertEquals(listOf(0), Day14.Rule("NN", "").findAllMatches("NNCB").toList())
-    }
 
     @Test
     fun solve1() {
@@ -48,6 +35,8 @@ CN -> C""".splitToSequence("\n")
 
     @Test
     fun solve2() {
+        println(Day14.solve2(example))
+        println()
         println(Day14.solve2(puzzleInput))
     }
 }
