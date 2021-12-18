@@ -51,10 +51,10 @@ object Day18 {
                 is PairNumber -> {
                     val leftSearch = left.explodeSearch(depth + 1, indexOffset)
                     if (leftSearch.match != null) {
-                        return ExplodeResult(this.copy(left = leftSearch.node), leftSearch.indexOffset, leftSearch.match)
+                        return leftSearch.copy(node = this.copy(left = leftSearch.node))
                     }
                     val rightSearch = right.explodeSearch(depth + 1, leftSearch.indexOffset)
-                    return ExplodeResult(this.copy(right = rightSearch.node), rightSearch.indexOffset, rightSearch.match)
+                    return rightSearch.copy(node = this.copy(right = rightSearch.node))
                 }
             }
         }
