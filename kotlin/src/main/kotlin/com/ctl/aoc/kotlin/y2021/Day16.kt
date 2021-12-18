@@ -69,6 +69,24 @@ object Day16 {
         }
     }
 
+    fun Packet.toKotlin(): String {
+        return when (this) {
+            is Packet.Literal -> this.numeric.toString() + "L"
+            is Packet.Operator -> {
+                when (this.typeId.type) {
+                    0L -> this.subPackets.joinToString(prefix = "(", postfix = ")", separator = " + ") { it.toKotlin() }
+                    1L -> this.subPackets.joinToString(prefix = "(", postfix = ")", separator = " * ") { it.toKotlin() }
+                    2L -> this.subPackets.joinToString(prefix = "listOf(", postfix = ").minOrNull()!!", separator = ",") { it.toKotlin() }
+                    3L -> this.subPackets.joinToString(prefix = "listOf(", postfix = ").maxOrNull()!!", separator = ",") { it.toKotlin() }
+                    5L -> "if(${this.subPackets[0].toKotlin()} > ${this.subPackets[1].toKotlin()}) 1L else 0L"
+                    6L -> "if(${this.subPackets[0].toKotlin()} < ${this.subPackets[1].toKotlin()}) 1L else 0L"
+                    7L -> "if(${this.subPackets[0].toKotlin()} == ${this.subPackets[1].toKotlin()}) 1L else 0L"
+                    else -> error("unknown type ${this.typeId.type}")
+                }
+            }
+        }
+    }
+
     class Scanner(private val source: BinaryString) {
         private var start = 0
         private var current = 0
