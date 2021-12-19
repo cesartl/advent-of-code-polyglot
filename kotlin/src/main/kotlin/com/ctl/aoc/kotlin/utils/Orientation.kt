@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.utils
 
 import java.math.BigInteger
+import kotlin.math.PI
 
 data class Position(val x: Int, val y: Int) {
     fun adjacent(): Sequence<Position> = sequenceOf(N, S, E, W).map { it.move(this) }
@@ -55,12 +56,154 @@ data class Position(val x: Int, val y: Int) {
 
     private fun rotate(matrix22: Matrix22): Position = (matrix22 x this).let { (x, y) -> Position(x, y) }
 
+    fun rotate4(): Sequence<Position> {
+        val p = this
+        return sequence {
+            yield(p)
+            yield(p.rotate90())
+            yield(p.rotate180())
+            yield(p.rotate270())
+        }
+    }
 
     companion object {
         fun parse(string: String): Position {
             val split = string.split(",")
             return Position(split[0].toInt(), split[1].toInt())
         }
+    }
+}
+
+data class Position3d(val x: Int, val y: Int, val z: Int) {
+
+
+    operator fun plus(other: Position3d): Position3d {
+        return Position3d(x = x + other.x, y = y + other.y, z = z + other.z)
+    }
+
+    operator fun minus(other: Position3d): Position3d {
+        return Position3d(x = x - other.x, y = y - other.y, z = z - other.z)
+    }
+
+    fun scalar(ratio: Int): Position3d {
+        return copy(x = x * ratio, y = y * ratio, z = z * ratio)
+    }
+
+    fun divide(ratio: Int): Position3d {
+        return copy(x = x / ratio, y = y / ratio, z = z / ratio)
+    }
+
+    fun distance(other: Position3d): Int = Math.abs(other.x - x) + Math.abs(other.y - y) + Math.abs(other.z - z)
+
+
+    private fun rotate(matrix33: Matrix33): Position3d = (matrix33 x this).let { (x, y, z) -> Position3d(x, y, z) }
+
+    fun rotateX90(): Position3d = rotate(Matrix33.rx(PI / 2))
+    fun rotateX180(): Position3d = rotate(Matrix33.rx(PI))
+    fun rotateX270(): Position3d = rotate(Matrix33.rx(-PI / 2))
+
+    fun rotateY90(): Position3d = rotate(Matrix33.ry(PI / 2))
+    fun rotateY180(): Position3d = rotate(Matrix33.ry(PI))
+    fun rotateY270(): Position3d = rotate(Matrix33.ry(-PI / 2))
+
+    fun rotateZ90(): Position3d = rotate(Matrix33.rz(PI / 2))
+    fun rotateZ180(): Position3d = rotate(Matrix33.rz(PI))
+    fun rotateZ270(): Position3d = rotate(Matrix33.rz(-PI / 2))
+    override fun toString(): String {
+        return "[$x,$y,$z]"
+    }
+}
+
+fun allRotations(): Sequence<(Position3d) -> Position3d> = sequence {
+    //x
+    yield() { p: Position3d -> p }
+    yield() { p: Position3d -> p.rotateX90() }
+    yield() { p: Position3d -> p.rotateX180() }
+    yield() { p: Position3d -> p.rotateX270() }
+
+    //-x
+    val xx: (Position3d) -> Position3d = { it.rotateY180() }
+
+    yield() { p: Position3d -> xx(p) }
+    yield() { p: Position3d -> xx(p).rotateX90() }
+    yield() { p: Position3d -> xx(p).rotateX180() }
+    yield() { p: Position3d -> xx(p).rotateX270() }
+
+    //y
+
+    val y: (Position3d) -> Position3d = { it.rotateZ90() }
+    yield() { p: Position3d -> y(p) }
+    yield() { p: Position3d -> y(p).rotateX90() }
+    yield() { p: Position3d -> y(p).rotateX180() }
+    yield() { p: Position3d -> y(p).rotateX270() }
+
+    //-y
+
+    val yy: (Position3d) -> Position3d = { y(it).rotateY180() }
+    yield() { p: Position3d -> yy(p) }
+    yield() { p: Position3d -> yy(p).rotateX90() }
+    yield() { p: Position3d -> yy(p).rotateX180() }
+    yield() { p: Position3d -> yy(p).rotateX270() }
+
+    // z
+    val z: (Position3d) -> Position3d = { it.rotateY90() }
+    yield() { p: Position3d -> z(p) }
+    yield() { p: Position3d -> z(p).rotateX90() }
+    yield() { p: Position3d -> z(p).rotateX180() }
+    yield() { p: Position3d -> z(p).rotateX270() }
+
+    //-z
+    val zz: (Position3d) -> Position3d = { z(it).rotateY180() }
+    yield() { p: Position3d -> zz(p) }
+    yield() { p: Position3d -> zz(p).rotateX90() }
+    yield() { p: Position3d -> zz(p).rotateX180() }
+    yield() { p: Position3d -> zz(p).rotateX270() }
+}
+
+fun Position3d.rotations24(): Sequence<Position3d> {
+    val p = this
+    return sequence {
+        //x
+        yield(p)
+        yield(p.rotateX90())
+        yield(p.rotateX180())
+        yield(p.rotateX270())
+
+        //-x
+        val xx = p.rotateY180()
+        yield(xx)
+        yield(xx.rotateX90())
+        yield(xx.rotateX180())
+        yield(xx.rotateX270())
+
+        //y
+
+        val y = p.rotateZ90()
+        yield(y)
+        yield(y.rotateX90())
+        yield(y.rotateX180())
+        yield(y.rotateX270())
+
+        //-y
+
+        val yy = y.rotateY180()
+        yield(yy)
+        yield(yy.rotateX90())
+        yield(yy.rotateX180())
+        yield(yy.rotateX270())
+
+        // z
+        val z = p.rotateY90()
+        yield(z)
+        yield(z.rotateX90())
+        yield(z.rotateX180())
+        yield(z.rotateX270())
+
+        val zz = z.rotateY180()
+        yield(zz)
+        yield(zz.rotateX90())
+        yield(zz.rotateX180())
+        yield(zz.rotateX270())
     }
 }
 
