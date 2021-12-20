@@ -21,21 +21,22 @@ object Day19 {
             }
             Delta(deltas)
         }
-    }
 
-    fun Scanner.allScannerRotations(): Sequence<Scanner> {
-        val scanner = this
-        return allRotations().mapIndexed { idx, rotation ->
-            scanner.copy(rotationId = idx, beacons = scanner.beacons.map { rotation(it) }.toSet())
+        val allScannerRotations : Sequence<Scanner> by lazy{
+            val scanner = this
+            allRotations().mapIndexed { idx, rotation ->
+                scanner.copy(rotationId = idx, beacons = scanner.beacons.map { rotation(it) }.toSet())
+            }
         }
     }
+
 
     fun Scanner.offset(offset: Position3d): Scanner {
         return copy(beacons = beacons.map { it + offset }.toSet())
     }
 
     fun Scanner.findMatch(other: Scanner): Pair<Scanner, Position3d>? {
-        return other.allScannerRotations()
+        return other.allScannerRotations
                 .mapNotNull { candidate -> this.isMatch(candidate)?.let { candidate to it } }
                 .firstOrNull()
     }
@@ -46,14 +47,7 @@ object Day19 {
         }
         val intersect = this.deltas.map.keys.intersect(other.deltas.map.keys)
         if (intersect.size >= 12 * 11) {
-            val offset = intersect.first().let { this.deltas.map[it]!!.first - other.deltas.map[it]!!.first }
-            val check1 = intersect.all { this.deltas.map[it]!!.first - other.deltas.map[it]!!.first == offset }
-            val check2 = intersect.all { this.deltas.map[it]!!.second - other.deltas.map[it]!!.second == offset }
-            if (check1 && check2) {
-                return offset
-            } else {
-                return null
-            }
+            return intersect.first().let { this.deltas.map[it]!!.first - other.deltas.map[it]!!.first }
         }
         return null
     }
@@ -84,7 +78,6 @@ object Day19 {
         others.forEach { unknown.addLast(it) }
         while (unknown.isNotEmpty()) {
             val current = unknown.removeFirst()
-//            println("Doing ${current.id}")
             val match = scannerById.values
                     .mapNotNull { known -> known.findMatch(current)?.let { known to it } }
                     .firstOrNull()
