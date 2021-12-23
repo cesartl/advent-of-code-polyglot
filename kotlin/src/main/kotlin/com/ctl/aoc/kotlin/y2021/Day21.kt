@@ -61,8 +61,17 @@ object Day21 {
         return UniverseCount(count.p1 * this, count.p2 * this)
     }
 
-
-    fun playDirac(p1: Player, p2: Player, p1Start: Boolean = true): UniverseCount {
+    fun playDirac(
+        p1: Player,
+        p2: Player,
+        p1Start: Boolean = true,
+        cache: MutableMap<Triple<Player, Player, Boolean>, UniverseCount> = mutableMapOf()
+    ): UniverseCount {
+        val cacheKey = Triple(p1, p2, p1Start)
+        val cached = cache[cacheKey]
+        if (cached != null) {
+            return cached
+        }
         if (p1.score >= 21) {
             return UniverseCount.p1Wins()
         }
@@ -79,22 +88,23 @@ object Day21 {
         val m9 = p.move(9)
         var total = UniverseCount(0, 0)
         if (p1Start) {
-            total += 1L x playDirac(m3, p2, false)
-            total += 3L x playDirac(m4, p2, false)
-            total += 6L x playDirac(m5, p2, false)
-            total += 7L x playDirac(m6, p2, false)
-            total += 6L x playDirac(m7, p2, false)
-            total += 3L x playDirac(m8, p2, false)
-            total += 1L x playDirac(m9, p2, false)
+            total += 1L x playDirac(m3, p2, false, cache)
+            total += 3L x playDirac(m4, p2, false, cache)
+            total += 6L x playDirac(m5, p2, false, cache)
+            total += 7L x playDirac(m6, p2, false, cache)
+            total += 6L x playDirac(m7, p2, false, cache)
+            total += 3L x playDirac(m8, p2, false, cache)
+            total += 1L x playDirac(m9, p2, false, cache)
         } else {
-            total += 1L x playDirac(p1, m3, true)
-            total += 3L x playDirac(p1, m4, true)
-            total += 6L x playDirac(p1, m5, true)
-            total += 7L x playDirac(p1, m6, true)
-            total += 6L x playDirac(p1, m7, true)
-            total += 3L x playDirac(p1, m8, true)
-            total += 1L x playDirac(p1, m9, true)
+            total += 1L x playDirac(p1, m3, true, cache)
+            total += 3L x playDirac(p1, m4, true, cache)
+            total += 6L x playDirac(p1, m5, true, cache)
+            total += 7L x playDirac(p1, m6, true, cache)
+            total += 6L x playDirac(p1, m7, true, cache)
+            total += 3L x playDirac(p1, m8, true, cache)
+            total += 1L x playDirac(p1, m9, true, cache)
         }
+        cache[cacheKey] = total
         return total
     }
 
@@ -104,8 +114,10 @@ object Day21 {
         val p2Pos = lines[1].last().toString().toLong()
         val player1 = Player(p1Pos - 1)
         val player2 = Player(p2Pos - 1)
-        val result = playDirac(player1, player2)
+        val cache : MutableMap<Triple<Player, Player, Boolean>, UniverseCount> = mutableMapOf()
+        val result = playDirac(player1, player2, true, cache)
         println(result)
+        println("cache size: ${cache.size}")
         return listOf(result.p1, result.p2).maxOrNull()!!
     }
 }
