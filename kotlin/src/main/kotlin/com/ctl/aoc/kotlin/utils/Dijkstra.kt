@@ -32,7 +32,16 @@ fun <T> PathingResultInt<T>.findPath(end: T): List<T> = findPath(end, this.previ
 
 object Dijkstra {
 
-    fun <T> traverse(start: T, end: T?, nodeGenerator: NodeGenerator<T>, distance: Distance<T>, constraints: List<Constraint<T>> = listOf(), queue: MinPriorityQueue<T> = JavaPriorityQueue(), heuristic: (T) -> Long = { 0 }): PathingResult<T> {
+    fun <T> traverse(
+        start: T,
+        end: T?,
+        nodeGenerator: NodeGenerator<T>,
+        distance: Distance<T>,
+        constraints: List<Constraint<T>> = listOf(),
+        queue: MinPriorityQueue<T> = JavaPriorityQueue(),
+        heuristic: (T) -> Long = { 0 },
+        debug: Boolean = false
+    ): PathingResult<T> {
         val steps = mutableMapOf<T, Long>()
         val prevs = mutableMapOf<T, T>()
 
@@ -44,6 +53,11 @@ object Dijkstra {
         var current: T? = null
 
         while (!queue.isEmpty && (end == null || current != end) && constraintsMet(current, steps, constraints)) {
+            if (debug) {
+                if (steps.size % 1000 == 0) {
+                    println("steps: ${steps.size}")
+                }
+            }
             current = queue.extractMinimum()!!
             nodeGenerator(current).filter { !visited.contains(it) }.forEach { n ->
                 if (!queue.contains(n)) {
@@ -63,7 +77,14 @@ object Dijkstra {
         return PathingResult(steps, prevs, current)
     }
 
-    fun <T> traverseInt(start: T, end: T?, nodeGenerator: NodeGenerator<T>, distance: DistanceInt<T>, queue: MinPriorityQueueInt<T> = JavaPriorityQueueInt(), heuristic: (T) -> Int = { 0 }): PathingResultInt<T> {
+    fun <T> traverseInt(
+        start: T,
+        end: T?,
+        nodeGenerator: NodeGenerator<T>,
+        distance: DistanceInt<T>,
+        queue: MinPriorityQueueInt<T> = JavaPriorityQueueInt(),
+        heuristic: (T) -> Int = { 0 }
+    ): PathingResultInt<T> {
         val steps = mutableMapOf<T, Int>()
         val prevs = mutableMapOf<T, T>()
 
@@ -94,21 +115,28 @@ object Dijkstra {
         return PathingResultInt(steps, prevs, current)
     }
 
-    private fun <T> isConstraintMet(current: T, steps: Map<T, Long>, constraint: Constraint<T>): Boolean = when (constraint) {
-        is StepConstraint<*> -> (steps[current] ?: 0) < constraint.maxSteps
-        is CustomConstraint -> constraint.f(current, steps)
-    }
+    private fun <T> isConstraintMet(current: T, steps: Map<T, Long>, constraint: Constraint<T>): Boolean =
+        when (constraint) {
+            is StepConstraint<*> -> (steps[current] ?: 0) < constraint.maxSteps
+            is CustomConstraint -> constraint.f(current, steps)
+        }
 
-    private fun <T> constraintsMet(current: T?, steps: Map<T, Long>, constraints: List<Constraint<T>>): Boolean = current?.let { node ->
-        constraints.all { constraint -> isConstraintMet(node, steps, constraint) }
-    } ?: true
+    private fun <T> constraintsMet(current: T?, steps: Map<T, Long>, constraints: List<Constraint<T>>): Boolean =
+        current?.let { node ->
+            constraints.all { constraint -> isConstraintMet(node, steps, constraint) }
+        } ?: true
 }
 
-fun <T> Graph<T>.dijkstra(start: T, end: T?, distance: Distance<T> = { _, _ -> 1L }, constraints: List<Constraint<T>> = listOf()): PathingResult<T> = Dijkstra.traverse(
-        start,
-        end, {
-    this.outgoingNodes(it).asSequence()
-},
-        distance,
-        constraints
+fun <T> Graph<T>.dijkstra(
+    start: T,
+    end: T?,
+    distance: Distance<T> = { _, _ -> 1L },
+    constraints: List<Constraint<T>> = listOf()
+): PathingResult<T> = Dijkstra.traverse(
+    start,
+    end, {
+        this.outgoingNodes(it).asSequence()
+    },
+    distance,
+    constraints
 )
