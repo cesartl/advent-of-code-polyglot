@@ -12,7 +12,7 @@ object Day24 {
         }
 
         fun toKotlin(): String = when (this) {
-            is Number -> this.n.toString()+"L"
+            is Number -> this.n.toString() + "L"
             is Register -> this.name.toString()
         }
     }
@@ -90,18 +90,108 @@ object Day24 {
         return builder.toString()
     }
 
+    fun chunkProgram(a: Long, b: Long, c: Long): (Long, Long) -> Long = { z, w ->
+        var zz = z
+        val x = b + z % 26
+        zz /= a
+        if (x != w) {
+            zz *= 26
+            zz += w + c
+        }
+        zz
+    }
 
-    fun solve1(input: Sequence<String>): Int {
-//        val instructions = input.map { Instr.parse(it) }.toList()
-//        val kotlin = kotlin(instructions)
-//        println(kotlin)
-        var c = 0L
-        (99999999999999L downTo 11111111111111L).forEach { c++ }
-        println(c)
-        TODO()
+    data class ChunkParam(val a: Long, val b: Long, val c: Long)
+
+    data class Eq(val i1: Int, val i2: Int, val offset: Long)
+
+    fun solve1(input: Sequence<String>): Long {
+        val blocks = input.chunked(18).toList()
+        val chunks = blocks.map { instrs ->
+            val l = mutableListOf<String>()
+            l.add(instrs[4])
+            l.add(instrs[5])
+            l.add(instrs[15])
+            l
+        }.map { (aa, bb, cc) ->
+            val a = aa.split(" ")[2].toLong()
+            val b = bb.split(" ")[2].toLong()
+            val c = cc.split(" ")[2].toLong()
+            ChunkParam(a, b, c)
+        }
+        val a1 = chunks.filter { (a, b, c) -> a == 1L }
+        val a26 = chunks.filter { (a, b, c) -> a == 26L }
+
+        val (stack, eqs) = chunks.foldIndexed(listOf<Pair<Int, Long>>() to listOf<Eq>()) { i, (stack, eqs), chunk ->
+            if (chunk.a == 1L) {
+                (listOf(i to chunk.c)) + stack to eqs
+            } else {
+                val (previousIndex, c) = stack.first()
+                stack.drop(1) to eqs + Eq(i, previousIndex, chunk.b + c)
+            }
+        }
+        val found = generateModelNumber().map { l -> l.joinToString(separator = "") to run(l.map { it.toLong() }) }
+            .find { it.second == 0L }
+        println()
+        return found!!.first.toLong()
+    }
+
+    fun generateModelNumber(): Sequence<List<Int>> {
+        return sequence {
+            (4 downTo 1).forEach { w0 ->
+                (9 downTo 1).forEach { w1 ->
+                    (9 downTo 9).forEach { w2 ->
+                        (7 downTo 1).forEach { w4 ->
+                            (2 downTo 1).forEach { w6 ->
+                                (9 downTo 6).forEach { w7 ->
+                                    (9 downTo 7).forEach { w8 ->
+                                        val w3 = w2 - 8
+                                        val w5 = w4 + 2
+                                        val w9 = w8 - 6
+                                        val w10 = w7 - 5
+                                        val w11 = w6 + 7
+                                        val w12 = w1
+                                        val w13 = w0 + 5
+                                        yield(listOf(w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun generateModelNumber2(): Sequence<List<Int>> {
+        return sequence {
+            (4 downTo 1).reversed().forEach { w0 ->
+                (9 downTo 1).reversed().forEach { w1 ->
+                    (9 downTo 9).reversed().forEach { w2 ->
+                        (7 downTo 1).reversed().forEach { w4 ->
+                            (2 downTo 1).reversed().forEach { w6 ->
+                                (9 downTo 6).reversed().forEach { w7 ->
+                                    (9 downTo 7).reversed().forEach { w8 ->
+                                        val w3 = w2 - 8
+                                        val w5 = w4 + 2
+                                        val w9 = w8 - 6
+                                        val w10 = w7 - 5
+                                        val w11 = w6 + 7
+                                        val w12 = w1
+                                        val w13 = w0 + 5
+                                        yield(listOf(w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun run(input: List<Long>): Long {
+        println(input.joinToString(""))
         var idx = 0
         var w = 0L
         var x = 0L
@@ -359,11 +449,15 @@ object Day24 {
         y=y+1L
         y=y*x
         z=z+y
+        println(z)
         return z
     }
 
 
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
+    fun solve2(input: Sequence<String>): Long {
+        val found = generateModelNumber2().map { l -> l.joinToString(separator = "") to run(l.map { it.toLong() }) }
+            .find { it.second == 0L }
+        println()
+        return found!!.first.toLong()
     }
 }
