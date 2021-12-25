@@ -16,7 +16,7 @@ object Day23 {
         return 2 + this.ordinal * 2
     }
 
-    val typePoints = AmphiType.values().associate { it to "1".padEnd(it.ordinal + 1, '0').toLong() }
+    private val typePoints = AmphiType.values().associate { it to "1".padEnd(it.ordinal + 1, '0').toLong() }
 
     sealed class Tile {
         object Corridor : Tile()
@@ -35,10 +35,10 @@ object Day23 {
 
     }
 
-    data class Env(val tiles: Map<Position, Tile>, val amphipods: Map<Position, AmphiType>) {
+    data class Env(val tiles: Map<Position, Tile>, val amphipods: Map<Position, AmphiType>, val maxY: Int = 2) {
 
         val isDone: Boolean by lazy {
-            amphipods.all { (pod, type) -> tiles[pod]?.let { it.isRoom(type) } ?: false }
+            amphipods.all { (pod, type) -> pod.y > 0 && pod.x == type.x() }
         }
 
         fun print() {
@@ -61,12 +61,100 @@ object Day23 {
             }
         }
 
+        fun goIntoRoom(x: Int, type: AmphiType): Int? {
+            val wrongPod = (1..maxY).any { y -> amphipods[Position(x, y)]?.let { pod -> pod != type } ?: false }
+            if (wrongPod) {
+                return null
+            }
+            var current = Position(x, 1)
+            if (amphipods[current] != null) {
+                return null
+            }
+            while (amphipods[current] == null) {
+                if (current.y == maxY) {
+                    return maxY
+                }
+                current = current.copy(y = current.y + 1)
+            }
+            return current.y - 1
+        }
+
+        fun podMoves(p: Position, type: AmphiType): Sequence<Position> {
+            return sequence {
+                if (p.y > 0) {
+                    //inside a room
+                    val up = Position(p.x, p.y - 1)
+                    if (p.y == 1 || amphipods[up] == null) {
+                        //can exit room
+                        val tolerance = 3
+                        //corridor to the right
+                        var current = Position(p.x + 1, 0)
+                        var countRight = 0
+                        val maxCountRight = if (type.x() < p.x) tolerance else 10
+                        while (amphipods[current] == null && current.x <= 10 && countRight < maxCountRight) {
+                            if (current.x != 2 && current.x != 4 && current.x != 6 && current.x != 8) {
+                                yield(current)
+                            }
+                            //we are above the target room
+                            if (current.x == type.x()) {
+                                goIntoRoom(current.x, type)?.let { y ->
+                                    yield(current.copy(y = y))
+                                }
+                            }
+                            current = current.copy(x = current.x + 1)
+                            countRight++
+                        }
+                        //corridor to the left
+                        current = Position(p.x - 1, 0)
+                        var countLeft = 0
+                        val maxCountLeft = if (type.x() > p.x) tolerance else 10
+                        while (amphipods[current] == null && current.x >= 0 && countLeft < maxCountLeft) {
+                            if (current.x != 2 && current.x != 4 && current.x != 6 && current.x != 8) {
+                                yield(current)
+                            }
+                            //we are above the target room
+                            if (current.x == type.x()) {
+                                goIntoRoom(current.x, type)?.let { y ->
+                                    yield(current.copy(y = y))
+                                }
+                            }
+                            current = current.copy(x = current.x - 1)
+                            countLeft++
+                        }
+                    }
+                } else {
+                    //in a corridor
+                    val deltaX = type.x() - p.x
+                    val range = if (deltaX > 0) (p.x + 1..type.x()) else (type.x() until p.x)
+                    val pathClear = range.all { amphipods[Position(it, 0)] == null }
+                    if (pathClear) {
+                        goIntoRoom(type.x(), type)?.let { y ->
+                            yield(Position(type.x(), y))
+                        }
+                    }
+                }
+            }
+        }
+
+        fun allMoves2(): Sequence<Env> {
+            val candidates =
+                amphipods
+                    .asSequence()
+                    .filterNot { (p, type) -> isAtRightPlace(p, type) }
+                    .flatMap { (p, type) ->
+                        podMoves(p, type).map { p to it }
+                    }
+
+            return (candidates.find { it.second.y > 0 }?.let { best -> sequenceOf(best) } ?: candidates)
+                .map { moveAmphi(it.first, it.second) }
+        }
+
         fun allMoves(): Sequence<Env> {
             return sequence {
                 amphipods
                     .filterNot { (p, type) -> isAtRightPlace(p, type) }
                     .forEach { (p, type) ->
-                        val pathing = amphiPaths(p)
+                        val pathing = computeAmphiPaths(p)
                         val moveTo = pathing.steps.keys
                             .asSequence()
                             .filter { it != p }
@@ -90,7 +178,7 @@ object Day23 {
         }
 
         fun isAllTheWayDown(p: Position): Boolean {
-            if (p.y == 1) {
+            if (p.y in 1 until maxY) {
                 return amphipods.containsKey(Position(p.x, p.y + 1))
             }
             return true
@@ -100,15 +188,15 @@ object Day23 {
             if (p.x != type.x()) {
                 return false
             }
-            if (p.y == 2) {
+            if (p.y == maxY) {
                 return true
             }
-            return amphipods[Position(p.x, p.y - 1)]?.let { below ->
+            return amphipods[Position(p.x, p.y + 1)]?.let { below ->
                 below == type
             } ?: false
         }
 
-        private fun moveAmphi(from: Position, to: Position): Env {
+        fun moveAmphi(from: Position, to: Position): Env {
             val mutablePods = amphipods.toMutableMap()
             val type = mutablePods.remove(from)!!
             mutablePods[to] = type
@@ -130,11 +218,6 @@ object Day23 {
             } ?: error("wrong move")
         }
 
-        fun amphiPaths(p: Position): PathingResult<Position> {
-            return pathingCache.computeIfAbsent(p) { computeAmphiPaths(it) }
-        }
-
-        private val pathingCache = mutableMapOf<Position, PathingResult<Position>>()
         private fun computeAmphiPaths(amphiPosition: Position): PathingResult<Position> {
             return Dijkstra.traverse(amphiPosition, null, { it.amphiAdjacent() }, { _, _ -> 1L })
         }
@@ -149,33 +232,44 @@ object Day23 {
         }
 
         companion object {
-            fun build(lines: List<List<Char>>): Env {
+            fun build(lines: List<List<Char>>, depth: Int = 2): Env {
                 val corridors = (0 until 11).associate { Position(it, 0) to Tile.Corridor }
-                val rooms = mapOf<Position, Tile>(
-                    Position(2, 1) to Tile.AmphiRoom(AmphiType.A),
-                    Position(2, 2) to Tile.AmphiRoom(AmphiType.A),
-                    Position(4, 1) to Tile.AmphiRoom(AmphiType.B),
-                    Position(4, 2) to Tile.AmphiRoom(AmphiType.B),
-                    Position(6, 1) to Tile.AmphiRoom(AmphiType.C),
-                    Position(6, 2) to Tile.AmphiRoom(AmphiType.C),
-                    Position(8, 1) to Tile.AmphiRoom(AmphiType.D),
-                    Position(8, 2) to Tile.AmphiRoom(AmphiType.D),
-                )
-
+                val rooms = (1..depth).flatMap { y ->
+                    listOf(
+                        Position(2, y) to Tile.AmphiRoom(AmphiType.A),
+                        Position(4, y) to Tile.AmphiRoom(AmphiType.B),
+                        Position(6, y) to Tile.AmphiRoom(AmphiType.C),
+                        Position(8, y) to Tile.AmphiRoom(AmphiType.D),
+                    )
+                }.toMap()
                 val podLines = lines.map { line -> line.map { AmphiType.valueOf(it.toString()) } }
                 val xStart = 2
                 val yStart = 1
                 val amphipods = podLines.flatMapIndexed { y: Int, pods: List<AmphiType> ->
                     pods.mapIndexed { x, pod -> Position(2 * x + xStart, y + yStart) to pod }
                 }.toMap()
-                return Env(corridors + rooms, amphipods)
+                return Env(corridors + rooms, amphipods, depth)
             }
 
             fun parse(input: Sequence<String>): Env {
                 val lines = input.drop(2)
                     .map { line -> line.filter { it.isLetter() }.toList() }
                     .take(2).toList()
-                return build(lines)
+                return build(lines, 2)
+            }
+
+            fun parse2(input: Sequence<String>): Env {
+                val lines = input.drop(2)
+                    .map { line -> line.filter { it.isLetter() }.toList() }
+                    .take(2).toList()
+                val newLines =
+                    listOf(
+                        lines[0],
+                        listOf('D', 'C', 'B', 'A'),
+                        listOf('D', 'B', 'A', 'C'),
+                        lines[1]
+                    )
+                return build(newLines, 4)
             }
         }
     }
@@ -185,7 +279,8 @@ object Day23 {
         val end = (to.amphipods.keys - from.amphipods.keys).first()
         val type = from.amphipods[start]!!
         assert(to.amphipods[end] == type)
-        val steps = from.amphiPaths(start).steps[end] ?: error("No steps")
+        val ySteps = start.y + end.y
+        val steps = (start.x - end.x).absoluteValue + ySteps
         return steps * typePoints[type]!!
     }
 
@@ -204,7 +299,7 @@ object Day23 {
         return Dijkstra.traverse(
             start,
             null,
-            { it.allMoves() },
+            { it.allMoves2() },
             { from, to -> distance(from, to) },
             listOf(constraint),
             heuristic = { it.heuristic() },
@@ -214,14 +309,26 @@ object Day23 {
 
     fun solve1(input: Sequence<String>): Long {
         val env = Env.parse(input)
+//        val moved = env
+//            .moveAmphi(Position(6, 1), Position(3, 0))
+//            .moveAmphi(Position(6, 2), Position(9, 0))
+//            .moveAmphi(Position(3, 0), Position(6, 2))
+//        println(moved.goIntoRoom(6, AmphiType.C))
+//        moved.print()
         val result = bigPathing(env)
+        println("done")
         return result.steps.asSequence()
             .find { it.key.isDone }
             ?.value
             ?: -1L
     }
 
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
+    fun solve2(input: Sequence<String>): Long {
+        val env = Env.parse2(input)
+        val result = bigPathing(env)
+        return result.steps.asSequence()
+            .find { it.key.isDone }
+            ?.value
+            ?: -1L
     }
 }

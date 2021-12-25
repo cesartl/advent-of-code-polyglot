@@ -90,22 +90,8 @@ object Day24 {
         return builder.toString()
     }
 
-    fun chunkProgram(a: Long, b: Long, c: Long): (Long, Long) -> Long = { z, w ->
-        var zz = z
-        val x = b + z % 26
-        zz /= a
-        if (x != w) {
-            zz *= 26
-            zz += w + c
-        }
-        zz
-    }
-
     data class ChunkParam(val a: Long, val b: Long, val c: Long)
-
-    data class Eq(val i1: Int, val i2: Int, val offset: Long)
-
-    fun solve1(input: Sequence<String>): Long {
+    private fun findChunks(input: Sequence<String>): List<ChunkParam> {
         val blocks = input.chunked(18).toList()
         val chunks = blocks.map { instrs ->
             val l = mutableListOf<String>()
@@ -119,75 +105,60 @@ object Day24 {
             val c = cc.split(" ")[2].toLong()
             ChunkParam(a, b, c)
         }
-        val a1 = chunks.filter { (a, b, c) -> a == 1L }
-        val a26 = chunks.filter { (a, b, c) -> a == 26L }
-
-        val (stack, eqs) = chunks.foldIndexed(listOf<Pair<Int, Long>>() to listOf<Eq>()) { i, (stack, eqs), chunk ->
+        return chunks
+    }
+    private fun findEquations(chunks: List<ChunkParam>): List<Eq> {
+        return chunks.foldIndexed<ChunkParam, Pair<List<Pair<Int, Long>>, List<Eq>>>(listOf<Pair<Int, Long>>() to listOf()) { i, (stack, eqs), chunk ->
             if (chunk.a == 1L) {
                 (listOf(i to chunk.c)) + stack to eqs
             } else {
                 val (previousIndex, c) = stack.first()
                 stack.drop(1) to eqs + Eq(i, previousIndex, chunk.b + c)
             }
-        }
-        val found = generateModelNumber().map { l -> l.joinToString(separator = "") to run(l.map { it.toLong() }) }
-            .find { it.second == 0L }
-        println()
-        return found!!.first.toLong()
+        }.second
     }
 
-    fun generateModelNumber(): Sequence<List<Int>> {
-        return sequence {
-            (4 downTo 1).forEach { w0 ->
-                (9 downTo 1).forEach { w1 ->
-                    (9 downTo 9).forEach { w2 ->
-                        (7 downTo 1).forEach { w4 ->
-                            (2 downTo 1).forEach { w6 ->
-                                (9 downTo 6).forEach { w7 ->
-                                    (9 downTo 7).forEach { w8 ->
-                                        val w3 = w2 - 8
-                                        val w5 = w4 + 2
-                                        val w9 = w8 - 6
-                                        val w10 = w7 - 5
-                                        val w11 = w6 + 7
-                                        val w12 = w1
-                                        val w13 = w0 + 5
-                                        yield(listOf(w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+    data class Eq(val i1: Int, val i2: Int, val offset: Long)
+    fun findModelNumbers(eqs: List<Eq>): Pair<Long, Long> {
+        val minDigits = LongArray(14) { 0L }
+        val maxDigits = LongArray(14) { 0L }
+        eqs.forEach { eq ->
+            val min = 1 - eq.offset.coerceAtMost(0)
+            val max = 9 - eq.offset.coerceAtLeast(0)
+            minDigits[eq.i2] = min
+            minDigits[eq.i1] = min + eq.offset
+
+            maxDigits[eq.i2] = max
+            maxDigits[eq.i1] = max + eq.offset
         }
+        return minDigits.joinToString(separator = "").toLong() to maxDigits.joinToString(separator = "").toLong()
     }
 
-    fun generateModelNumber2(): Sequence<List<Int>> {
-        return sequence {
-            (4 downTo 1).reversed().forEach { w0 ->
-                (9 downTo 1).reversed().forEach { w1 ->
-                    (9 downTo 9).reversed().forEach { w2 ->
-                        (7 downTo 1).reversed().forEach { w4 ->
-                            (2 downTo 1).reversed().forEach { w6 ->
-                                (9 downTo 6).reversed().forEach { w7 ->
-                                    (9 downTo 7).reversed().forEach { w8 ->
-                                        val w3 = w2 - 8
-                                        val w5 = w4 + 2
-                                        val w9 = w8 - 6
-                                        val w10 = w7 - 5
-                                        val w11 = w6 + 7
-                                        val w12 = w1
-                                        val w13 = w0 + 5
-                                        yield(listOf(w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+    fun solve1(input: Sequence<String>): Long {
+        val chunks = findChunks(input)
+        val eqs = findEquations(chunks)
+        return findModelNumbers(eqs).second
+    }
+
+
+    fun solve2(input: Sequence<String>): Long {
+        val chunks = findChunks(input)
+        val eqs = findEquations(chunks)
+        return findModelNumbers(eqs).first
+    }
+
+
+    //for research only
+
+    fun chunkProgram(a: Long, b: Long, c: Long): (Long, Long) -> Long = { z, w ->
+        var zz = z
+        val x = b + z % 26
+        zz /= a
+        if (x != w) {
+            zz *= 26
+            zz += w + c
         }
+        zz
     }
 
     fun run(input: List<Long>): Long {
@@ -197,267 +168,259 @@ object Day24 {
         var x = 0L
         var y = 0L
         var z = 0L
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/1L
-        x=x+15L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+15L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/1L
-        x=x+12L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+5L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/1L
-        x=x+13L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+6L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/26L
-        x=x+-14L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+7L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/1L
-        x=x+15L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+9L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/26L
-        x=x+-7L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+6L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/1L
-        x=x+14L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+14L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/1L
-        x=x+15L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+3L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/1L
-        x=x+15L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+1L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/26L
-        x=x+-7L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+3L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/26L
-        x=x+-8L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+4L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/26L
-        x=x+-7L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+6L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/26L
-        x=x+-5L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+7L
-        y=y*x
-        z=z+y
-        w=input[idx++]
-        x=x*0L
-        x=x+z
-        x=x%26L
-        z=z/26L
-        x=x+-10L
-        x=if(x==w) 1L else 0L
-        x=if(x==0L) 1L else 0L
-        y=y*0L
-        y=y+25L
-        y=y*x
-        y=y+1L
-        z=z*y
-        y=y*0L
-        y=y+w
-        y=y+1L
-        y=y*x
-        z=z+y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 1L
+        x = x + 15L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 15L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 1L
+        x = x + 12L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 5L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 1L
+        x = x + 13L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 6L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 26L
+        x = x + -14L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 7L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 1L
+        x = x + 15L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 9L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 26L
+        x = x + -7L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 6L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 1L
+        x = x + 14L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 14L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 1L
+        x = x + 15L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 3L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 1L
+        x = x + 15L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 1L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 26L
+        x = x + -7L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 3L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 26L
+        x = x + -8L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 4L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 26L
+        x = x + -7L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 6L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 26L
+        x = x + -5L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 7L
+        y = y * x
+        z = z + y
+        w = input[idx++]
+        x = x * 0L
+        x = x + z
+        x = x % 26L
+        z = z / 26L
+        x = x + -10L
+        x = if (x == w) 1L else 0L
+        x = if (x == 0L) 1L else 0L
+        y = y * 0L
+        y = y + 25L
+        y = y * x
+        y = y + 1L
+        z = z * y
+        y = y * 0L
+        y = y + w
+        y = y + 1L
+        y = y * x
+        z = z + y
         println(z)
         return z
-    }
-
-
-    fun solve2(input: Sequence<String>): Long {
-        val found = generateModelNumber2().map { l -> l.joinToString(separator = "") to run(l.map { it.toLong() }) }
-            .find { it.second == 0L }
-        println()
-        return found!!.first.toLong()
     }
 }

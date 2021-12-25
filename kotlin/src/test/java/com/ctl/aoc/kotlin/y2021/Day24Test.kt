@@ -9,7 +9,6 @@ internal class Day24Test {
 
     @Test
     fun solve1() {
-//        (9 downTo 9).forEach { println(it) }
         println(Day24.solve1(puzzleInput))
     }
 
