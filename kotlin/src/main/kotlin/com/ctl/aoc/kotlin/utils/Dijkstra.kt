@@ -13,9 +13,12 @@ data class PathingResult<T>(val steps: Map<T, Long>, val previous: Map<T, T>, va
 data class PathingResultInt<T>(val steps: Map<T, Int>, val previous: Map<T, T>, val lastNode: T? = null)
 
 sealed class Constraint<T>
-
 data class StepConstraint<T>(val maxSteps: Long) : Constraint<T>()
 data class CustomConstraint<T>(val f: (T, steps: Map<T, Long>) -> Boolean) : Constraint<T>()
+
+sealed class ConstraintInt<T>
+data class StepConstraintInt<T>(val maxSteps: Int) : ConstraintInt<T>()
+data class CustomConstraintInt<T>(val f: (T, steps: Map<T, Int>) -> Boolean) : ConstraintInt<T>()
 
 fun <T> findPath(end: T, prev: Map<T, T>): List<T> {
     return sequence<T> {
@@ -82,6 +85,7 @@ object Dijkstra {
         end: T?,
         nodeGenerator: NodeGenerator<T>,
         distance: DistanceInt<T>,
+        constraints: List<ConstraintInt<T>> = listOf(),
         queue: MinPriorityQueueInt<T> = JavaPriorityQueueInt(),
         heuristic: (T) -> Int = { 0 }
     ): PathingResultInt<T> {
@@ -95,7 +99,7 @@ object Dijkstra {
 
         var current: T? = null
 
-        while (!queue.isEmpty && (end == null || current != end)) {
+        while (!queue.isEmpty && (end == null || current != end) && constraintsMetInt(current, steps, constraints)) {
             current = queue.extractMinimum()!!
             nodeGenerator(current).filter { !visited.contains(it) }.forEach { n ->
                 if (!queue.contains(n)) {
@@ -121,9 +125,20 @@ object Dijkstra {
             is CustomConstraint -> constraint.f(current, steps)
         }
 
+    private fun <T> isConstraintMetInt(current: T, steps: Map<T, Int>, constraint: ConstraintInt<T>): Boolean =
+        when (constraint) {
+            is StepConstraintInt<*> -> (steps[current] ?: 0) < constraint.maxSteps
+            is CustomConstraintInt -> constraint.f(current, steps)
+        }
+
     private fun <T> constraintsMet(current: T?, steps: Map<T, Long>, constraints: List<Constraint<T>>): Boolean =
         current?.let { node ->
             constraints.all { constraint -> isConstraintMet(node, steps, constraint) }
+        } ?: true
+
+    private fun <T> constraintsMetInt(current: T?, steps: Map<T, Int>, constraints: List<ConstraintInt<T>>): Boolean =
+        current?.let { node ->
+            constraints.all { constraint -> isConstraintMetInt(node, steps, constraint) }
         } ?: true
 }
 
