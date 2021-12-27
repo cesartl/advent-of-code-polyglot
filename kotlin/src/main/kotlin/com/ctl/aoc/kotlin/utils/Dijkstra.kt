@@ -89,6 +89,26 @@ object Dijkstra {
         queue: MinPriorityQueueInt<T> = JavaPriorityQueueInt(),
         heuristic: (T) -> Int = { 0 }
     ): PathingResultInt<T> {
+        return traverseIntPredicate(
+            start,
+            { c: T? -> end?.let { it == c } ?: false },
+            nodeGenerator,
+            distance,
+            constraints,
+            queue,
+            heuristic
+        )
+    }
+
+    fun <T> traverseIntPredicate(
+        start: T,
+        end: (T?) -> Boolean,
+        nodeGenerator: NodeGenerator<T>,
+        distance: DistanceInt<T>,
+        constraints: List<ConstraintInt<T>> = listOf(),
+        queue: MinPriorityQueueInt<T> = JavaPriorityQueueInt(),
+        heuristic: (T) -> Int = { 0 }
+    ): PathingResultInt<T> {
         val steps = mutableMapOf<T, Int>()
         val prevs = mutableMapOf<T, T>()
 
@@ -99,7 +119,7 @@ object Dijkstra {
 
         var current: T? = null
 
-        while (!queue.isEmpty && (end == null || current != end) && constraintsMetInt(current, steps, constraints)) {
+        while (!queue.isEmpty && (!end(current)) && constraintsMetInt(current, steps, constraints)) {
             current = queue.extractMinimum()!!
             nodeGenerator(current).filter { !visited.contains(it) }.forEach { n ->
                 if (!queue.contains(n)) {
