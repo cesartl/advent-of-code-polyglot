@@ -1,10 +1,12 @@
 package com.ctl.aoc.kotlin.y2021
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timedMs
 import com.ctl.aoc.kotlin.y2021.Day18.explode
 import com.ctl.aoc.kotlin.y2021.Day18.plus
 import com.ctl.aoc.kotlin.y2021.Day18.split
-import com.ctl.aoc.kotlin.y2021.Day18.toSnailNumber
+import com.ctl.aoc.kotlin.y2021.Day18.toFlatSnail
+import com.ctl.aoc.kotlin.y2021.Day18.toTreeSnail
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -27,12 +29,17 @@ internal class Day18Test {
     @Test
     internal fun snailNumber() {
         checkParse("[[1,9],[8,5]]")
+        checkParse("[1,[[1,4],2]]")
+        checkParse("[7,[6,[5,[7,0]]]]")
+        checkParse("[[6,[5,[7,0]]],3]")
+        checkParse("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]")
+        checkParse("[[3,[2,[8,0]]],[9,[5,[7,0]]]]")
         checkParse("[[[[1,3],[5,3]],[[1,3],[8,7]]],[[[4,9],[6,9]],[[8,2],[7,3]]]]")
     }
 
     @Test
     internal fun testAdd() {
-        assertEquals("[[1,2],[[3,4],5]]", ("[1,2]".toSnailNumber() + "[[3,4],5]".toSnailNumber()).toString())
+        assertEquals("[[1,2],[[3,4],5]]", ("[1,2]".toTreeSnail() + "[[3,4],5]".toTreeSnail()).toString())
     }
 
     @Test
@@ -46,47 +53,62 @@ internal class Day18Test {
 
     @Test
     internal fun testSplit() {
-        testSplit("[[[[0,7],4],[[7,8],[0,13]]],[1,1]]","[[[[0,7],4],[15,[0,13]]],[1,1]]")
+        testSplit("[[[[0,7],4],[[7,8],[0,13]]],[1,1]]", "[[[[0,7],4],[15,[0,13]]],[1,1]]")
     }
 
     @Test
     internal fun testReduce() {
-        val s1 = "[[[[4,3],4],4],[7,[[8,4],9]]]".toSnailNumber()
-        val s2 = "[1,1]".toSnailNumber()
+        val s1 = "[[[[4,3],4],4],[7,[[8,4],9]]]".toTreeSnail()
+        val s2 = "[1,1]".toTreeSnail()
         assertEquals("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]", (s1 + s2).toString())
     }
 
     @Test
     internal fun splitLong() {
-        assertEquals((5L to 5L), (10L).split())
-        assertEquals((5L to 6L), (11L).split())
+        assertEquals((5 to 5), (10).split())
+        assertEquals((5 to 6), (11).split())
     }
 
     private fun testExplode(expected: String, source: String) {
-        val (exploded, found) = source.toSnailNumber().explode()
+        //tree form
+        val (exploded, found) = source.toTreeSnail().explode()
         assertTrue(found)
         assertEquals(expected, exploded.toString())
+
+        //flat form
+        val flatExploded = source.toFlatSnail().explode()
+        assertEquals(expected, flatExploded?.let { it.snailTree.toString() } ?: "null")
     }
 
     private fun testSplit(expected: String, source: String) {
-        val (result, isSplit) = source.toSnailNumber().split()
+        //tree form
+        val (result, isSplit) = source.toTreeSnail().split()
         assertTrue(isSplit)
         assertEquals(expected, result.toString())
+
+        //flat form
+        val flatSplit = source.toFlatSnail().split()
+        assertEquals(expected, flatSplit?.let { it.snailTree.toString() } ?: "null")
     }
 
     fun checkParse(s: String) {
-        assertEquals(s, s.toSnailNumber().toString())
+        assertEquals(s, s.toTreeSnail().toString())
+        assertEquals(s, s.toFlatSnail().snailTree.toString())
     }
 
     @Test
     fun solve1() {
-        println(Day18.solve1(example))
-        println(Day18.solve1(puzzleInput))
+        assertEquals(4140, Day18.solve1Tree(example))
+        assertEquals(3494, Day18.solve1Tree(puzzleInput))
+        assertEquals(4140, Day18.solve1Flat(example))
+        assertEquals(3494, Day18.solve1Flat(puzzleInput))
     }
 
     @Test
     fun solve2() {
-        println(Day18.solve2(example))
-        println(Day18.solve2(puzzleInput))
+        assertEquals(3993, Day18.solve2Tree(example))
+        println(timedMs { Day18.solve2Tree(puzzleInput) })
+        assertEquals(3993, Day18.solve2Flat(example))
+        println(timedMs { Day18.solve2Flat(puzzleInput) })
     }
 }

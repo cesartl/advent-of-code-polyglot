@@ -20,4 +20,19 @@ internal class LinkedListTest {
             acc + "(idx: $i, element: $l)"
         })
     }
+
+    @Test
+    internal fun testLazy() {
+        val l: LinkedList<() -> Int> = listOf({ 1 }, { 2 }, { 3 }, { error("error") }).toLinkedList()
+        assertTrue(l.any { it() == 2 })
+    }
+
+    @Test
+    internal fun folds() {
+        val l = listOf(1, 2, 3, 4).toLinkedList()
+
+        println(l.foldRight(listOf(0)) { n, acc -> acc + (acc.last() + n) })
+        println(l.foldLeft(listOf(0)) { acc, n -> acc + (acc.last() + n) })
+
+    }
 }

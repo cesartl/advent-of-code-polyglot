@@ -43,6 +43,11 @@ tailrec fun <T, R> LinkedList<T>.foldLeft(initial: R, operation: (acc: R, T) -> 
     is Cons -> tail.foldLeft(operation(initial, head), operation)
 }
 
+fun <T, R> LinkedList<T>.foldRight(initial: R, opperation: (T, R) -> R): R = when (this) {
+    Nil -> initial
+    is Cons -> opperation(head, tail.foldRight(initial, opperation))
+}
+
 tailrec fun <T, R> LinkedList<T>.foldLeftIndexed(initial: R, idx: Int = 0, operation: (idx: Int, acc: R, T) -> R): R =
     when (this) {
         Nil -> initial
