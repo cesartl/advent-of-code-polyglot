@@ -30,6 +30,11 @@ on x=-41..9,y=-7..43,z=-33..15
 on x=-54112..-39298,y=-85059..-49293,z=-27449..7877
 on x=967..23432,y=45373..81175,z=27513..53682""".splitToSequence("\n")
 
+    private val smallExample = """on x=10..12,y=10..12,z=10..12
+on x=11..13,y=11..13,z=11..13
+off x=9..11,y=9..11,z=9..11
+on x=10..10,y=10..10,z=10..10""".splitToSequence("\n")
+
     @Test
     fun solve1() {
         println(Day22.solve1(example))
@@ -37,7 +42,19 @@ on x=967..23432,y=45373..81175,z=27513..53682""".splitToSequence("\n")
     }
 
     @Test
+    fun solve1Bis() {
+        println(Day22.solve1Bis(smallExample))
+        println(Day22.solve1Bis(example))
+        println(Day22.solve1Bis(puzzleInput))
+    }
+
+    @Test
     fun solve2() {
         println(Day22.solve2(puzzleInput))
+    }
+
+    @Test
+    fun solve2Bis() {
+        println(Day22.solve2Bis(puzzleInput))
     }
 }

@@ -107,4 +107,117 @@ object Day22 {
         }
         return allCounts.asSequence().sumOf { (cube, l) -> l * cube.size }
     }
+
+    // -- coordinate compression
+
+    fun solve1Bis(input: Sequence<String>): Long {
+        val limit = -50..50
+        val boundary = Cuboid(limit, limit, limit)
+        val regions = input.map { Region.parse(it) }
+            .filter { boundary.contains(it.cuboid) }
+            .toList()
+        return coordinateCompressionCount(regions)
+    }
+
+    fun solve2Bis(input: Sequence<String>): Long {
+        val regions = input.map { Region.parse(it) }
+            .toList()
+        return coordinateCompressionCount(regions)
+    }
+
+    @JvmInline
+    value class Grid(val grid: Array<Array<Array<Boolean>>>) {
+
+        fun set(x: Int, y: Int, z: Int) {
+            grid[x][y][z] = true
+        }
+
+        fun unSet(x: Int, y: Int, z: Int) {
+            grid[x][y][z] = false
+        }
+
+        fun test(x: Int, y: Int, z: Int): Boolean {
+            return grid[x][y][z]
+        }
+
+        companion object {
+            fun empty(size: Int): Grid {
+                val grid = Array(size) {
+                    Array(size) {
+                        Array(size) { false }
+                    }
+                }
+                return Grid(grid)
+            }
+        }
+    }
+
+    private fun coordinateCompressionCount(regions: List<Region>): Long {
+        val tmpX = ArrayList<Int>(regions.size)
+        val tmpY = ArrayList<Int>(regions.size)
+        val tmpZ = ArrayList<Int>(regions.size)
+
+        regions.forEach { region ->
+            val cuboid = region.cuboid
+            tmpX.add(cuboid.xRange.first)
+            tmpX.add(cuboid.xRange.last + 1)
+            tmpY.add(cuboid.yRange.first)
+            tmpY.add(cuboid.yRange.last + 1)
+            tmpZ.add(cuboid.zRange.first)
+            tmpZ.add(cuboid.zRange.last + 1)
+        }
+        val n = tmpX.size
+        val compressedX = tmpX.sorted()
+        val compressedY = tmpY.sorted()
+        val compressedZ = tmpZ.sorted()
+
+        val grid = Grid.empty(n)
+
+        regions.forEach { region ->
+            val (xRange, yRange, zRange) = region.cuboid
+            val xRangeCompressed = compressedX.compressedRange(xRange)
+            val yRangeCompressed = compressedY.compressedRange(yRange)
+            val zRangeCompressed = compressedZ.compressedRange(zRange)
+
+            xRangeCompressed.forEach { x ->
+                yRangeCompressed.forEach { y ->
+                    zRangeCompressed.forEach { z ->
+                        region.restart(grid, x, y, z)
+                    }
+                }
+            }
+        }
+
+        var count = 0L
+        (0 until n - 1).forEach { xIdx ->
+            (0 until n - 1).forEach { yIdx ->
+                (0 until n - 1).forEach { zIdx ->
+                    if (grid.test(xIdx, yIdx, zIdx)) {
+                        var tmp = (compressedX[xIdx + 1] - compressedX[xIdx]).toLong()
+                        tmp *= (compressedY[yIdx + 1] - compressedY[yIdx]).toLong()
+                        tmp *= (compressedZ[zIdx + 1] - compressedZ[zIdx]).toLong()
+//                        assert(tmp != 0) { "zero" }
+                        assert(tmp >= 0) { "overflow" }
+                        count += tmp
+                    }
+                }
+            }
+        }
+        return count
+    }
+
+    private fun Region.restart(grid: Grid, x: Int, y: Int, z: Int) {
+        when (this) {
+            is Region.OffRegion -> grid.unSet(x, y, z)
+            is Region.OnRegion -> grid.set(x, y, z)
+        }
+    }
+
+    private fun List<Int>.compressedRange(range: IntRange): IntRange {
+        val startIdx = this.binarySearch { it - range.first }
+        val endIdx = this.binarySearch { it - range.last - 1 }
+        assert(startIdx != -1) { "start idx ${range.first} not found" }
+        assert(endIdx != -1) { "end idx ${range.last} not found" }
+        return (startIdx until endIdx)
+    }
 }
