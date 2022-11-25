@@ -2,16 +2,19 @@ package com.ctl.aoc.kotlin.meta
 
 import com.ctl.aoc.kotlin.utils.InputUtils
 import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 
 object ResourceCreator {
 
-    private const val ROOT = "/Users/cesar/repos/advent-of-code-polyglot/kotlin"
+    private val root: String
+        get() = Paths.get("").toAbsolutePath().toString()
 
-    fun createResources(year: Int){
+    fun createResources(year: Int) {
         (1 until 26).forEach { day -> createResources(year, day) }
     }
 
-    private fun createResources(year: Int, day: Int){
+    private fun createResources(year: Int, day: Int) {
         createObjectFile(year, day)
         createTestFile(year, day)
 //        createInputFile(year, day)
@@ -20,17 +23,18 @@ object ResourceCreator {
     private fun createObjectFile(year: Int, day: Int) {
         val content = InputUtils.getStream("meta/object.template").bufferedReader().use { it.readText() }
         val replaced = content.replace("_YEAR_", year.toString())
-                .replace("_DAY_", day.toString())
+            .replace("_DAY_", day.toString())
 
-        val directory = File("$ROOT/src/main/kotlin/com/ctl/aoc/kotlin/y$year")
-        if(!directory.exists()){
+
+        val directory = File("$root/src/main/kotlin/com/ctl/aoc/kotlin/y$year")
+        if (!directory.exists()) {
             directory.mkdirs();
         }
         val objectFile = File(directory, "Day$day.kt")
-        if(!objectFile.exists()) {
+        if (!objectFile.exists()) {
             objectFile.writeText(replaced, Charsets.UTF_8)
             println("Written ${objectFile.canonicalPath}")
-        }else{
+        } else {
             println("${objectFile.canonicalPath} already exists")
         }
     }
@@ -38,31 +42,31 @@ object ResourceCreator {
     private fun createTestFile(year: Int, day: Int) {
         val content = InputUtils.getStream("meta/test.template").bufferedReader().use { it.readText() }
         val replaced = content.replace("_YEAR_", year.toString())
-                .replace("_DAY_", day.toString())
+            .replace("_DAY_", day.toString())
 
-        val directory = File("$ROOT/src/test/java/com/ctl/aoc/kotlin/y$year")
-        if(!directory.exists()){
+        val directory = File("$root/src/test/java/com/ctl/aoc/kotlin/y$year")
+        if (!directory.exists()) {
             directory.mkdirs();
         }
         val testFile = File(directory, "Day${day}Test.kt")
-        if(!testFile.exists()) {
+        if (!testFile.exists()) {
             testFile.writeText(replaced, Charsets.UTF_8)
             println("Written ${testFile.canonicalPath}")
-        }else{
+        } else {
             println("${testFile.canonicalPath} already exists")
         }
     }
 
-    private fun createInputFile(year: Int, day: Int){
-        val directory = File("$ROOT/src/main/resources/y$year")
-        if(!directory.exists()){
+    private fun createInputFile(year: Int, day: Int) {
+        val directory = File("$root/src/main/resources/y$year")
+        if (!directory.exists()) {
             directory.mkdirs();
         }
         val inputFile = File(directory, "day${day}.txt")
-        if(!inputFile.exists()) {
+        if (!inputFile.exists()) {
             inputFile.writeText("", Charsets.UTF_8)
             println("Written ${inputFile.canonicalPath}")
-        }else{
+        } else {
             println("${inputFile.canonicalPath} already exists")
         }
     }
