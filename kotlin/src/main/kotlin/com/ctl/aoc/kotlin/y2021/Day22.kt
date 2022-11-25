@@ -160,11 +160,11 @@ object Day22 {
         regions.forEach { region ->
             val cuboid = region.cuboid
             tmpX.add(cuboid.xRange.first)
-            tmpX.add(cuboid.xRange.last + 1)
+            tmpX.add(cuboid.xRange.last)
             tmpY.add(cuboid.yRange.first)
-            tmpY.add(cuboid.yRange.last + 1)
+            tmpY.add(cuboid.yRange.last)
             tmpZ.add(cuboid.zRange.first)
-            tmpZ.add(cuboid.zRange.last + 1)
+            tmpZ.add(cuboid.zRange.last)
         }
         val n = tmpX.size
         val compressedX = tmpX.sorted()
@@ -193,9 +193,9 @@ object Day22 {
             (0 until n - 1).forEach { yIdx ->
                 (0 until n - 1).forEach { zIdx ->
                     if (grid.test(xIdx, yIdx, zIdx)) {
-                        var tmp = (compressedX[xIdx + 1] - compressedX[xIdx]).toLong()
-                        tmp *= (compressedY[yIdx + 1] - compressedY[yIdx]).toLong()
-                        tmp *= (compressedZ[zIdx + 1] - compressedZ[zIdx]).toLong()
+                        var tmp = (compressedX[xIdx + 1] - compressedX[xIdx] + 1).toLong()
+                        tmp *= (compressedY[yIdx + 1] - compressedY[yIdx] + 1).toLong()
+                        tmp *= (compressedZ[zIdx + 1] - compressedZ[zIdx] + 1).toLong()
 //                        assert(tmp != 0) { "zero" }
                         assert(tmp >= 0) { "overflow" }
                         count += tmp
@@ -215,7 +215,7 @@ object Day22 {
 
     private fun List<Int>.compressedRange(range: IntRange): IntRange {
         val startIdx = this.binarySearch { it - range.first }
-        val endIdx = this.binarySearch { it - range.last - 1 }
+        val endIdx = this.binarySearch { it - range.last }
         assert(startIdx != -1) { "start idx ${range.first} not found" }
         assert(endIdx != -1) { "end idx ${range.last} not found" }
         return (startIdx until endIdx)
