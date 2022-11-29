@@ -14,6 +14,8 @@ object Day7 {
         fun ifWire(f: (String) -> Unit) {
             when (this) {
                 is Wire -> f(this.name)
+                is Value -> TODO()
+                else -> {}
             }
         }
 

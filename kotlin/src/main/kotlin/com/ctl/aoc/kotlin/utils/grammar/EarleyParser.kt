@@ -91,6 +91,10 @@ class EarleyParser(private val grammar: Grammar) {
                         stateSets.getValue(i).add(newItem)
                     }
                 }
+                is CharClass -> TODO()
+                is Range -> TODO()
+                is SingleChar -> TODO()
+                null -> TODO()
             }
         }
     }

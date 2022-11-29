@@ -1,6 +1,5 @@
 package com.ctl.aoc.kotlin.y2019
 
-import java.lang.IllegalArgumentException
 import java.util.*
 
 object Day5 {

@@ -115,6 +115,9 @@ object Day13 {
                             is Tile.Paddle -> {
                                 paddle = p
                             }
+                            Tile.Block -> TODO()
+                            Tile.Empty -> TODO()
+                            Tile.Wall -> TODO()
                         }
                         if (shouldUpdateView.get()) {
                             viewUpdate(GameState(grid, score))
