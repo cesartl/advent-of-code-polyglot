@@ -1,62 +1,41 @@
 package com.ctl.aoc.kotlin.y2022
 
+
 object Day2 {
 
-    enum class RPS {
-        Rock, Paper, Scissors
-    }
+    enum class RPS : Comparator<RPS> {
+        Rock, Paper, Scissors;
 
-    fun RPS.score(): Int {
-        return when (this) {
-            RPS.Rock -> 1
-            RPS.Paper -> 2
-            RPS.Scissors -> 3
+        override fun compare(o1: RPS, o2: RPS): Int {
+            return (o1.ordinal - o2.ordinal) % RPS.values().size
+        }
+
+        val score: Int = ordinal + 1
+
+        fun compete(other: RPS): Outcome {
+            return if (this > other) {
+                Outcome.Win
+            } else if (this < other) {
+                Outcome.Loose
+            } else {
+                Outcome.Draw
+            }
         }
     }
 
-    fun RPS.findMe(outcome: Outcome): RPS {
-        return RPS.values().first { it.compete(this) == outcome }
+    private fun RPS.advance(n: Int): RPS {
+        return RPS.values()[(this.ordinal + n) % RPS.values().size]
     }
 
-    enum class Outcome {
-        Win, Loose, Draw
-    }
+    enum class Outcome(val offset: Int) {
+        Win(-1), Loose(1), Draw(0);
 
-    fun Outcome.score(): Int = when (this) {
-        Outcome.Win -> 6
-        Outcome.Draw -> 3
-        Outcome.Loose -> 0
-    }
-
-    fun RPS.compete(other: RPS): Outcome {
-        return if (this == other) {
-            Outcome.Draw
-        } else if (this == RPS.Rock) {
-            if (other == RPS.Paper) {
-                Outcome.Loose
-            } else {
-                Outcome.Win
-            }
-        } else if (this == RPS.Paper) {
-            if (other == RPS.Scissors) {
-                Outcome.Loose
-            } else {
-                Outcome.Win
-            }
-            //Scissors
-        } else {
-            assert(this == RPS.Scissors)
-            if (other == RPS.Rock) {
-                Outcome.Loose
-            } else {
-                Outcome.Win
-            }
-        }
+        val score: Int = 3 * ordinal
     }
 
     data class Round(val other: RPS, val me: RPS) {
         val score: Int by lazy {
-            me.score() + me.compete(other).score()
+            me.score + me.compete(other).score
         }
     }
 
@@ -91,12 +70,15 @@ object Day2 {
     }
 
     fun solve2(input: Sequence<String>): Int {
-        return input.map { line ->
-            val split = line.split(" ")
-            split[0].toRPS() to split[1].toOutcome()
-        }.map { (other, outcome) ->
-            Round(other, other.findMe(outcome))
-        }.map { it.score }
+        return input
+            .map { line ->
+                val split = line.split(" ")
+                split[0].toRPS() to split[1].toOutcome()
+            }
+            .map { (other, outcome) ->
+                Round(other, other.advance(outcome.offset))
+            }
+            .map { it.score }
             .sum()
     }
 }
