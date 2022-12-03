@@ -44,12 +44,21 @@ object InputUtils {
         getStream(year, name).bufferedReader().use { it.readLines().asSequence() }
 
     fun getLines(year: Int, day: Int): Sequence<String> =
-        getStream(year, day).bufferedReader().use { it.readLines().asSequence() }.filter { it.isNotBlank() }
+       getLinesAllLines(year, day).filter { it.isNotBlank() }
+
+    fun getLinesAllLines(year: Int, day: Int): Sequence<String> =
+        getStream(year, day).bufferedReader().use { it.readLines().asSequence() }
 
     fun downloadAndGetLines(year: Int, day: Int): Sequence<String> {
         downloadInputIfNeeded(year, day)
         return getLines(year, day)
     }
+
+    fun downloadAndGetAllLines(year: Int, day: Int): Sequence<String> {
+        downloadInputIfNeeded(year, day)
+        return getLinesAllLines(year, day)
+    }
+
 
     fun downloadAndGetString(year: Int, day: Int): String {
         downloadInputIfNeeded(year, day)

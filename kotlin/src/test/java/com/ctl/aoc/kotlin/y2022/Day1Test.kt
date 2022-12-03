@@ -3,11 +3,9 @@ package com.ctl.aoc.kotlin.y2022
 import com.ctl.aoc.kotlin.utils.InputUtils
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.Assertions.*
+class Day1Test {
 
-internal class Day1Test {
-
-    val puzzleInput = InputUtils.downloadAndGetLines(2022, 1)
+    val puzzleInput = InputUtils.downloadAndGetAllLines(2022, 1)
 
     @Test
     fun solve1() {
