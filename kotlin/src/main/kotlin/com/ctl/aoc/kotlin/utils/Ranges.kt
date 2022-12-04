@@ -4,7 +4,7 @@ package com.ctl.aoc.kotlin.utils
 fun IntRange.rangeIntersect(other: IntRange): IntRange? {
     val newFirst = kotlin.math.max(this.first, other.first)
     val newLast = kotlin.math.min(this.last, other.last)
-    if(newFirst <= newLast){
+    if (newFirst <= newLast) {
         return newFirst..newLast
     }
     return null
@@ -15,4 +15,8 @@ fun IntRange.rangeIntersect(other: IntRange): IntRange? {
 //    val start = r2.first
 //    val end = r1.last.coerceAtMost(r2.last)
 //    return start..end
+}
+
+fun IntRange.includes(other: IntRange): Boolean {
+    return this.first <= other.first && this.last >= other.last
 }
