@@ -33,6 +33,10 @@ object Day5 {
                 stacks[move.to - 1].addFirst(c)
             }
         }
+
+        fun topCrates(): String {
+            return stacks.map { it.first() }.joinToString("")
+        }
     }
 
     fun solve1(input: Sequence<String>): String {
@@ -40,7 +44,7 @@ object Day5 {
         input.drop(9).map { it.toMove() }.forEach {
             crates.apply(it)
         }
-        return crates.stacks.map { it.first() }.joinToString("")
+        return crates.topCrates()
     }
 
     fun solve2(input: Sequence<String>): String {
@@ -48,7 +52,7 @@ object Day5 {
         input.drop(9).map { it.toMove() }.forEach {
             crates.apply2(it)
         }
-        return crates.stacks.map { it.first() }.joinToString("")
+        return crates.topCrates()
     }
 
     private fun buildCrates(input: Sequence<String>): Crates {
