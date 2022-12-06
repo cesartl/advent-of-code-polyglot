@@ -40,24 +40,26 @@ object Day5 {
     }
 
     fun solve1(input: Sequence<String>): String {
-        val crates = buildCrates(input)
-        input.drop(9).map { it.toMove() }.forEach {
+        val (crates, moves) = parseInput(input)
+        moves.forEach {
             crates.apply(it)
         }
         return crates.topCrates()
     }
 
     fun solve2(input: Sequence<String>): String {
-        val crates = buildCrates(input)
-        input.drop(9).map { it.toMove() }.forEach {
+        val (crates, moves) = parseInput(input)
+        moves.forEach {
             crates.apply2(it)
         }
         return crates.topCrates()
     }
 
-    private fun buildCrates(input: Sequence<String>): Crates {
+    private fun parseInput(input: Sequence<String>): Pair<Crates, List<Move>> {
         val crates = Crates()
-        input.take(8)
+        val splitIndex = input.indexOf("")
+        println("Split index: $splitIndex")
+        input.take(splitIndex - 1)
             .map { line -> line.chunked(4).map { it.trim() } }
             .forEach { elements ->
                 elements.forEachIndexed { crateNum, s ->
@@ -67,6 +69,7 @@ object Day5 {
                     }
                 }
             }
-        return crates
+        val moves = input.drop(splitIndex + 1).map { it.toMove() }.toList()
+        return crates to moves
     }
 }
