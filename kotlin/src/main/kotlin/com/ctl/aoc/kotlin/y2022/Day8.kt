@@ -83,9 +83,9 @@ object Day8 {
         trees: Map<Position, Tree>,
         maxX: Int,
         maxY: Int,
-        next: (Position) -> Position
+        offset: Position
     ): Int {
-        return generateSequence(this.position, next)
+        return generateSequence(this.position) { it + offset }
             .drop(1)
             .takeWhile { it.isValid(maxX, maxY) }
             .takeWhileInclusive { trees[it]!!.h < this.h }
@@ -95,12 +95,10 @@ object Day8 {
     fun Tree.score(trees: Map<Position, Tree>): Int {
         val maxX = trees.keys.maxOfOrNull { it.x }!!
         val maxY = trees.keys.maxOfOrNull { it.y }!!
-        val eScore = this.directionalScore(trees, maxX, maxY) { p -> p.copy(x = p.x + 1) }
-        val wScore = this.directionalScore(trees, maxX, maxY) { p -> p.copy(x = p.x - 1) }
-        val sScore = this.directionalScore(trees, maxX, maxY) { p -> p.copy(y = p.y + 1) }
-        val nScore = this.directionalScore(trees, maxX, maxY) { p -> p.copy(y = p.y - 1) }
 
-        return eScore * wScore * nScore * sScore
+        return sequenceOf(Position(1, 0), Position(-1, 0), Position(0, 1), Position(0, -1))
+            .map { this.directionalScore(trees, maxX, maxY, it) }
+            .fold(1) { acc, i -> acc * i }
     }
 
     fun solve2(input: Sequence<String>): Int {
