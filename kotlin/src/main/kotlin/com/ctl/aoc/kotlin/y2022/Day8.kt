@@ -1,11 +1,117 @@
 package com.ctl.aoc.kotlin.y2022
 
+import com.ctl.aoc.kotlin.utils.Position
+
 object Day8 {
+
+    data class Tree(val position: Position, val h: Int)
+
     fun solve1(input: Sequence<String>): Int {
-        TODO()
+        val trees = parseTrees(input)
+
+        val maxX = trees.keys.maxOfOrNull { it.x }!!
+        val maxY = trees.keys.maxOfOrNull { it.y }!!
+
+        val visibleTrees = mutableSetOf<Tree>()
+
+        for (x in (0..maxX)) {
+            visibleTrees.add(trees[Position(x, 0)]!!)
+            var maxH = trees[Position(x, 0)]!!.h
+            for (y in (1 until maxY)) {
+                val current = trees[Position(x, y)]!!
+                if (current.h > maxH) {
+                    maxH = current.h
+                    visibleTrees.add(current)
+                }
+            }
+
+            visibleTrees.add(trees[Position(x, maxY)]!!)
+            maxH = trees[Position(x, maxY)]!!.h
+            for (y in (maxY - 1 downTo 1)) {
+                val current = trees[Position(x, y)]!!
+                if (current.h > maxH) {
+                    maxH = current.h
+                    visibleTrees.add(current)
+                }
+            }
+        }
+
+        for (y in (0..maxY)) {
+            visibleTrees.add(trees[Position(0, y)]!!)
+            var maxH = trees[Position(0, y)]!!.h
+            for (x in (1 until maxX)) {
+                val current = trees[Position(x, y)]!!
+                if (current.h > maxH) {
+                    maxH = current.h
+                    visibleTrees.add(current)
+                }
+            }
+
+            visibleTrees.add(trees[Position(maxY, y)]!!)
+            maxH = trees[Position(maxX, y)]!!.h
+            for (x in (maxX - 1 downTo 1)) {
+                val current = trees[Position(x, y)]!!
+                if (current.h > maxH) {
+                    maxH = current.h
+                    visibleTrees.add(current)
+                }
+            }
+        }
+        println(visibleTrees)
+        return visibleTrees.size
+    }
+
+    private fun parseTrees(input: Sequence<String>): Map<Position, Tree> {
+        val trees = input
+            .withIndex()
+            .flatMap { (y, line) ->
+                line.splitToSequence("")
+                    .filter { it.isNotBlank() }
+                    .withIndex()
+                    .map { (x, h) -> Tree(Position(x, y), h.toInt()) }
+            }.map { it.position to it }
+            .toMap()
+        return trees
+    }
+
+    fun Position.isValid(maxX: Int, maxY: Int): Boolean {
+        return this.x in (0..maxX) && this.y in (0..maxY)
+    }
+
+    fun Tree.directionalScore(
+        trees: Map<Position, Tree>,
+        maxX: Int,
+        maxY: Int,
+        next: (Position) -> Position
+    ): Int {
+        val ps = generateSequence(this.position, next)
+            .drop(1)
+            .takeWhile { it.isValid(maxX, maxY) }
+        var count = 0
+        ps.forEach {
+            count++
+            if (trees[it]!!.h >= this.h) {
+                return count
+            }
+        }
+        return count
+    }
+
+    fun Tree.score(trees: Map<Position, Tree>): Int {
+        val maxX = trees.keys.maxOfOrNull { it.x }!!
+        val maxY = trees.keys.maxOfOrNull { it.y }!!
+        val eScore = this.directionalScore(trees, maxX, maxY) { p -> p.copy(x = p.x + 1) }
+        val wScore = this.directionalScore(trees, maxX, maxY) { p -> p.copy(x = p.x - 1) }
+        val sScore = this.directionalScore(trees, maxX, maxY) { p -> p.copy(y = p.y + 1) }
+        val nScore = this.directionalScore(trees, maxX, maxY) { p -> p.copy(y = p.y - 1) }
+
+        return eScore * wScore * nScore * sScore
     }
 
     fun solve2(input: Sequence<String>): Int {
-        TODO()
+        val trees = parseTrees(input)
+        return trees.values.maxOfOrNull { tree ->
+            tree.score(trees)
+        } ?: error("Not found")
     }
 }

@@ -89,9 +89,7 @@ object Day7 {
                     currentDir.nodes.add(file)
                 }
 
-                Terminal.Ls -> {
-
-                }
+                Terminal.Ls -> {}
             }
         }
         return root
