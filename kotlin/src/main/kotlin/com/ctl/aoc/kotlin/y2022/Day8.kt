@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2022
 
 import com.ctl.aoc.kotlin.utils.Position
+import com.ctl.aoc.kotlin.utils.takeWhileInclusive
 
 object Day8 {
 
@@ -84,17 +85,11 @@ object Day8 {
         maxY: Int,
         next: (Position) -> Position
     ): Int {
-        val ps = generateSequence(this.position, next)
+        return generateSequence(this.position, next)
             .drop(1)
             .takeWhile { it.isValid(maxX, maxY) }
-        var count = 0
-        ps.forEach {
-            count++
-            if (trees[it]!!.h >= this.h) {
-                return count
-            }
-        }
-        return count
+            .takeWhileInclusive { trees[it]!!.h < this.h }
+            .count()
     }
 
     fun Tree.score(trees: Map<Position, Tree>): Int {

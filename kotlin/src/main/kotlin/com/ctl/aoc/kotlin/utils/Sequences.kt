@@ -7,3 +7,15 @@ object Sequences {
 }
 
 fun <T> Sequence<T>.startWith(other: Sequence<T>): Boolean = Sequences.startWith(this, other)
+
+
+fun <T> Sequence<T>.takeWhileInclusive(
+    predicate: (T) -> Boolean
+): Sequence<T> {
+    var shouldContinue = true
+    return takeWhile {
+        val result = shouldContinue
+        shouldContinue = predicate(it)
+        result
+    }
+}
