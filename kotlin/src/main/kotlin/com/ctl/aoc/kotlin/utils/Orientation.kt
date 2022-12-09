@@ -2,6 +2,7 @@ package com.ctl.aoc.kotlin.utils
 
 import java.math.BigInteger
 import kotlin.math.PI
+import kotlin.math.abs
 
 data class Position(val x: Int, val y: Int) {
     fun adjacent(): Sequence<Position> = sequenceOf(N, S, E, W).map { it.move(this) }
@@ -14,6 +15,11 @@ data class Position(val x: Int, val y: Int) {
         yield(Position(x - 1, y + 1))
         yield(Position(x - 1, y))
         yield(Position(x - 1, y - 1))
+    }
+
+    fun isTouching(other: Position): Boolean{
+        val (dX, dY) = this - other
+        return abs(dX) <= 1 && abs(dY) <= 1
     }
 
     fun distance(other: Position): Int = Math.abs(other.x - x) + Math.abs(other.y - y)
@@ -64,6 +70,14 @@ data class Position(val x: Int, val y: Int) {
             yield(p.rotate180())
             yield(p.rotate270())
         }
+    }
+
+    fun sameRow(other: Position): Boolean{
+        return this.y == other.y
+    }
+
+    fun sameColumn(other: Position): Boolean{
+        return this.x == other.x
     }
 
     companion object {
@@ -258,6 +272,13 @@ sealed class Orientation {
                 else -> throw Error("degree: $degrees ($d)")
             }
         }
+    }
+
+    fun opposite(): Orientation = when(this){
+        E -> W
+        N -> S
+        S -> N
+        W -> E
     }
 
     companion object {
