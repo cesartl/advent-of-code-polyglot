@@ -7,13 +7,8 @@ private fun Position.follow(previous: Position): Position {
     if (this.isTouching(previous)) {
         return this
     }
-    val dX = if (previous.x < x) -1 else 1
-    val dY = if (previous.y < y) -1 else 1
-    return when {
-        previous.x == x -> this.copy(y = y + dY)
-        previous.y == y -> this.copy(x = x + dX)
-        else -> this + Position(dX, dY)
-    }
+    val diff = previous - this
+    return this + diff.sign()
 }
 
 object Day9 {

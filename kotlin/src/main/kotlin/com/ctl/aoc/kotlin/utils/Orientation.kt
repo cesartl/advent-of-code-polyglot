@@ -3,6 +3,7 @@ package com.ctl.aoc.kotlin.utils
 import java.math.BigInteger
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.sign
 
 data class Position(val x: Int, val y: Int) {
     fun adjacent(): Sequence<Position> = sequenceOf(N, S, E, W).map { it.move(this) }
@@ -55,6 +56,8 @@ data class Position(val x: Int, val y: Int) {
             }
         }
     }
+
+    fun sign(): Position = this.copy(x = this.x.sign, y = this.y.sign)
 
     fun rotate90(): Position = rotate(Matrix22.rotate90)
     fun rotate180(): Position = rotate(Matrix22.rotate180)
