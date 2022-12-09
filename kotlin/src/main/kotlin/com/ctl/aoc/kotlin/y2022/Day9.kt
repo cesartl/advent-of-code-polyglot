@@ -26,30 +26,38 @@ object Day9 {
         }
     }
 
-    data class LongRope(val elements: List<Position>) {
+    data class LongRope(val head: Position, val tail: List<Position>) {
         fun move(orientation: Orientation): LongRope {
-            val newElements = elements
+            val newHead = orientation.move(head)
+            val newTail = tail
                 .asSequence()
-                .drop(1)
-                .runningFold(orientation.move(elements.first())) { previous, current ->
+                .runningFold(newHead) { previous, current ->
                     current.follow(previous)
                 }
+                .drop(1)
                 .toList()
-            return LongRope(newElements)
+            return LongRope(newHead, newTail)
         }
     }
 
     fun LongRope.print(xRange: IntRange, yRange: IntRange) {
         val index =
-            elements.withIndex().groupBy { it.value }.mapValues { entry -> entry.value.minBy { it.index }.index }
+            tail.withIndex().groupBy { it.value }.mapValues { entry -> entry.value.minBy { it.index }.index }
         println("--")
         yRange.forEach { y ->
             xRange.forEach { x ->
-                val p = Position(x, y)
-                if (p == Position(0, 0)) {
-                    print("s")
-                } else {
-                    print((index[p] ?: "."))
+                when (val p = Position(x, y)) {
+                    head -> {
+                        print("H")
+                    }
+
+                    Position(0, 0) -> {
+                        print("s")
+                    }
+
+                    else -> {
+                        print((index[p] ?: "."))
+                    }
                 }
             }
             println()
@@ -91,7 +99,8 @@ object Day9 {
 
     fun solve2(input: Sequence<String>): Int {
         val moves = parseMoves(input)
-        val start = LongRope((0..9).map { Position(0, 0) })
+        val p0 = Position(0, 0)
+        val start = LongRope(p0, (0 until 9).map { p0 })
         val positions = moves
             .runningFold(start) { rope, o -> rope.move(o) }
             .toList()
@@ -101,7 +110,7 @@ object Day9 {
 //        }
 
         return positions
-            .map { it.elements.last() }
+            .map { it.tail.last() }
             .toSet()
             .size
     }

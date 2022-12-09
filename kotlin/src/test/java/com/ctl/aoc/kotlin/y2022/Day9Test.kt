@@ -25,11 +25,11 @@ D 10
 L 25
 U 20""".splitToSequence("\n")
 
-    @Test
-    fun solve1() {
-        println(Day9.solve1(exampleInput))
-        println(Day9.solve1(puzzleInput))
-    }
+//    @Test
+//    fun solve1() {
+//        println(Day9.solve1(exampleInput))
+//        println(Day9.solve1(puzzleInput))
+//    }
 
     @Test
     fun solve2() {
