@@ -1,5 +1,6 @@
 
 secret.properties
+kotlin/src/main/resources/y*
 
 # Created by https://www.gitignore.io/api/kotlin,intellij
 # Edit at https://www.gitignore.io/?templates=kotlin,intellij
@@ -14,6 +15,7 @@ kotlin/.idea/**/tasks.xml
 kotlin/.idea/**/usage.statistics.xml
 kotlin/.idea/**/dictionaries
 kotlin/.idea/**/shelf
+
 
 # Generated files
 kotlin/.idea/**/contentModel.xml
