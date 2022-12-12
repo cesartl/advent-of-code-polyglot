@@ -161,21 +161,9 @@ noop""".splitToSequence("\n")
     }
 
     @Test
-    fun solve1Bis() {
-        println(Day10.solve1Bis(exampleInput))
-        println(Day10.solve1Bis(puzzleInput))
-    }
-
-    @Test
     fun solve2() {
         println(Day10.solve2(exampleInput))
         println(Day10.solve2(puzzleInput))
     }
 
-    @Test
-    fun solve2Bis() {
-        println(Day10.solve2Bis(exampleInput))
-        println("---")
-        println(Day10.solve2Bis(puzzleInput, dark = " "))
-    }
 }
