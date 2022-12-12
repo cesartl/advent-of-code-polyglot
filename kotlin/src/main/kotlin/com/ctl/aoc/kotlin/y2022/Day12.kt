@@ -1,20 +1,24 @@
 package com.ctl.aoc.kotlin.y2022
 
-import com.ctl.aoc.kotlin.utils.Dijkstra
-import com.ctl.aoc.kotlin.utils.PathingResult
-import com.ctl.aoc.kotlin.utils.Position
-import com.ctl.aoc.kotlin.utils.StepConstraint
+import com.ctl.aoc.kotlin.utils.*
 
 private typealias Elevation = Int
 
 object Day12 {
 
     data class Grid(val map: Map<Position, Elevation>, val start: Position, val target: Position) {
-        fun neighbours(p: Position): Sequence<Position> {
+        fun neighboursUp(p: Position): Sequence<Position> {
             val e = map[p]!!
             return p.adjacent()
                 .filter { map.containsKey(it) }
                 .filter { map[it]!! <= e + 1 }
+        }
+
+        fun neighboursDown(p: Position): Sequence<Position> {
+            val e = map[p]!!
+            return p.adjacent()
+                .filter { map.containsKey(it) }
+                .filter { map[it]!! >= e - 1 }
         }
     }
 
@@ -45,28 +49,35 @@ object Day12 {
         return Grid(map, start!!, target!!)
     }
 
-    private fun Grid.traverse(start: Position = this.start): PathingResult<Position> {
+    private fun Grid.traverseUp(): PathingResult<Position> {
         return Dijkstra.traverse(
-            start = start,
+            start = this.start,
             end = this.target,
-            nodeGenerator = { this.neighbours(it) },
+            nodeGenerator = { this.neighboursUp(it) },
             distance = { _, _ -> 1L },
-//            heuristic = {(this.map[this.target]!! - this.map[it]!!).toLong() },
             constraints = listOf(StepConstraint(484))
+        )
+    }
+
+    private fun Grid.traverseDown(): PathingResult<Position> {
+        return Dijkstra.traverse(
+            start = this.target,
+            end = null,
+            nodeGenerator = { this.neighboursDown(it) },
+            distance = { _, _ -> 1L },
+            constraints = listOf(CustomConstraint { p, _ -> this.map[p]!! != 0 })
         )
     }
 
     fun solve1(input: Sequence<String>): Long {
         val grid = parseGrid(input)
-        return grid.traverse().steps[grid.target] ?: error("No path found")
+        return grid.traverseUp().steps[grid.target] ?: error("No path found")
     }
 
     fun solve2(input: Sequence<String>): Long {
         val grid = parseGrid(input)
-        val results = grid.map.filter { it.value == 0 }
-            .asSequence()
-            .map { grid.traverse(it.key) }
-            .mapNotNull { it.steps[grid.target] }
-        return results.min()
+        return grid.traverseDown().let {
+            it.steps[it.lastNode!!]
+        } ?: error("")
     }
 }
