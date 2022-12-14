@@ -22,13 +22,11 @@ object Day13 {
             return when {
                 c == '[' -> {
                     val values = mutableListOf<Signal>()
-                    if (peek() != ']') {
-                        do {
-                            values.add(parse())
-                            if (peek() == ',') {
-                                advance()
-                            }
-                        } while (peek() != ']')
+                    while (peek() != ']') {
+                        values.add(parse())
+                        if (peek() == ',') {
+                            advance()
+                        }
                     }
                     assert(advance() == ']')
                     Signal.Multiple(values)
@@ -88,7 +86,7 @@ object Day13 {
                     var i = 0
                     var r: Boolean? = null
                     while (r == null) {
-                        if(i == left.values.size && i == right.values.size){
+                        if (i == left.values.size && i == right.values.size) {
                             return null
                         }
                         if (i >= left.values.size) {

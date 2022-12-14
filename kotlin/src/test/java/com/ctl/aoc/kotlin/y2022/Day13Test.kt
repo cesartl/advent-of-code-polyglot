@@ -31,24 +31,15 @@ internal class Day13Test {
 [1,[2,[3,[4,[5,6,7]]]],8,9]
 [1,[2,[3,[4,[5,6,0]]]],8,9]"""
 
-//    @Test
-//    fun solve1() {
-//        println(Day13.solve1(exampleInput))
-//        println(Day13.solve1(puzzleInput))
-//    }
+    @Test
+    fun solve1() {
+        println(Day13.solve1(exampleInput))
+        println(Day13.solve1(puzzleInput))
+    }
 
     @Test
     fun solve2() {
-//        println(Day13.solve2(exampleInput))
+        println(Day13.solve2(exampleInput))
         println(Day13.solve2(puzzleInput))
-        //28194 too high
     }
-
-//    @Test
-//    fun name() {
-//        val k2 = "[[2]]".parseSignal()
-//        val x = Day13.Signal.Single(1)
-//        println(x.correctOrder(k2))
-//
-//    }
 }
