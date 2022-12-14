@@ -9,9 +9,13 @@ object Day14 {
         object Rock : Terrain()
     }
 
-    data class Cave(val terrainMap: Map<Position, Terrain>) {
-        val xRange = (terrainMap.keys.minOfOrNull { it.x } ?: 0)..(terrainMap.keys.maxOfOrNull { it.x } ?: 0)
-        val yRange = (terrainMap.keys.minOfOrNull { it.y } ?: 0)..(terrainMap.keys.maxOfOrNull { it.y } ?: 0)
+    data class Cave(val terrainMap: MutableMap<Position, Terrain>) {
+        val xRange: IntRange
+            get() = (terrainMap.keys.minOfOrNull { it.x } ?: 0)..(terrainMap.keys.maxOfOrNull { it.x } ?: 0)
+        val yRange: IntRange
+            get() = (terrainMap.keys.minOfOrNull { it.y } ?: 0)..(terrainMap.keys.maxOfOrNull { it.y } ?: 0)
+
+        val yMax: Int = terrainMap.keys.maxOfOrNull { it.y } ?: 0
     }
 
     fun Cave.print(): String {
@@ -31,38 +35,40 @@ object Day14 {
         return builder.toString()
     }
 
+    private fun buildCave(input: Sequence<String>): Cave {
+        val terrainMap: MutableMap<Position, Terrain> = input
+            .flatMap { line ->
+                line.splitToSequence(" -> ")
+                    .map {
+                        val s = it.split(",")
+                        Position(s[0].toInt(), s[1].toInt())
+                    }
+                    .zipWithNext { from, to -> drawLine(from, to) }
+                    .flatten()
+            }.associateWith { Terrain.Rock }
+            .toMutableMap()
+        return Cave(terrainMap)
+    }
     private fun drawLine(from: Position, to: Position): Sequence<Position> {
         val dir = (to - from).normalise()
         return generateSequence(from) { it + dir }
             .takeWhile { (it - dir) != to }
     }
 
-    private fun buildCave(input: Sequence<String>): Cave {
-        val terrainMap: MutableMap<Position, Terrain> = mutableMapOf()
-        input.flatMap { line ->
-            line.splitToSequence(" -> ")
-                .map {
-                    val s = it.split(",")
-                    Position(s[0].toInt(), s[1].toInt())
-                }
-                .zipWithNext { from, to -> drawLine(from, to) }
-                .flatten()
-        }.forEach { terrainMap[it] = Terrain.Rock }
-        return Cave(terrainMap)
-    }
-
     private fun Position.down(): Position = this + Position(0, 1)
     private fun Position.downLeft(): Position = this + Position(-1, 1)
     private fun Position.downRight(): Position = this + Position(1, 1)
     private fun Cave.dropSand(): Cave? {
-        val copy = terrainMap.toMutableMap()
         var current = Position(500, 0)
-        while (current.y <= this.yRange.max()) {
+        while (current.y <= this.yMax) {
             val next = sequenceOf(current.down(), current.downLeft(), current.downRight())
                 .firstOrNull { !this.terrainMap.containsKey(it) }
             if (next == null) {
-                copy[current] = Terrain.Sand
-                return Cave(copy)
+                if (this.terrainMap.containsKey(current)) {
+                    return null
+                }
+                this.terrainMap[current] = Terrain.Sand
+                return this
             }
             current = next
         }
@@ -71,23 +77,25 @@ object Day14 {
 
     fun solve1(input: Sequence<String>): Int {
         val cave = buildCave(input)
-        val last = generateSequence(cave) { cave -> cave.dropSand() }.last()
+        val last = generateSequence(cave) { it.dropSand() }.last()
         return last.terrainMap.count { it.value is Terrain.Sand }
     }
 
     fun solve2(input: Sequence<String>): Int {
-        val cave = buildCave(input)
-        val copy = cave.terrainMap.toMutableMap()
-        val delta = 50
-        val y = 2 + cave.yRange.max()
-        (cave.xRange.min() - delta..cave.xRange.max() + delta).forEach { x ->
-            copy[Position(x, y)] = Terrain.Rock
-        }
-        val newCave = Cave(copy)
-        val last = generateSequence(newCave) { it.dropSand() }
+        var cave = buildCavePart2(input, 160)
+        val last = generateSequence(cave) { it.dropSand() }
             .last()
-//            .first { it.terrainMap[Position(500, 0)] != null }
         println(last.print())
         return last.terrainMap.count { it.value is Terrain.Sand }
+    }
+
+    private fun buildCavePart2(input: Sequence<String>, delta: Int): Cave {
+        var cave = buildCave(input)
+        val y = 2 + cave.yRange.max()
+        (cave.xRange.min() - delta..cave.xRange.max() + delta).forEach { x ->
+            cave.terrainMap[Position(x, y)] = Terrain.Rock
+        }
+        cave = Cave(cave.terrainMap)
+        return cave
     }
 }
