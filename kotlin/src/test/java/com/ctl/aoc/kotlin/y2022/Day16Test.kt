@@ -29,4 +29,17 @@ Valve JJ has flow rate=21; tunnel leads to valve II""".splitToSequence("\n")
         println(Day16.solve2(exampleInput))
         println(Day16.solve2(puzzleInput))
     }
+
+    @Test
+    fun solve1Bis() {
+        println(Day16.solve1Bis(exampleInput))
+        println(Day16.solve1Bis(puzzleInput))
+    }
+
+        @Test
+    fun solve2Bis() {
+        println(Day16.solve2Bis(exampleInput))
+        println(Day16.solve2Bis(puzzleInput))
+    }
+
 }
