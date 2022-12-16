@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2022
 
-import com.ctl.aoc.kotlin.utils.*
+import com.ctl.aoc.kotlin.utils.Queue
+import com.ctl.aoc.kotlin.utils.traversal
 
 
 private val regex = """Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? ([\w ,]+)""".toRegex()
@@ -35,43 +36,34 @@ object Day16 {
     ) {
         fun next(): Sequence<State> {
             val spec = specs[current]!!
-            return spec.to
-                .asSequence()
-                .flatMap { next ->
-                    sequence {
-                        val isNextOpen = openValves.contains(next)
-                        val nextSpec = specs[next] ?: error("no spec for $next")
-                        val shouldOpen = nextSpec.flowRate > 0
-                        val timeSpent = 1 + if (isNextOpen || !shouldOpen) 0 else 1
-                        val newClock = clock - timeSpent
-                        val pressureRelease = if (isNextOpen) {
-                            0
-                        } else {
-                            newClock * nextSpec.flowRate
-                        }
-                        if (newClock >= 0) {
-                            yield(
-                                copy(
-                                    current = next,
-                                    clock = newClock,
-                                    totalPressureRelease = totalPressureRelease,
-                                    openValves = openValves
-                                )
+            return sequence {
+                val currentSpec = specs[current]!!
+                if (!openValves.contains(current) && currentSpec.flowRate > 0) {
+                    val newClock = clock - 1
+                    if (newClock >= 0) {
+                        yield(
+                            copy(
+                                clock = newClock,
+                                totalPressureRelease = totalPressureRelease + newClock * currentSpec.flowRate,
+                                openValves = openValves + current
                             )
-                            if (shouldOpen && !isNextOpen) {
-                                yield(
-                                    copy(
-                                        current = next,
-                                        clock = newClock,
-                                        totalPressureRelease = totalPressureRelease + pressureRelease,
-                                        openValves = openValves + next
-                                    )
-                                )
-                            }
-                        }
+                        )
                     }
                 }
-                .sortedByDescending { it.current.compareTo(this.current) }
+                spec.to.forEach { next ->
+                    val newClock = clock - 1
+                    if (newClock >= 0) {
+                        yield(
+                            copy(
+                                current = next,
+                                clock = newClock,
+                                totalPressureRelease = totalPressureRelease,
+                                openValves = openValves
+                            )
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -85,31 +77,37 @@ object Day16 {
         val usefulValves: Int = specs.values.count { it.flowRate > 0 }
     ) {
         fun next(): Sequence<State2> {
-            val meSpec = specs[me]!!
-            val elephantSpec = specs[elephant]!!
-            TODO()
+            if (openValves.size == usefulValves) {
+                return sequenceOf(copy(clock = 0))
+            }
+            if(clock ==0){
+                return sequenceOf()
+            }
+            val meState = State(specs, me, clock, totalPressureRelease, openValves)
+            val elephantState = State(specs, elephant, clock, totalPressureRelease, openValves)
+            val elephantNextStates = elephantState.next().toList()
+            return sequence {
+                meState.next().forEach { meNext ->
+                    elephantNextStates.forEach { elephantNext ->
+                        if (meNext.current != elephantNext.current) {
+                            yield(merge(meNext, elephantNext))
+                        }
+                    }
+                }
+            }
         }
-    }
 
-    fun State.cost(): Long {
-        val remainingFlowRates = specs
-            .asSequence()
-            .filterNot { this.openValves.contains(it.key) }
-            .map { it.value.flowRate }
-            .sum()
-            .toLong()
-        return 30 * remainingFlowRates - totalPressureRelease + 10 * clock
-    }
-
-    fun State.path(): PathingResult<State> {
-        return Dijkstra.traverse(
-            start = this,
-            end = null,
-            nodeGenerator = { it.next() },
-            distance = { from, to -> cost() },
-            constraints = listOf(CustomConstraint { s, _ -> s.clock > 0 }),
-            debug = false,
-        )
+        fun merge(meNext: State, elephantNext: State): State2 {
+            val meRelease = meNext.totalPressureRelease - totalPressureRelease
+            val elephantRelease = elephantNext.totalPressureRelease - totalPressureRelease
+            return copy(
+                me = meNext.current,
+                elephant = elephantNext.current,
+                totalPressureRelease = totalPressureRelease + meRelease + elephantRelease,
+                openValves = meNext.openValves + elephantNext.openValves,
+                clock = clock - 1
+            )
+        }
     }
 
     fun buildState(input: Sequence<String>): State {
@@ -125,17 +123,10 @@ object Day16 {
 
     fun solve1(input: Sequence<String>): Int {
         val state = buildState(input)
-//        val result = state.path()
-//        result.findPath(result.lastNode!!).map {
-//            "t=${it.clock} " + it.current + "(${it.totalPressureRelease}) - ${it.openValves.sorted()}"
-//        }.forEach {
-//            println(it)
-//        }
-//        return result.lastNode?.totalPressureRelease ?: 0
         val states = traversal(
             startNode = state,
             storage = Queue(),
-            index = { "${it.current}-${it.totalPressureRelease}" },
+            index = { "${it.current}-${it.totalPressureRelease}-${it.clock}" },
             nodeGenerator = { it.next() }
         )
         val end = states
@@ -146,6 +137,26 @@ object Day16 {
     }
 
     fun solve2(input: Sequence<String>): Int {
-        TODO()
+        val state = buildState(input).let {
+            State2(
+                specs = it.specs,
+                me = "AA",
+                elephant = "AA",
+                clock = 26,
+                totalPressureRelease = 0,
+                openValves = setOf(),
+            )
+        }
+        val states = traversal(
+            startNode = state,
+            storage = Queue(),
+            index = { "${it.me}-${it.elephant}-${it.totalPressureRelease}" },
+            nodeGenerator = { it.next() }
+        )
+        val end = states
+            .filter { it.clock == 0 }
+            .sortedByDescending { it.totalPressureRelease }
+            .first()
+        return end.totalPressureRelease
     }
 }
