@@ -3,7 +3,7 @@ package com.ctl.aoc.kotlin.y2022
 import com.ctl.aoc.kotlin.utils.InputUtils
 import org.junit.jupiter.api.Test
 
-internal class Day16Test {
+class Day16Test {
 
     val puzzleInput = InputUtils.downloadAndGetLines(2022, 16)
 
@@ -36,7 +36,7 @@ Valve JJ has flow rate=21; tunnel leads to valve II""".splitToSequence("\n")
         println(Day16.solve1Bis(puzzleInput))
     }
 
-        @Test
+    @Test
     fun solve2Bis() {
         println(Day16.solve2Bis(exampleInput))
         println(Day16.solve2Bis(puzzleInput))

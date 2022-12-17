@@ -200,19 +200,30 @@ object Day16 {
             nodeGenerator = { it.next() }
         )
             .filter { it.totalPressureRelease > 100 }
+            .filter { it.pathSet.size >= 6 }
             .groupBy { it.effectivePathSet }
             .mapValues { listEntry -> listEntry.value.maxBy { it.totalPressureRelease } }
             .values
             .toList()
-        return sequence {
+        val (pressure, pair) = sequence {
             all.forEach { human ->
                 all.forEach { elephant ->
                     if (human.effectivePathSet.intersect(elephant.effectivePathSet).isEmpty()) {
-                        yield(human.totalPressureRelease + elephant.totalPressureRelease)
+                        yield(human.totalPressureRelease + elephant.totalPressureRelease to (human to elephant))
                     }
                 }
             }
-        }.max()
+        }.maxBy { it.first }
+        val (human, elephant) = pair
+        println(elephant.effectivePathSet.map { it.from })
+        println(human.effectivePathSet.map { it.from })
+        return pressure
+    }
+
+    private fun <T> PathingResult<T>.removeNodes(nodes: Set<T>): PathingResult<T> {
+        return copy(
+            steps = steps.filterNot { nodes.contains(it.key) }
+        )
     }
 
     data class SearchNode(
