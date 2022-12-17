@@ -113,31 +113,48 @@ object Day17 {
         return tetris.height().toInt()
     }
 
-    fun solve2(input: String): Long {
-        val diffs = generateHeightDiffString(input)
+    fun solve2(input: String, minCycleLength: Int): Long {
+        val deltaHeightList = generateHeightDiffSequence(input)
+            .take((2.5 * minCycleLength).toInt())
+            .toList()
 
+        val (offset, cycle) = deltaHeightList.findCycle(10, minCycleLength)
+        println("$offset")
+        println("$cycle")
 
-        val pattern1 = "01230113220023401212012120132001334"
-        val start1 = "01230113220023401212012120132001334"
-
-        val start2 =
-            "222013322130201220013320133001320213322121200332002042033201302213022132421213013201121401330002222132001124013300123011322212132132201330203300101421303212240133001332013212122"
-        val pattern2 =
-            "4002340023021230013220103001322013200132111332002322133221324213300133200224013340023201214010320123220234013022121221222012220022001302013340123421232013340132121302013322133420000103300133221321213012003201330013300003100334013342122221334213210132001324002240130221304003030023401230002302130401230012300123421212003300133401322012130022101322013300133001030010311103121232213220130121330013020122221334012122002200232212302102400022002300112100330012140133001321003002023401322213212132221324010020130201330212122132201321013302132221210012302022001332012300133201232213222133021304002340023221030013220133201330213300103000212012120123010321113300122421222012120130401220202322133201330213300132201332013322133220030213320022220034213340133221321012220133201213013240003221321212132030301222002322132221213013300132201230103300133000232213200133221230201220133201322013002130420220213020133001334212340030321212013300022221322002100133020301213202133001232013320130201324012130132221212013300123021332212120122401332002200132221322013030123401322013220132101031010311112401332013022133001321113222132421304013320133001212213320133021304003032133220302212300023011230112340132111224012120132221302012122132401004213202133221320212222122111224013020133221232210320133000332013320132000230012120132201322012212133001332013032133401213213320023001322013040133001332003222130300320202222132200234013300133001303212302133021321103020133201330013300103401212213320133421303003322103101224013320022201302200342123201330013011103401332002300133201332213300012201121013040020200132002300121421230213030133000222013300133420300013322123021332212210133201324213300103401330013340022001330013342133200032012200122401330013300133"
-
-        val pattern = pattern2
-        val start = start2
+        val pattern = deltaHeightList.subList(offset + 1, offset + cycle + 1)
+        println("pattern: ${pattern.joinToString(separator = "")}")
+        val start = deltaHeightList.subList(0, offset + 1)
+        println("start: ${start.joinToString(separator = "")}")
 
         val l = 1000000000000L
-        val n = (l - start.length) / pattern.length
-        val r = (l - start.length) % pattern.length
-        val startHeight = start.map { it.toString().toLong() }.sum()
-        val patternHeight = pattern.map { it.toString().toLong() }.sum()
-        val reminder = pattern.take(r.toInt()).map { it.toString().toLong() }.sum()
-        return startHeight + patternHeight * n + reminder + 1
+        val n = (l - offset - 1) / cycle
+        val r = (l - offset - 1) % cycle
+        val startHeight = start.sum()
+        val patternHeight = pattern.sum()
+        val reminder = pattern.take(r.toInt()).sum()
+        return startHeight + patternHeight * n + reminder
     }
 
-    private fun generateHeightDiffString(input: String): Sequence<Long> {
+    private fun <T> List<T>.findCycle(searchWidth: Int, minCycleLength: Int): Pair<Int, Int> {
+        val l = this.size
+        val pattern = this.subList(l - searchWidth, this.size)
+        var i = l - minCycleLength
+        while (i >= searchWidth && this.subList(i - searchWidth, i) != pattern) {
+            i--
+        }
+        if (i < searchWidth) {
+            error("No Cycle found")
+        }
+        val cycle = this.size - i
+        var offset = 0
+        while (offset < l && this.subList(offset, offset + cycle) != this.subList(offset + cycle, offset + 2 * cycle)) {
+            offset++
+        }
+        return offset to cycle
+    }
+
+    private fun generateHeightDiffSequence(input: String): Sequence<Long> {
         val gas = gasIterator(input.trim())
         val tetris = Tetris((1..7).map { Position(it, 0) }.toMutableSet())
         return shapeSequence()

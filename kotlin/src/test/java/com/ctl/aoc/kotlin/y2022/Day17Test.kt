@@ -16,8 +16,8 @@ internal class Day17Test {
 
     @Test
     fun solve2() {
-        println(Day17.solve2(exampleInput))
-        println(Day17.solve2(puzzleInput))
+        println(Day17.solve2(exampleInput, 100))
+        println(Day17.solve2(puzzleInput, 3000))
 //        <1572093023268
     }
 }
