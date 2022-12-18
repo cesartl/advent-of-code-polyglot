@@ -18,7 +18,7 @@ data class Position(val x: Int, val y: Int) {
         yield(Position(x - 1, y - 1))
     }
 
-    fun isTouching(other: Position): Boolean{
+    fun isTouching(other: Position): Boolean {
         val (dX, dY) = this - other
         return abs(dX) <= 1 && abs(dY) <= 1
     }
@@ -48,9 +48,11 @@ data class Position(val x: Int, val y: Int) {
             gcd != 0 -> {
                 copy(x = x / gcd, y = y / gcd)
             }
+
             this.x == 0 -> {
                 copy(y = 1)
             }
+
             else -> {
                 copy(x = 1)
             }
@@ -75,11 +77,11 @@ data class Position(val x: Int, val y: Int) {
         }
     }
 
-    fun sameRow(other: Position): Boolean{
+    fun sameRow(other: Position): Boolean {
         return this.y == other.y
     }
 
-    fun sameColumn(other: Position): Boolean{
+    fun sameColumn(other: Position): Boolean {
         return this.x == other.x
     }
 
@@ -89,6 +91,11 @@ data class Position(val x: Int, val y: Int) {
             return Position(split[0].toInt(), split[1].toInt())
         }
     }
+}
+
+fun String.toPosition3d(): Position3d {
+    val s = this.split(",").map { it.toInt() }
+    return Position3d(s[0], s[1], s[2])
 }
 
 data class Position3d(val x: Int, val y: Int, val z: Int) {
@@ -253,6 +260,7 @@ sealed class Orientation {
                 270 -> S
                 else -> throw Error("degree: $degrees ($d)")
             }
+
             W -> when (d) {
                 0 -> W
                 90 -> S
@@ -260,6 +268,7 @@ sealed class Orientation {
                 270 -> N
                 else -> throw Error("degree: $degrees ($d)")
             }
+
             S -> when (d) {
                 0 -> S
                 90 -> E
@@ -267,6 +276,7 @@ sealed class Orientation {
                 270 -> W
                 else -> throw Error("degree: $degrees ($d)")
             }
+
             N -> when (d) {
                 0 -> N
                 90 -> W
@@ -277,7 +287,7 @@ sealed class Orientation {
         }
     }
 
-    fun opposite(): Orientation = when(this){
+    fun opposite(): Orientation = when (this) {
         E -> W
         N -> S
         S -> N
