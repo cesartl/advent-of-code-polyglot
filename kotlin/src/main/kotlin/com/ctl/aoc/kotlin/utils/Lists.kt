@@ -138,4 +138,5 @@ object Lists {
             numArray[(numArray.size) / 2]
         }
     }
+
 }
