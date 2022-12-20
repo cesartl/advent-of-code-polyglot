@@ -4,58 +4,78 @@ import com.ctl.aoc.kotlin.utils.CircularLinkedList
 import kotlin.math.absoluteValue
 
 object Day20 {
-    fun solve1(input: Sequence<String>): Int {
-        val list = input.map { it.toInt() }.toList()
+    fun solve1(input: Sequence<String>): Long {
+        val list = input.map { it.toLong() }.toList()
+        val mixed = mix(list)
+        println("Mixed: $mixed")
+        return findCoordinates(mixed)
+    }
+
+    fun solve2(input: Sequence<String>): Long {
+        val encryptionKey = 811589153L
+        val list = input.map { it.toLong() * encryptionKey }.toList()
+        val mixed = mix(list, 10)
+        println("Mixed: $mixed")
+        return findCoordinates(mixed)
+    }
+
+    private fun findCoordinates(list: List<Long>): Long {
+        val i = list.indexOf(0)
+        return sequenceOf(1000, 2000, 3000)
+            .map { list[(i + it) % list.size] }
+            .sum()
+    }
+
+    private fun mix(list: List<Long>, nMix: Int = 1): List<Long> {
         val size = list.size
         val circular = CircularLinkedList.of(list.first())
         var insert = circular
-        val nodes = mutableListOf<CircularLinkedList<Int>>()
+        val nodes = mutableListOf<CircularLinkedList<Long>>()
+        nodes.add(circular)
         list.drop(1).forEach {
             insert = insert.insert(it)
             nodes.add(insert)
         }
-        nodes.add(circular)
         println(circular.print { "${it.value} " })
-        var current = circular
-        val iterator = nodes.iterator()
-        var first = current
-        repeat(list.size) {
-            if (current == first) {
-                first = current.nextNode()
-            }
-            val n = current.value
-            val mod = if (n >= 0) {
-                n % size
-            } else {
-                (2 * size + n - 1) % size
-            }
-//            println("Doing ${current.value} (mod=$mod)")
-            if (n > 0) {
-                current = current.previousNode()
-                current.removeNext()
-                current = current.nextNode(n)
-                current.insert(n)
-            } else if (n < 0) {
-                current = current.previousNode()
-                current.removeNext()
-                current = current.previousNode(n.absoluteValue)
-                current.insert(n)
-            }
-//            println("current: " + current.print { "${it.value} " })
-//            println("first: "+first.print { "${it.value} " })
-            current = iterator.next()
-        }
-        println(first.print { "${it.value} " })
-        var zero = current
-        while (zero.value != 0) {
-            zero = zero.nextNode()
-        }
-        return sequenceOf(1000, 2000, 3000)
-            .map { zero.nextNode(it % size).value }
-            .sum()
-    }
 
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
+        repeat(nMix) {
+            var index = 0
+            var current = nodes.first()
+            var first = current
+//            println("new mix")
+            repeat(list.size) {
+                if (current == first) {
+                    first = current.nextNode()
+                }
+                val n = current.value
+//                println("Doing ${current.value}")
+                if (n > 0) {
+                    current = current.previousNode()
+                    current.removeNext()
+                    current = current.nextNode((n % (size - 1)).toInt())
+                    nodes[index] = current.insert(n)
+                } else if (n < 0) {
+                    current = current.previousNode()
+                    current.removeNext()
+                    current = current.previousNode((n.absoluteValue % (size - 1)).toInt())
+                    nodes[index] = current.insert(n)
+                }
+                //            println("current: " + current.print { "${it.value} " })
+                //            println("first: "+first.print { "${it.value} " })
+
+                if(index < size-1) {
+                    index++
+                    current = nodes[index]
+                }
+            }
+        }
+//        println(first.print { "${it.value} " })
+        var toAdd = nodes.first()
+        val mixed = mutableListOf<Long>()
+        repeat(size) {
+            mixed.add(toAdd.value)
+            toAdd = toAdd.nextNode()
+        }
+        return mixed
     }
 }
