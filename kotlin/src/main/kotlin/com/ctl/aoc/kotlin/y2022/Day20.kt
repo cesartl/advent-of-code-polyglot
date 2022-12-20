@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2022
 
 import com.ctl.aoc.kotlin.utils.CircularLinkedList
+import kotlin.math.absoluteValue
 
 object Day20 {
     fun solve1(input: Sequence<String>): Int {
@@ -29,15 +30,19 @@ object Day20 {
                 (2 * size + n - 1) % size
             }
 //            println("Doing ${current.value} (mod=$mod)")
-            if (mod > 0) {
+            if (n > 0) {
                 current = current.previousNode()
                 current.removeNext()
-                current = current.nextNode(mod)
+                current = current.nextNode(n)
                 current.insert(n)
-            } else if (mod < 0) {
-                error("n=$n mod = $mod")
+            } else if (n < 0) {
+                current = current.previousNode()
+                current.removeNext()
+                current = current.previousNode(n.absoluteValue)
+                current.insert(n)
             }
 //            println("current: " + current.print { "${it.value} " })
+//            println("first: "+first.print { "${it.value} " })
             current = iterator.next()
         }
         println(first.print { "${it.value} " })

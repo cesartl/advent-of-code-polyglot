@@ -20,6 +20,7 @@ internal class Day20Test {
         println(Day20.solve1(exampleInput))
         println(Day20.solve1(puzzleInput))
         //>2785
+        //>3965
     }
 
     @Test
