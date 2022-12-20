@@ -20,13 +20,23 @@ internal class Day20Test {
     fun solve1() {
         println(Day20.solve1(exampleInput))
         assertEquals(23321, Day20.solve1(puzzleInput))
-        //>2785
-        //>3965
+    }
+
+    @Test
+    fun solve1Bis() {
+        println(Day20.solve1Bis(exampleInput))
+        assertEquals(23321, Day20.solve1Bis(puzzleInput))
     }
 
     @Test
     fun solve2() {
         println(Day20.solve2(exampleInput))
         println(Day20.solve2(puzzleInput))
+    }
+
+    @Test
+    fun solve2Bis() {
+        println(Day20.solve2Bis(exampleInput))
+        assertEquals(1428396909280, Day20.solve2Bis(puzzleInput))
     }
 }
