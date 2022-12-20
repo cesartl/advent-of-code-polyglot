@@ -44,7 +44,7 @@ data class CircularLinkedList<T>(val value: T, var previous: CircularLinkedList<
     fun removePrevious(): T {
         val previous = this.previousNode()
         this.previous = previous.previousNode()
-        this.previousNode().previous = this
+        this.previousNode().next = this
         return previous.value
 
     }
