@@ -36,52 +36,23 @@ object Day25 {
             if (sum in -2..2) {
                 buffer[buffer.size - 1 - i] = reverseCharValue[sum]!!
                 carry = 0
-            } else {
-                when (sum) {
-                    5 -> {
-                        buffer[buffer.size - 1 - i] = '0'
-                        carry = 1
-                    }
-
-                    4 -> {
-                        buffer[buffer.size - 1 - i] = '-'
-                        carry = 1
-                    }
-
-                    3 -> {
-                        buffer[buffer.size - 1 - i] = '='
-                        carry = 1
-                    }
-
-                    -3 -> {
-                        buffer[buffer.size - 1 - i] = '2'
-                        carry = -1
-                    }
-                    -4 -> {
-                        buffer[buffer.size - 1 - i] = '1'
-                        carry = -1
-                    }
-
-                    -5 ->{
-                        buffer[buffer.size - 1 - i] = '0'
-                        carry = -1
-                    }
-
-                    else -> error("sum: $sum")
-                }
+            } else if(sum > 0) {
+                val x = sum - 5
+                buffer[buffer.size - 1 - i] = reverseCharValue[x]!!
+                carry = 1
+            }else{
+                val x = 5 + sum
+                buffer[buffer.size - 1 - i] = reverseCharValue[x]!!
+                carry = -1
             }
             i++
         }
-        return Snafu(buffer.joinToString(separator = "").trim())
+        return Snafu(buffer.joinToString(separator = "").trim().dropWhile { it == '0' })
     }
 
     fun solve1(input: Sequence<String>): String {
         return input.map { it.toSnafu() }
             .fold("0".toSnafu()) { acc, snafu -> acc + snafu }
             .digits
-    }
-
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
     }
 }
