@@ -34,20 +34,20 @@ object Day25 {
             val b = other.charFromEnd(i)
             val sum = charValue[a]!! + charValue[b]!! + carry
             if (sum in -2..2) {
-                buffer[buffer.size - 1 - i] = reverseCharValue[sum]!!
+                buffer[i] = reverseCharValue[sum]!!
                 carry = 0
-            } else if(sum > 0) {
+            } else if (sum > 0) {
                 val x = sum - 5
-                buffer[buffer.size - 1 - i] = reverseCharValue[x]!!
+                buffer[i] = reverseCharValue[x]!!
                 carry = 1
-            }else{
+            } else {
                 val x = 5 + sum
-                buffer[buffer.size - 1 - i] = reverseCharValue[x]!!
+                buffer[i] = reverseCharValue[x]!!
                 carry = -1
             }
             i++
         }
-        return Snafu(buffer.joinToString(separator = "").trim().dropWhile { it == '0' })
+        return Snafu(buffer.joinToString(separator = "").trim().reversed().dropWhile { it == '0' })
     }
 
     fun solve1(input: Sequence<String>): String {
