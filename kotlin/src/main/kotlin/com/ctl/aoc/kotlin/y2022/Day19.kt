@@ -188,7 +188,7 @@ object Day19 {
         return traversal(
             startNode = start,
             storage = Queue(),
-            index = { "${it.clock}-${it.resources}-${it.robots}" },
+            index = { "${it.resources}-${it.robots}" },
             nodeGenerator = { it.nextStates() }
         )
             .filter { it.clock == 0 }

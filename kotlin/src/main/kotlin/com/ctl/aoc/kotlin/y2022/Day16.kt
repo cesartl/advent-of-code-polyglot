@@ -178,7 +178,7 @@ object Day16 {
     // After that we only move from useful valve to useful valve
 
     fun solve1Bis(input: Sequence<String>): Int {
-        val start = buildStartNode(input, 26)
+        val start = buildStartNode(input, 30)
         val best = traversal(
             startNode = start,
             storage = Queue(),
@@ -218,12 +218,6 @@ object Day16 {
         println(elephant.effectivePathSet.map { it.from })
         println(human.effectivePathSet.map { it.from })
         return pressure
-    }
-
-    private fun <T> PathingResult<T>.removeNodes(nodes: Set<T>): PathingResult<T> {
-        return copy(
-            steps = steps.filterNot { nodes.contains(it.key) }
-        )
     }
 
     data class SearchNode(
@@ -276,10 +270,10 @@ object Day16 {
     private fun buildStartNode(input: Sequence<String>, startClock: Int): SearchNode {
         val specs = input.map { it.toSpec() }
         val valveToSpec = specs.associateBy { it.from }
-        val pathingMap: Map<ValveSpec, PathingResult<ValveSpec>> = buildPathingMap(specs, valveToSpec)
+        val pathingMap: Map<ValveSpec, PathingResult<ValveSpec>> = buildPathingMap(valveToSpec)
 
         return SearchNode(
-            clock = 26,
+            clock = startClock,
             path = listOf(valveToSpec["AA"]!!),
             totalPressureRelease = 0,
             pathingMap = pathingMap
@@ -288,18 +282,144 @@ object Day16 {
 
 
     private fun buildPathingMap(
-        specs: Sequence<ValveSpec>,
         valveToSpec: Map<Valve, ValveSpec>
     ): Map<ValveSpec, PathingResult<ValveSpec>> {
         val graph = Graph<ValveSpec>()
-        specs.forEach { spec ->
+        valveToSpec.values.forEach { spec ->
             spec.to.forEach { to ->
                 graph.addEdge(spec, valveToSpec[to]!!)
             }
         }
-        return specs
+        return valveToSpec.values
             .filter { it.from == "AA" || it.flowRate > 0 }
             .associateWith { graph.dijkstra(it, null) }
     }
+
+    //--- DP approach
+
+    data class MemoKey(
+        val currentVale: Valve,
+        val openValves: Set<Valve>,
+        val clock: Int,
+        val player: Int = 0
+    )
+
+    fun solve1Dp(input: Sequence<String>): Int {
+        val specs: Map<Valve, ValveSpec> = input.map { it.toSpec() }.associateBy { it.from }
+        val cache = mutableMapOf<MemoKey, Int>()
+        val result = dp(specs, MemoKey("AA", setOf(), 30), cache)
+        println("cache size: ${cache.size}")
+        return result
+    }
+
+    fun solve2Dp(input: Sequence<String>): Int {
+        val specs: Map<Valve, ValveSpec> = input.map { it.toSpec() }.associateBy { it.from }
+        val cache = mutableMapOf<MemoKey, Int>()
+        val result = dp(specs, MemoKey("AA", setOf(), 26, 1), cache)
+        println("cache size: ${cache.size}")
+        return result
+    }
+
+    private fun dp(
+        valves: Map<Valve, ValveSpec>,
+        memoKey: MemoKey,
+        cache: MutableMap<MemoKey, Int>
+    ): Int {
+        val (currentVale, openValves, clock, player) = memoKey
+        if (clock == 0 && player == 0) {
+            return 0
+        } else if (clock == 0) {
+            return dp(valves, MemoKey("AA", openValves, 26, player - 1), cache)
+        }
+        //state already exists
+        cache[memoKey]?.let {
+            return it
+        }
+        var maxPressureRelease = Int.MIN_VALUE
+
+        val spec = valves[currentVale] ?: error("Unknown valve: $currentVale")
+        if (spec.flowRate > 0 && !openValves.contains(currentVale)) {
+            val newValves = openValves + currentVale
+            val candidate = (clock - 1) * spec.flowRate + dp(
+                valves,
+                memoKey.copy(openValves = newValves, clock = clock - 1),
+                cache
+            )
+            maxPressureRelease = candidate
+        }
+        spec.to.forEach { to ->
+            val candidate = dp(valves, memoKey.copy(currentVale = to, clock = clock - 1), cache)
+            maxPressureRelease = maxPressureRelease.coerceAtLeast(candidate)
+        }
+
+        cache[memoKey] = maxPressureRelease
+        return maxPressureRelease
+    }
+
+    data class MemoFastKey(
+        val currentVale: ValveSpec,
+        val openValves: Set<ValveSpec>,
+        val clock: Int,
+        val player: Int = 0
+    )
+
+    fun solve1DpFast(input: Sequence<String>): Int {
+        val specs: Map<Valve, ValveSpec> = input.map { it.toSpec() }.associateBy { it.from }
+        val pathingMap: Map<ValveSpec, PathingResult<ValveSpec>> = buildPathingMap(specs)
+        val cache = mutableMapOf<MemoFastKey, Int>()
+        val result = dpFast(specs["AA"]!!, MemoFastKey(specs["AA"]!!, setOf(), 30, 0), pathingMap, cache)
+        println("cache size: ${cache.size}")
+        return result
+    }
+
+    fun solve2DpFast(input: Sequence<String>): Int {
+        val specs: Map<Valve, ValveSpec> = input.map { it.toSpec() }.associateBy { it.from }
+        val pathingMap: Map<ValveSpec, PathingResult<ValveSpec>> = buildPathingMap(specs)
+        val cache = mutableMapOf<MemoFastKey, Int>()
+        val startValve = specs["AA"]!!
+        val result = dpFast(startValve, MemoFastKey(startValve, setOf(), 26, 1), pathingMap, cache)
+        println("cache size: ${cache.size}")
+        return result
+    }
+
+
+    private fun dpFast(
+        startValve: ValveSpec,
+        memoKey: MemoFastKey,
+        pathingMap: Map<ValveSpec, PathingResult<ValveSpec>>,
+        cache: MutableMap<MemoFastKey, Int>
+    ): Int {
+        val (currentVale, openValves, clock, player) = memoKey
+        if (clock == 0) {
+            return if (player == 0) {
+                0
+            } else {
+                dpFast(startValve, MemoFastKey(startValve, openValves, 26, player - 1), pathingMap, cache)
+            }
+        }
+        //state already exists
+        cache[memoKey]?.let {
+            return it
+        }
+        var maxPressureRelease = 0
+
+        (pathingMap.keys - openValves).forEach { toSpec ->
+            val travelTime = pathingMap[currentVale]!!.steps[toSpec]!!.toInt()
+            val newClock = clock - travelTime - 1
+            if (newClock >= 0) {
+                val newValves = openValves + toSpec
+                val candidate = newClock * toSpec.flowRate + dpFast(
+                    startValve,
+                    memoKey.copy(currentVale = toSpec, openValves = newValves, clock = newClock),
+                    pathingMap,
+                    cache
+                )
+                maxPressureRelease = maxPressureRelease.coerceAtLeast(candidate)
+            }
+        }
+        cache[memoKey] = maxPressureRelease
+        return maxPressureRelease
+    }
+
 
 }

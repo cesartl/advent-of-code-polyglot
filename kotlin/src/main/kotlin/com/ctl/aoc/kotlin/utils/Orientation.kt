@@ -304,6 +304,16 @@ sealed class Orientation {
                 else -> throw IllegalArgumentException(char.toString())
             }
         }
+
+        fun parse2(char: Char): Orientation {
+            return when (char) {
+                '>' -> E
+                '<' -> W
+                'v' -> S
+                '^' -> N
+                else -> throw IllegalArgumentException(char.toString())
+            }
+        }
     }
 }
 

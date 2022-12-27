@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2022
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class Day16Test {
@@ -40,6 +41,30 @@ Valve JJ has flow rate=21; tunnel leads to valve II""".splitToSequence("\n")
     fun solve2Bis() {
         println(Day16.solve2Bis(exampleInput))
         println(Day16.solve2Bis(puzzleInput))
+    }
+
+    @Test
+    fun solve1Dp() {
+        println(Day16.solve1Dp(exampleInput))
+        println(Day16.solve1Dp(puzzleInput))
+    }
+
+    @Test
+    fun solve2Dp() {
+        println(Day16.solve2Dp(exampleInput))
+        println(Day16.solve2Dp(puzzleInput))
+    }
+
+    @Test
+    fun solve1DpFast() {
+        assertEquals(1651, Day16.solve1DpFast(exampleInput))
+        assertEquals(2265, Day16.solve1DpFast(puzzleInput))
+    }
+
+    @Test
+    fun solve2DpFast() {
+        assertEquals(1707, Day16.solve2DpFast(exampleInput))
+        assertEquals(2811, Day16.solve2DpFast(puzzleInput))
     }
 
 }
