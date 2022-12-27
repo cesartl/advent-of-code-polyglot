@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2022
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day22Test {
@@ -30,6 +31,7 @@ internal class Day22Test {
 
     @Test
     fun solve2() {
-        println(Day22.solve2(puzzleInput))
+        assertEquals(5031, Day22.solve2(example, 4))
+        println(Day22.solve2(puzzleInput, 50))
     }
 }

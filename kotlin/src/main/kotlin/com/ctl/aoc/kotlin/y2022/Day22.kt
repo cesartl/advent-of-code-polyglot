@@ -70,7 +70,7 @@ object Day22 {
         private fun nextOrWrap(p: Position, orientation: Orientation): Pair<Position, Orientation> {
             val next = orientation.move(p, 1)
             return if (!grid.containsKey(next)) {
-                if (wrappingMap.containsKey(p)) {
+                if (wrappingMap.isNotEmpty()) {
                     wrappingMap[p]!!
                 } else {
                     wrap(p, orientation) to orientation
@@ -155,97 +155,110 @@ object Day22 {
         return Pair(instructions, world)
     }
 
-    private fun wrappingMap(size: Int, grid: Map<Position, Grid>): MutableMap<Position, Pair<Position, Orientation>> {
-        val r1 = (1..size)
-        val r2 = (size + 1..2 * size)
-        val r3 = (2 * size + 1..3 * size)
-        val r4 = (3 * size + 1..4 * size)
+    sealed class Arete {
 
-        val c1X = r3
-        val c1Y = r1
+        abstract val orientation: Orientation
 
-        val c2X = r1
-        val c2Y = r2
+        data class HArete(val xRange: IntProgression, val y: Int, override val orientation: Orientation) : Arete()
+        data class VArete(val x: Int, val yRange: IntProgression, override val orientation: Orientation) : Arete()
 
-        val c3X = r2
-        val c3Y = r2
+        fun points(): Sequence<Position> = when (this) {
+            is HArete -> sequence {
+                xRange.forEach { x ->
+                    yield(Position(x, y))
+                }
+            }
 
-        val c4X = r3
-        val c4Y = r2
-
-        val c5X = r3
-        val c5Y = r3
-
-        val c6X = r4
-        val c6Y = r3
-
-        val wrappingMap: MutableMap<Position, Pair<Position, Orientation>> = mutableMapOf()
-
-
-        //1<->2
-        c1X.forEachIndexed { i, x ->
-            val from = Position(x, c1Y.first)
-            val to = Position(c2X.toList()[i], c2Y.first)
-            assert(grid.containsKey(from)) { "$from" }
-            assert(grid.containsKey(to)) { "$to" }
-            wrappingMap[from] = to to S
-            wrappingMap[to] = from to S
+            is VArete -> sequence {
+                yRange.forEach { y ->
+                    yield(Position(x, y))
+                }
+            }
         }
 
-        //1<->3
-        c1Y.forEachIndexed { i, y ->
-            val from = Position(c1X.first, y)
-            val to = Position(c3X.toList()[i], c3Y.first)
-            wrappingMap[from] = to to S
-            wrappingMap[to] = from to E
+        fun reversed(): Arete = when (this) {
+            is HArete -> copy(xRange = xRange.reversed())
+            is VArete -> copy(yRange = yRange.reversed())
+        }
+    }
+
+    data class Region(val i: Int, val j: Int, val size: Int) {
+        val xRange = (i * size + 1..(i + 1) * size)
+        val yRange = (j * size + 1..(j + 1) * size)
+
+        val top: Arete = Arete.HArete(xRange, yRange.first, S)
+        val bottom: Arete = Arete.HArete(xRange, yRange.last, N)
+        val left: Arete = Arete.VArete(xRange.first, yRange, E)
+        val right: Arete = Arete.VArete(xRange.last, yRange, W)
+    }
+
+    infix fun Arete.connectWith(with: Arete): Map<Position, Pair<Position, Orientation>> {
+        return this.points().zip(with.points()).flatMap { (a, b) ->
+            sequenceOf(
+                a to (b to with.orientation),
+                b to (a to this.orientation),
+            )
+        }.toMap()
+    }
+
+    class WrappingMapBuilder(val init: WrappingMapBuilder.() -> Unit) {
+        private val wrappingMap: MutableMap<Position, Pair<Position, Orientation>> = mutableMapOf()
+
+        infix fun Arete.connects(with: Arete) {
+            wrappingMap.putAll(this connectWith with)
         }
 
-        //1<->6
-        c1Y.forEachIndexed { i, y ->
-            val from = Position(c1X.last, y)
-            val to = Position(c6X.last, c6Y.reversed().toList()[i])
-            wrappingMap[from] = to to W
-            wrappingMap[to] = from to W
+        fun build(): Map<Position, Pair<Position, Orientation>> {
+            init()
+            return wrappingMap.toMap()
         }
+    }
 
-        //2<->6
-        c2Y.forEachIndexed { i, y ->
-            val from = Position(c2X.first, y)
-            val to = Position(c6X.reversed().toList()[i], c6Y.last)
-            wrappingMap[from] = to to N
-            wrappingMap[to] = from to E
-        }
+    private fun wrappingMap(size: Int, grid: Map<Position, Grid>): Map<Position, Pair<Position, Orientation>> {
+        return if (size == 4) {
+            val r1 = Region(2, 0, size)
+            val r2 = Region(0, 1, size)
+            val r3 = Region(1, 1, size)
+            val r4 = Region(2, 1, size)
+            val r5 = Region(2, 2, size)
+            val r6 = Region(3, 2, size)
+            WrappingMapBuilder {
+                r1.left connects r3.top
+                r1.top connects r2.top
+                r1.right connects r6.right.reversed()
 
-        //2<->5
-        c2X.forEachIndexed { i, x ->
-            val from = Position(x, c2Y.last)
-            val to = Position(c5X.reversed().toList()[i], c5Y.last)
-            wrappingMap[from] = to to N
-            wrappingMap[to] = from to N
-        }
+                r2.left connects r6.bottom.reversed()
+                r2.bottom connects r5.bottom.reversed()
 
-        //3<->5
-        c3X.forEachIndexed { i, x ->
-            val from = Position(x, c3Y.last)
-            val to = Position(c5X.first, c5Y.reversed().toList()[i])
-            wrappingMap[from] = to to E
-            wrappingMap[to] = from to N
-        }
+                r3.bottom connects r5.left.reversed()
+                r4.right connects r6.top.reversed()
+            }.build()
+        } else {
+            val r1 = Region(1, 0, size)
+            val r2 = Region(2, 0, size)
+            val r3 = Region(1, 1, size)
+            val r4 = Region(0, 2, size)
+            val r5 = Region(1, 2, size)
+            val r6 = Region(0, 3, size)
+            WrappingMapBuilder {
+                r1.top connects r6.left
+                r1.left connects r4.left.reversed()
 
-        //4<->6
-        c4Y.forEachIndexed { i, y ->
-            val from = Position(c4X.last, y)
-            val to = Position(c6X.reversed().toList()[i], c6Y.first)
-            wrappingMap[from] = to to S
-            wrappingMap[to] = from to W
+                r2.top connects r6.bottom
+                r2.right connects r5.right.reversed()
+                r2.bottom connects r3.right
+
+                r3.left connects r4.top
+
+                r5.bottom connects r6.right
+            }.build()
         }
-        return wrappingMap
     }
 
     fun solve2(input: String, size: Int): Int {
 
         val (instructions, w) = parse(input)
-        val wrappingMap: MutableMap<Position, Pair<Position, Orientation>> = wrappingMap(size, w.grid)
+        val wrappingMap: Map<Position, Pair<Position, Orientation>> = wrappingMap(size, w.grid)
         val world = w.copy(wrappingMap = wrappingMap)
         instructions.forEach { instruction ->
             world.apply(instruction)
