@@ -37,12 +37,7 @@ class Queue<T> : Storage<T> {
 
 }
 
-fun <T> traversal(
-    startNode: T,
-    storage: Storage<T>,
-    index: (node: T) -> String = { it.toString() },
-    nodeGenerator: NodeGenerator<T>
-): Sequence<T> {
+fun <T> traversal(startNode: T, storage: Storage<T>, index: (node: T) -> String = { it.toString() }, nodeGenerator: NodeGenerator<T>): Sequence<T> {
     storage.push(startNode)
     val visited = mutableSetOf<String>()
     return sequence {
@@ -59,10 +54,9 @@ fun <T> traversal(
     }
 }
 
-class Graph<T>(
-    val adjacencyMap: HashMap<T, HashSet<T>> = HashMap(),
+class Graph<T> {
+    val adjacencyMap: HashMap<T, HashSet<T>> = HashMap()
     val incomingMap: HashMap<T, HashSet<T>> = HashMap()
-) {
 
     fun outGoingSize(): Int = adjacencyMap.size
 
@@ -73,10 +67,10 @@ class Graph<T>(
 
     fun addDirectedEdge(source: T, dest: T) {
         adjacencyMap
-            .computeIfAbsent(source) { HashSet() }
-            .add(dest)
+                .computeIfAbsent(source) { HashSet() }
+                .add(dest)
         incomingMap.computeIfAbsent(dest) { HashSet() }
-            .add(source)
+                .add(source)
     }
 
     fun removeEdge(source: T, dest: T) {
@@ -106,35 +100,6 @@ class Graph<T>(
 
     fun bfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Queue(), index)
     fun dfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Stack(), index)
-
-    fun copy(): Graph<T> {
-        return Graph(
-            adjacencyMap = this.adjacencyMap,
-            incomingMap = this.incomingMap
-        )
-    }
-
-    fun topologicalSort(): List<T> {
-        val rootNodes = kotlin.collections.ArrayDeque<T>()
-        val sorted = mutableListOf<T>()
-        val copy = this.copy()
-        copy.incomingMap.keys.forEach { node ->
-            if(copy.outgoingNodes(node).isEmpty()){
-                rootNodes.add(node)
-            }
-        }
-        while (rootNodes.isNotEmpty()) {
-            val current = rootNodes.removeFirst()
-            sorted.add(current)
-            copy.incomingNodes(current).forEach { from ->
-                copy.removeEdge(from, current)
-                if (copy.outgoingNodes(from).isEmpty()) {
-                    rootNodes.add(from)
-                }
-            }
-        }
-        return sorted
-    }
 }
 
 

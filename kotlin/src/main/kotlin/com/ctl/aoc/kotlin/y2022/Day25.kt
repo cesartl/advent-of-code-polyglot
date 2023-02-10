@@ -1,7 +1,5 @@
 package com.ctl.aoc.kotlin.y2022
 
-import kotlin.math.sign
-
 fun String.toSnafu() = Day25.Snafu(this)
 
 object Day25 {
@@ -32,15 +30,21 @@ object Day25 {
         var i = 0
         var carry = 0
         while (i < max) {
-            println("carry: $carry")
             val a = this.charFromEnd(i)
             val b = other.charFromEnd(i)
             val sum = charValue[a]!! + charValue[b]!! + carry
-            println("sum: $sum")
-            val x = ((sum + 2) % 5) - 2 // always in -2..2
-            println("x: $x")
-            buffer[i] = reverseCharValue[x]!!
-            carry = (sum - x).sign
+            if (sum in -2..2) {
+                buffer[i] = reverseCharValue[sum]!!
+                carry = 0
+            } else if (sum > 0) {
+                val x = sum - 5
+                buffer[i] = reverseCharValue[x]!!
+                carry = 1
+            } else {
+                val x = 5 + sum
+                buffer[i] = reverseCharValue[x]!!
+                carry = -1
+            }
             i++
         }
         return Snafu(buffer.joinToString(separator = "").trim().reversed().dropWhile { it == '0' })

@@ -57,7 +57,7 @@ object Day21 {
 
     fun solve1(input: Sequence<String>): Long {
         val jobs = input.map { it.parseJob() }
-        val sorted = sortJobs(jobs)
+        val sorted = topologicalSort(jobs)
         val variables = mutableMapOf<String, Long>()
         sorted.forEach {
             it.eval(variables)
@@ -65,137 +65,87 @@ object Day21 {
         return variables["root"]!!
     }
 
-    fun solve2(input: Sequence<String>): Long {
-        val jobs = input.map { it.parseJob() }
-        val sorted = sortJobs(jobs).filter {
-            it.variable() != "humn"
-        }
-//        val variables = mutableMapOf<String, Variable>()
-//        variables["humn"] = Variable.Unknown("humn")
-//        sorted.forEach {
-//            it.evaluateVariables(variables)
-//        }
-//        val root = jobs.first { it.variable() == "root" } as Job.Operation
-//        println(variables[root.x]?.describe())
-//        println(variables[root.y]?.describe())
-//        println(27276913415446696L / 8085)
-
-        val expressions = mutableMapOf<String, Expression>()
-        expressions["humn"] = Expression.Variable("humn")
-        sorted.forEach {
-            it.buildExpression(expressions)
-        }
-        val root = jobs.first { it.variable() == "root" } as Job.Operation
-
-        val x = expressions[root.x]!!
-        val y = expressions[root.y]!!
-        println(x.describe())
-        println(y.describe())
-        return solve(x, y)
+    sealed class Variable {
+        data class Evaluated(val value: Long) : Variable()
+        data class Unknown(val eq: String) : Variable()
     }
 
-    sealed class Expression {
-        data class Mult(val a: Expression, val b: Expression) : Expression()
-        data class Div(val a: Expression, val b: Expression) : Expression()
-        data class Add(val a: Expression, val b: Expression) : Expression()
-        data class Subtract(val a: Expression, val b: Expression) : Expression()
-
-        data class Variable(val name: String) : Expression()
-        data class Value(val value: Long) : Expression()
-
-        fun describe(): String = when (this) {
-            is Add -> "(${a.describe()}+${b.describe()})"
-            is Div -> "(${a.describe()}/${b.describe()})"
-            is Mult -> "(${a.describe()}*${b.describe()})"
-            is Subtract -> "(${a.describe()}-${b.describe()})"
-            is Value -> this.value.toString()
-            is Variable -> this.name
-        }
-
-        fun evaluate(): Long = when (this) {
-            is Add -> a.evaluate() + b.evaluate()
-            is Div -> a.evaluate() / b.evaluate()
-            is Mult -> a.evaluate() * b.evaluate()
-            is Subtract -> a.evaluate() - b.evaluate()
-            is Value -> value
-            is Variable -> error("Cannot evaluate unknown variable")
-        }
-
-        fun containsVariable(): Boolean = when (this) {
-            is Add -> a.containsVariable() || b.containsVariable()
-            is Div -> a.containsVariable() || b.containsVariable()
-            is Mult -> a.containsVariable() || b.containsVariable()
-            is Subtract -> a.containsVariable() || b.containsVariable()
-            is Value -> false
-            is Variable -> true
-        }
+    private fun Variable.mult(n: Long): Variable = when (this) {
+        is Variable.Evaluated -> Variable.Evaluated(n * value)
+        is Variable.Unknown -> Variable.Unknown("$n*($eq)")
     }
 
-    private fun Job.buildExpression(expressions: MutableMap<String, Expression>) {
+    private fun Variable.div(n: Long): Variable = when (this) {
+        is Variable.Evaluated -> Variable.Evaluated(n / value)
+        is Variable.Unknown -> Variable.Unknown("$n/($eq)")
+    }
+
+    private fun Variable.describe(): String = when (this) {
+        is Variable.Evaluated -> "${this.value}"
+        is Variable.Unknown -> this.eq
+    }
+
+    private fun Job.evaluateVariables(variables: MutableMap<String, Variable>) {
         when (this) {
             is Job.Assignment -> {
-                expressions[this.variable] = Expression.Value(this.value)
+                variables[this.variable] = Variable.Evaluated(this.value)
             }
 
             is Job.Operation -> {
-                val a = expressions[this.x] ?: error("Unknown $x in ${this.equation()}")
-                val b = expressions[this.y] ?: error("Unknown $y in ${this.equation()}")
-
-                val e = when (this.o) {
-                    "+" -> {
-                        Expression.Add(a, b)
+                val xVar = variables[this.x] ?: error("Unknown $x in ${this.equation()}")
+                val yVar = variables[this.y] ?: error("Unknown $y in  ${this.equation()}")
+                val v = if (xVar is Variable.Evaluated && yVar is Variable.Evaluated) {
+                    val eval = this.o.operation(xVar.value, yVar.value)
+                    Variable.Evaluated(eval)
+//                } else if (xVar is Variable.Evaluated) {
+//                    if (this.o == "*") {
+//                        yVar.mult(xVar.value)
+//                    } else if (this.o == "/") {
+//                        yVar.div(xVar.value)
+//                    } else {
+//                        Variable.Unknown("(${xVar.describe()}${this.o}${yVar.describe()})")
+//                    }
+//                } else if (yVar is Variable.Evaluated) {
+//                    if (this.o == "*") {
+//                        xVar.mult(yVar.value)
+//                    } else if (this.o == "/") {
+//                        xVar.div(yVar.value)
+//                    } else {
+//                        Variable.Unknown("(${xVar.describe()}${this.o}${yVar.describe()})")
+//                    }
+                } else {
+                    if (this.o == "+" || this.o == "-") {
+                        Variable.Unknown("(${xVar.describe()}${this.o}${yVar.describe()})")
+                    } else {
+                        Variable.Unknown("${xVar.describe()}${this.o}${yVar.describe()}")
                     }
-
-                    "-" -> {
-                        Expression.Subtract(a, b)
-                    }
-
-                    "*" -> {
-                        Expression.Mult(a, b)
-                    }
-
-                    "/" -> {
-                        Expression.Div(a, b)
-                    }
-
-                    else -> error("")
                 }
-                expressions[this.variable] = e
+                variables[this.variable] = v
             }
         }
     }
 
-    private fun solve(lhs: Expression, rhs: Expression): Long = when (lhs) {
-        is Expression.Add -> if (lhs.a.containsVariable()) {
-            solve(lhs.a, Expression.Subtract(rhs, lhs.b))
-        } else {
-            solve(lhs.b, Expression.Subtract(rhs, lhs.a))
+    fun solve2(input: Sequence<String>): Int {
+        val jobs = input.map { it.parseJob() }
+        val sorted = topologicalSort(jobs).filter {
+            it.variable() != "humn"
         }
-
-        is Expression.Subtract -> if (lhs.a.containsVariable()) {
-            solve(lhs.a, Expression.Add(rhs, lhs.b))
-        } else {
-            solve(lhs.b, Expression.Subtract(lhs.a, rhs))
+        val variables = mutableMapOf<String, Variable>()
+        variables["humn"] = Variable.Unknown("humn")
+        sorted.forEach {
+//            println("doing ${it.equation()}")
+            it.evaluateVariables(variables)
         }
-
-        is Expression.Mult -> if (lhs.a.containsVariable()) {
-            solve(lhs.a, Expression.Div(rhs, lhs.b))
-        } else {
-            solve(lhs.b, Expression.Div(rhs, lhs.a))
-        }
-
-        is Expression.Div -> if (lhs.a.containsVariable()) {
-            solve(lhs.a, Expression.Mult(rhs, lhs.b))
-        } else {
-            solve(lhs.b, Expression.Div(lhs.b, rhs))
-        }
-
-        is Expression.Value -> lhs.value
-        is Expression.Variable -> rhs.evaluate()
+        val root = jobs.first { it.variable() == "root" } as Job.Operation
+        println(variables[root.x]?.describe())
+        println(variables[root.y]?.describe())
+        println(27276913415446696L/8085)
+        TODO()
     }
 
-    fun sortJobs(jobs: Sequence<Job>): List<Job> {
+    fun topologicalSort(jobs: Sequence<Job>): List<Job> {
         val graph = Graph<String>()
+        val rootNodes = ArrayDeque<String>()
         val jobIndex = mutableMapOf<String, Job>()
         jobs.forEach { job ->
             when (job) {
@@ -206,11 +156,24 @@ object Day21 {
                 }
 
                 is Job.Assignment -> {
+                    rootNodes.add(job.variable)
                     jobIndex[job.variable] = job
                 }
             }
         }
-        return graph.topologicalSort().mapNotNull { jobIndex[it] }
+        val sorted = mutableListOf<String>()
+        while (rootNodes.isNotEmpty()) {
+            val current = rootNodes.removeFirst()
+            sorted.add(current)
+            graph.incomingNodes(current).forEach { from ->
+                graph.removeEdge(from, current)
+                if (graph.outgoingNodes(from).isEmpty()) {
+                    rootNodes.add(from)
+                }
+            }
+        }
+
+        return sorted.mapNotNull { jobIndex[it] }
     }
 
     private fun String.parseJob(): Job {

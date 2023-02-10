@@ -23,11 +23,11 @@ lgvd: ljgn * ptdq
 drzm: hmdt - zczc
 hmdt: 32""".splitToSequence("\n")
 
-    @Test
-    fun solve1() {
-        println(Day21.solve1(exampleInput))
-        println(Day21.solve1(puzzleInput))
-    }
+//    @Test
+//    fun solve1() {
+//        println(Day21.solve1(exampleInput))
+//        println(Day21.solve1(puzzleInput))
+//    }
 
     @Test
     fun solve2() {
