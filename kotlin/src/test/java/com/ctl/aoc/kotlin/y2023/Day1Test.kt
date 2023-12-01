@@ -31,9 +31,4 @@ zoneight234
         println(Day1.solve2(example2))
         println(Day1.solve2(puzzleInput))
     }
-
-    @Test
-    fun substrings() {
-        println("abcde".subStrings().toList())
-    }
 }

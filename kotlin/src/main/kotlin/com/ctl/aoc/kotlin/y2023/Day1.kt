@@ -13,11 +13,11 @@ object Day1 {
 
     fun solve2(input: Sequence<String>): Int {
         return input.map { line ->
-            val parts = line
-                .subStrings()
-                .mapNotNull { regex.find(it) }
-                .map { it.value }
-                .map { it.parseValue() }
+            val parts = line.indices
+                .asSequence()
+                .mapNotNull { start ->
+                    regex.find(line, startIndex = start)
+                }.map { it.value.parseValue() }
                 .toList()
             listOf(parts.first(), parts.last()).joinToString(separator = "").toInt()
         }.sum()
@@ -35,10 +35,4 @@ private fun String.parseValue(): Int = when (this) {
     "eight" -> 8
     "nine" -> 9
     else -> this.toInt()
-}
-
-fun String.subStrings(): Sequence<String> {
-    return generateSequence(this) { s ->
-        s.substring(1)
-    }.takeWhile { it.isNotEmpty() }
 }
