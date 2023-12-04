@@ -11,7 +11,7 @@ data class Cubes(
     val blue: Int
 )
 
-val gameRegex = """Game (\d+): """.toRegex()
+private val gameRegex = """Game (\d+): """.toRegex()
 
 private fun String.parseGame(): Game {
     val idMatch = gameRegex.find(this) ?: error("Couldn't find game ID")
@@ -25,9 +25,9 @@ private fun String.parseGame(): Game {
     return Game(id, trials)
 }
 
-val redRegex = """(\d+) red""".toRegex()
-val greenRegex = """(\d+) green""".toRegex()
-val blueRegex = """(\d+) blue""".toRegex()
+private val redRegex = """(\d+) red""".toRegex()
+private val greenRegex = """(\d+) green""".toRegex()
+private val blueRegex = """(\d+) blue""".toRegex()
 
 private fun String.parseTrial(): Cubes {
     val red = redRegex.find(this)?.groupValues?.get(1)?.toInt() ?: 0
