@@ -1,5 +1,8 @@
 package com.ctl.aoc.kotlin.y2023
 
+import kotlinx.coroutines.*
+import java.util.concurrent.Executors
+
 data class GardeningMapEntry(
     val destinationStart: Long,
     val sourceStart: Long,
@@ -96,6 +99,50 @@ object Day5 {
             .filter { it > 0 }
             .min()
     }
+
+    @OptIn(FlowPreview::class)
+    fun solve2BruteForce(input: String): Long {
+        val (seeds, maps) = input.parseGardenSpec()
+        val blocks = seeds
+            .chunked(2)
+            .asSequence()
+            .map {
+                val start = it[0]
+                val length = it[1]
+                start until (start + length)
+            }.toList()
+        val cores = Runtime.getRuntime().availableProcessors()
+        val dispatcher = Executors
+            .newFixedThreadPool(cores).asCoroutineDispatcher()
+        return runBlocking {
+            val startTime = System.currentTimeMillis()
+            blocks.asSequence()
+                .flatMap { it.chunked(10_000_000) }
+                .mapIndexed { idx, block ->
+                    async(context = dispatcher) { minForBlock(idx, block, maps, startTime) }
+                }
+                .toList()
+                .awaitAll()
+                .min()
+        }
+    }
+
+    private fun minForBlock(id: Int, range: LongRange, maps: List<GardeningMap>, startTime: Long): Long {
+        var min = Long.MAX_VALUE
+        range.forEach { seed ->
+            val r = getDestination(seed, maps)
+            if (r < min) {
+                min = r
+                val t = (System.currentTimeMillis() - startTime) / 1000
+                println("[Block #$id]: $r $t s")
+            }
+//            if (seed % 1_000_000L == 0L) {
+//                val p = 100 * (seed - range.first).toDouble() / (range.last - range.first).toDouble()
+//                println("[Block #$id]: Progress ${p.toInt()}%")
+//            }
+        }
+        return min
+    }
 }
 
 private fun String.parseGardenSpec(): GardenSpec {
@@ -158,4 +205,14 @@ private fun String.parseGardenSpec(): GardenSpec {
             )
         }
     return GardenSpec(seeds, maps)
+}
+
+
+fun LongRange.chunked(size: Long): Sequence<LongRange> = sequence {
+    var current = first
+    while (current <= last) {
+        val end = kotlin.math.min(current + size, last + 1)
+        yield(current..<end)
+        current = end
+    }
 }

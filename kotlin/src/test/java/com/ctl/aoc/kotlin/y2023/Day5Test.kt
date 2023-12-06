@@ -52,4 +52,10 @@ humidity-to-location map:
         println(Day5.solve2(example))
         println(Day5.solve2(puzzleInput))
     }
+
+    @Test
+    fun solve2BruteForce() {
+//        println(Day5.solve2BruteForce(example))
+        println(Day5.solve2BruteForce(puzzleInput))
+    }
 }
