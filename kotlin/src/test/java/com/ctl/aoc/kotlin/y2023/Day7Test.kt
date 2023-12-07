@@ -21,6 +21,25 @@ QQQJA 483""".splitToSequence("\n")
 
     @Test
     fun solve2() {
+        println(Day7.solve2(example))
         println(Day7.solve2(puzzleInput))
+        //not 248005414
+        //<248240479
+        //not 248005414
+    }
+
+    @Test
+    fun name() {
+
+        val l = listOf(
+            "QQJ9K 0",
+            "QQJKK 0",
+            "AJK89 0",
+            "AJJJJ 0",
+            "AKAJJ 0",
+        ).map { it.parseHand() }
+        l.forEach {
+            println("${it.value} ${it.kindJoker}")
+        }
     }
 }
