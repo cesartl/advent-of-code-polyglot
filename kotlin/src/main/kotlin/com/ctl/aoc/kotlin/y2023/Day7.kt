@@ -9,16 +9,15 @@ data class Hand(
     val elements = value.toList().frequency()
 
     private fun sameCard(n: Int, c: Int = 1): Boolean = elements.count { (_, v) -> v == n } >= c
-    private fun sameCardWithJoker(n: Int, c: Int = 1): Boolean {
+    private fun sameCardWithJoker(n: Int): Boolean {
         val jokers = elements['J'] ?: 0
-        val count = elements.count { (k, v) ->
+        return elements.any { (k, v) ->
             if (k == 'J') {
                 v == n
             } else {
                 v + jokers == n
             }
         }
-        return count >= c
     }
 
     private fun isFullHouseJoker(): Boolean {
@@ -26,18 +25,10 @@ data class Hand(
         val (threes, v) = elements.toList().first { (_, v) ->
             v + jokers == 3
         }
-        val jokerUsed = 3 - v
-        if(jokerUsed < 0){
-            error("")
-        }
-        val jokerRemaining = (jokers - jokerUsed)
-        if(jokerRemaining < 0){
-            error("")
-        }
         return elements
             .asSequence()
             .filter { (k, _) -> k != threes && k != 'J' }
-            .any { (_, v) -> v + jokerRemaining == 2 }
+            .any { (_, v) -> v == 2 }
     }
 
     private fun hasTwoPairJoker(): Boolean {
@@ -45,17 +36,9 @@ data class Hand(
         val (twos, v) = elements.toList().first { (k, v) ->
             v + jokers == 2
         }
-        val jokerUsed = 3 - v
-        if(jokerUsed < 0){
-            error("")
-        }
-        val jokerRemaining = (jokers - jokerUsed).coerceAtLeast(0)
-        if(jokerRemaining < 0){
-            error("")
-        }
         return elements.asSequence()
             .filter { (k, _) -> k != twos && k != 'J' }
-            .any { (_, v) -> v + jokerRemaining == 2 }
+            .any { (_, v) -> v == 2 }
     }
 
     val kind: Kind by lazy {

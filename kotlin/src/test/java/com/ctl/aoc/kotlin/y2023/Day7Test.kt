@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2023
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class Day7Test {
@@ -22,10 +23,9 @@ QQQJA 483""".splitToSequence("\n")
     @Test
     fun solve2() {
         println(Day7.solve2(example))
-        println(Day7.solve2(puzzleInput))
-        //not 248005414
-        //<248240479
-        //not 248005414
+        val p2 = Day7.solve2(puzzleInput)
+        println(p2)
+        assertEquals(247885995L, p2)
     }
 
     @Test
