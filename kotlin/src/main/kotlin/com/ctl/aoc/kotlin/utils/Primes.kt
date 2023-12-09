@@ -48,8 +48,12 @@ object Primes {
 
     fun sumOfDivisor(factorisation: Factorisation): BigInteger = divisorFunction(1, factorisation)
 
-    fun primeFactorisation(n: Long, primes: List<BigInteger>): Sequence<Factorisation> = sequence {
-        var current = BigInteger.valueOf(n)
+    fun primeFactorisation(n: Long, primes: List<BigInteger>): Sequence<Factorisation> {
+        return primeFactorisation(BigInteger.valueOf(n), primes)
+    }
+
+    fun primeFactorisation(n: BigInteger, primes: List<BigInteger>): Sequence<Factorisation> = sequence {
+        var current = n
         val it = primes.iterator()
         while (current > BigInteger.ONE) {
             require(it.hasNext()) { "Not enough primes" }
@@ -64,6 +68,19 @@ object Primes {
             }
         }
     }
+}
 
+fun BigInteger.primeFactorisation(): Sequence<Factorisation> {
+    val sqrt = this.sqrt()
+    val primes = Primes.allPrimes().takeWhile { it <= this }.toList()
+    return Primes.primeFactorisation(this, primes)
+}
 
+fun lcm(numbers: Sequence<BigInteger>): BigInteger {
+    return numbers
+        .flatMap { it.primeFactorisation() }
+        .groupBy { it.first }
+        .mapValues { (_, f) -> f.minOf { it.second } }
+        .asSequence()
+        .fold(BigInteger.ONE) { acc, (prime, exponent) -> acc.multiply(prime.pow(exponent)) }
 }

@@ -1,5 +1,8 @@
 package com.ctl.aoc.kotlin.y2023
 
+import com.ctl.aoc.kotlin.utils.lcm
+import java.math.BigInteger
+
 data class HauntedMap(
     val directions: String,
     val nodes: Map<String, Pair<String, String>>
@@ -39,6 +42,24 @@ private fun HauntedMap.walk(start: String): Sequence<String> {
     return directions().runningFold(start) { current, direction -> next(current, direction) }
 }
 
+private fun HauntedMap.walk(starts: List<String>): Sequence<List<String>> {
+    return directions().runningFold(starts) { current, direction -> current.map { next(it, direction) } }
+}
+
+fun HauntedMap.cycles(start: String): Sequence<Pair<Int, String>> {
+    return walk(start)
+        .withIndex()
+        .filter { it.value.endsWith("A") || it.value.endsWith("Z") }
+        .zipWithNext { a, b -> (b.index - a.index) to b.value }
+}
+
+fun HauntedMap.cycle(start: String): BigInteger {
+    return cycles(start)
+        .first()
+        .first
+        .toBigInteger()
+}
+
 object Day8 {
     fun solve1(input: Sequence<String>): Int {
         val map = parseHauntedMap(input)
@@ -48,8 +69,12 @@ object Day8 {
             .index
     }
 
-    fun solve2(input: Sequence<String>): Int {
+    fun solve2(input: Sequence<String>): BigInteger {
         val map = parseHauntedMap(input)
-        TODO()
+        val starts = map.nodes.keys.filter { it.endsWith("A") }
+        val cycles = starts
+            .asSequence()
+            .map { map.cycle(it) }
+        return lcm(cycles)
     }
 }

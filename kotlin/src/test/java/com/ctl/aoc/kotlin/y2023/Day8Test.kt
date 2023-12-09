@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2023
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.lcm
 import org.junit.jupiter.api.Test
 
 internal class Day8Test {
@@ -17,7 +18,7 @@ EEE = (EEE, EEE)
 GGG = (GGG, GGG)
 ZZZ = (ZZZ, ZZZ)""".splitToSequence("\n")
 
-    val example2 = """RL
+    val example2 = """LR
 
 11A = (11B, XXX)
 11B = (XXX, 11Z)
@@ -38,5 +39,18 @@ XXX = (XXX, XXX)""".splitToSequence("\n")
     fun solve2() {
         println(Day8.solve2(example2))
         println(Day8.solve2(puzzleInput))
+    }
+
+    @Test
+    fun testLcm() {
+        val numbers = sequenceOf(
+            19631,
+            13771,
+            21389,
+            17287,
+            23147,
+            20803,
+        ).map { it.toBigInteger() }
+        println(lcm(numbers))
     }
 }
