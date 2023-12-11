@@ -317,7 +317,7 @@ sealed class Orientation {
     }
 }
 
-object E : Orientation()
-object W : Orientation()
-object S : Orientation()
-object N : Orientation()
+data object E : Orientation()
+data object W : Orientation()
+data object S : Orientation()
+data object N : Orientation()
