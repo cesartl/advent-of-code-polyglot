@@ -22,6 +22,7 @@ internal class Day12Test {
 
     @Test
     fun solve2() {
+        println(Day12.solve2(example))
         println(Day12.solve2(puzzleInput))
     }
 }
