@@ -3,38 +3,7 @@ package com.ctl.aoc.kotlin.y2023
 data class SpringRecord(
     val record: String,
     val groups: List<Int>
-) {
-    val regex: Regex by lazy {
-        groups.joinToString(
-            separator = "\\.+",
-            prefix = "\\.*",
-            postfix = "\\.*",
-        ) {
-            "#{$it}"
-        }.toRegex()
-    }
-
-    fun matches(record: String): Boolean = regex.matches(record)
-
-    fun generateRecords(): Sequence<String> {
-        return go(0, "")
-            .filter { this.matches(it) }
-    }
-
-    private fun go(index: Int, current: String): Sequence<String> = sequence {
-        if (index == record.length) {
-            yield(current)
-        } else {
-            val c = record[index]
-            if (c == '?') {
-                yieldAll(go(index + 1, "$current."))
-                yieldAll(go(index + 1, "$current#"))
-            } else {
-                yieldAll(go(index + 1, current + c))
-            }
-        }
-    }
-}
+)
 
 private fun String.parseRecord(): SpringRecord {
     val parts = this.split(" ")
@@ -48,14 +17,57 @@ private fun String.parseRecord(): SpringRecord {
 }
 
 object Day12 {
-    fun solve1(input: Sequence<String>): Int {
+    fun solve1(input: Sequence<String>): Long {
         return input
             .map { it.parseRecord() }
-            .map { it.generateRecords().count() }
+            .map { count(it.record, it.groups) }
             .sum()
     }
 
     fun solve2(input: Sequence<String>): Int {
         TODO()
+    }
+
+    private fun count(record: String, groups: List<Int>): Long {
+        if (record.isEmpty()) {
+            return if (groups.isEmpty()) {
+                1L
+            } else {
+                0L
+            }
+        }
+        val c = record.first()
+        val next = record.drop(1)
+        if (c == '.') {
+            return count(next, groups)
+        }
+        if (c == '?') {
+            return count(".$next", groups) + count("#$next", groups)
+        }
+        if (groups.isEmpty()) {
+            return 0
+        }
+        val group = groups.first()
+        if (record.length < group) {
+            return 0
+        }
+        if (record.subSequence(0, group).any { it == '.' }) {
+            return 0
+        }
+        val next2 = record.drop(group)
+        val first = next2.firstOrNull()
+        return when (first) {
+            '#' -> {
+                0
+            }
+
+            '?' -> {
+                count(next2.drop(1), groups.drop(1))
+            }
+
+            else -> {
+                return count(next2, groups.drop(1))
+            }
+        }
     }
 }
