@@ -160,3 +160,12 @@ fun <T> List<List<T>>.transpose(): List<List<T>> {
         }
     }
 }
+fun Array<CharArray>.transpose(): Array<CharArray> {
+    val cols = this.first().size
+    val rows = this.size
+    return Array(cols) { j ->
+        CharArray(rows) { i ->
+            this[i][j]
+        }
+    }
+}
