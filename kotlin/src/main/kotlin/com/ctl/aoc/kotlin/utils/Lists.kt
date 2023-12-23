@@ -12,30 +12,30 @@ fun <T> List<T>.frequency() = Lists.frequency(this)
 
 fun <T> List<T>.mostFrequent(): T? {
     val sorted = this.frequency()
-            .toList()
-            .sortedBy { -it.second }
+        .toList()
+        .sortedBy { -it.second }
     if (sorted.size > 1) {
         if (sorted.first().second == sorted.drop(1).first().second) {
             return null;
         }
     }
     return sorted
-            .first()
-            .first
+        .first()
+        .first
 }
 
 fun <T> List<T>.leastFrequent(): T? {
     val sorted = this.frequency()
-            .toList()
-            .sortedBy { it.second }
+        .toList()
+        .sortedBy { it.second }
     if (sorted.size > 1) {
         if (sorted.first().second == sorted.drop(1).first().second) {
             return null;
         }
     }
     return sorted
-            .first()
-            .first
+        .first()
+        .first
 }
 
 /**
@@ -98,7 +98,7 @@ object Lists {
      */
     fun <T> allMappings(collection: Collection<T>): Sequence<Map<T, T>> {
         fun go(current: Collection<T>, remaining: Collection<T>): Sequence<Map<T, T>> = sequence {
-            if(current.size == 1){
+            if (current.size == 1) {
                 yield(mapOf(current.first() to remaining.first()))
             }
             if (current.isNotEmpty()) {
@@ -139,4 +139,24 @@ object Lists {
         }
     }
 
+}
+
+inline fun <reified T> transpose(xs: Array<Array<T>>): Array<Array<T>> {
+    val cols = xs[0].size
+    val rows = xs.size
+    return Array(cols) { j ->
+        Array(rows) { i ->
+            xs[i][j]
+        }
+    }
+}
+
+fun <T> List<List<T>>.transpose(): List<List<T>> {
+    val cols = this.first().size
+    val rows = this.size
+    return List(cols) { j ->
+        List(rows) { i ->
+            this[i][j]
+        }
+    }
 }
