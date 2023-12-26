@@ -38,6 +38,11 @@ fun <T> LinkedList<T>.add(t: T): LinkedList<T> {
     return Cons(t, this)
 }
 
+fun <T> LinkedList<T>.append(t: T): LinkedList<T> = when (this) {
+    is Cons -> Cons(this.head, this.tail.append(t))
+    Nil -> Cons(t, Nil)
+}
+
 tailrec fun <T, R> LinkedList<T>.foldLeft(initial: R, operation: (acc: R, T) -> R): R = when (this) {
     Nil -> initial
     is Cons -> tail.foldLeft(operation(initial, head), operation)
