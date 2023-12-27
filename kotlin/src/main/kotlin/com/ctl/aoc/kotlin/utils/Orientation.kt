@@ -5,6 +5,16 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sign
 
+data class Heading(
+    val position: Position,
+    val orientation: Orientation
+) {
+    fun turnRight() = copy(orientation = orientation.rotate(-90))
+    fun turnLeft() = copy(orientation = orientation.rotate(90))
+
+    fun advance(amount: Int = 1): Heading = copy(position = orientation.move(position, amount))
+}
+
 data class Position(val x: Int, val y: Int) {
     fun adjacent(): Sequence<Position> = sequenceOf(N, S, E, W).map { it.move(this) }
     fun neighbours(): Sequence<Position> = sequence {
