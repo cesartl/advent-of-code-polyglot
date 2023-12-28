@@ -30,14 +30,13 @@ data class CrucibleState(
         if (straightCount < 10) {
             yield(moveStraight())
         }
-        if(straightCount >= 4) {
+        if (straightCount >= 4) {
             yield(moveRight())
             yield(moveLeft())
         }
 
     }
 }
-
 
 object Day17 {
     fun solve1(input: Sequence<String>): Int {
@@ -54,16 +53,14 @@ object Day17 {
 
     fun solve2(input: Sequence<String>): Int {
         val grid = parseGrid(input) { it.digitToInt() }
-        val start = CrucibleState(Heading(Position(0, 0), E))
-
-
-
+        val start = CrucibleState(Heading(Position(0, 0), S))
 
         val result = Dijkstra.traverseIntPredicate(
             start = start,
             end = { it?.heading?.position == grid.bottomRight && it.straightCount >= 4 },
             nodeGenerator = { it.nextStatesUltra().filter { h -> grid.inScope(h.heading.position) } },
-            distance = { _, to -> grid.map[to.heading.position] ?: error("Invalid $to") }
+            distance = { _, to -> grid.map[to.heading.position] ?: error("Invalid $to") },
+            heuristic = {from -> from.heading.position.distance(start.heading.position)}
         )
         return result.steps[result.lastNode!!] ?: 0
     }

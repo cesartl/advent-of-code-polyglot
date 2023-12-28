@@ -10,6 +10,7 @@ data class Grid<T>(
         return x in xRange && y in yRange
     }
 
+    val topLeft = Position(xRange.first, yRange.first)
     val bottomRight = Position(xRange.last, yRange.last)
 }
 
