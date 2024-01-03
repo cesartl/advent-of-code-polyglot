@@ -7,8 +7,16 @@ data class DigInstruction(
     val amount: Int,
     val rbg: String
 ) {
-    fun unfold(): Sequence<Orientation> {
-        return generateSequence(orientation) { it }.take(amount)
+    fun parseRGB(): DigInstruction {
+        val distance = rbg.substring(0..<5).toInt(16)
+        val orientation = when (rbg[5]) {
+            '0' -> "R"
+            '1' -> "D"
+            '2' -> "L"
+            '3' -> "U"
+            else -> error("")
+        }.parseOrientation()
+        return DigInstruction(orientation, distance, rbg)
     }
 }
 
@@ -31,109 +39,33 @@ private fun String.parseOrientation(): Orientation = when (this) {
 }
 
 object Day18 {
-    fun solve1(input: Sequence<String>): Int {
-        val holes = input.map { it.parseDigInstruction() }
-            .flatMap { it.unfold() }
-            .runningFold(Position(0, 0)) { acc, orientation ->
-                orientation.move(acc)
-            }.toSet()
-
-        val minX = holes.minOf { it.x }
-        val maxX = holes.maxOf { it.x }
-        val xRange = minX..maxX
-
-        val minY = holes.minOf { it.y }
-        val maxY = holes.maxOf { it.y }
-        val yRange = minY..maxY
-
-        val inside = tracing2(holes, xRange, yRange)
-//        val allInside = findInsidePoints(inside, holes, xRange, yRange)
-        return (holes + inside).size
+    fun solve1(input: Sequence<String>): Long {
+        val instructions = input
+            .map { it.parseDigInstruction() }
+        return countInside(instructions)
     }
 
-    private fun findInsidePoints(
-        start: Position,
-        boundaries: Set<Position>,
-        xRange: IntRange,
-        yRange: IntRange
-    ): Set<Position> {
-        return traversal(
-            startNode = start,
-            storage = Queue(),
-            index = { it.toString() },
-            nodeGenerator = {
-                it.adjacent().filterNot { p -> boundaries.contains(p) }.filter { (x, y) ->
-                    x in xRange && y in yRange
-                }
-            }
-        ).toSet()
+    fun solve2(input: Sequence<String>): Long {
+        val instructions = input
+            .map { it.parseDigInstruction() }
+            .map { it.parseRGB() }
+        return countInside(instructions)
     }
 
-    private fun print(
-        yRange: IntRange,
-        xRange: IntRange,
-        holes: Set<Position>
-    ) {
-        yRange.forEach { y ->
-            xRange.forEach { x ->
-                val p = Position(x, y)
-                val c = if (holes.contains(p)) {
-                    '#'
-                } else {
-                    '.'
-                }
-                print(c)
-            }
-            println()
+    private fun countInside(instructions: Sequence<DigInstruction>): Long {
+        val corners = instructions
+            .runningFold(Position(0, 0)) { acc, (o, amount) ->
+                o.move(acc, amount)
+            }.toList()
+        val area: Long = area(corners)
+        val b = instructions.fold(0L) { acc, digInstruction -> acc + digInstruction.amount }
+        return area + b / 2 + 1
+    }
+
+    fun area(corners: List<Position>): Long {
+        val a = corners.zipWithNext().sumOf { (a, b) ->
+            (a.y + b.y) * (a.x - b.x).toLong()
         }
-    }
-
-    private fun tracing(boundaries: Set<Position>, xRange: IntRange, yRange: IntRange): Sequence<Position> = sequence {
-        yRange.forEach { y ->
-            var inside = false
-            var x = xRange.first
-            while (x in xRange) {
-                val p = Position(x, y)
-                if (boundaries.contains(p)) {
-                    inside = !inside
-                    while (boundaries.contains(Position(x + 1, y))) {
-                        x++
-                    }
-                } else {
-                    if (inside) {
-                        yield(p)
-                    }
-                }
-                x++
-            }
-        }
-    }
-
-    private fun tracing2(boundaries: Set<Position>, xRange: IntRange, yRange: IntRange): Set<Position> {
-
-
-        val insidePoints = mutableSetOf<Position>()
-
-        yRange.forEach { y ->
-            var inside = false
-            var x = xRange.first
-            while (x in xRange) {
-                val p = Position(x, y)
-                if (boundaries.contains(p) && boundaries.contains(Position(x, y - 1))) {
-                    inside = !inside
-                } else {
-                    if (inside) {
-                        insidePoints.add(p)
-                    }
-                }
-                x++
-            }
-        }
-
-        return insidePoints
-    }
-
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
+        return a / 2
     }
 }

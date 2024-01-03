@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2023
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.Position
 import org.junit.jupiter.api.Test
 
 internal class Day18Test {
@@ -30,6 +31,21 @@ U 2 (#7a21e3)""".splitToSequence("\n")
 
     @Test
     fun solve2() {
+        println(952408144115)
+        println(Day18.solve2(example))
         println(Day18.solve2(puzzleInput))
+    }
+
+    @Test
+    fun areaTest() {
+        val corners = listOf(
+            Position(1, 6),
+            Position(3, 1),
+            Position(7, 2),
+            Position(4, 4),
+            Position(8, 5),
+            Position(1, 6),
+        )
+        println(Day18.area(corners))
     }
 }
