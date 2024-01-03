@@ -53,6 +53,7 @@ object Day18 {
     }
 
     private fun countInside(instructions: Sequence<DigInstruction>): Long {
+        //https://en.wikipedia.org/wiki/Pick%27s_theorem
         val corners = instructions
             .runningFold(Position(0, 0)) { acc, (o, amount) ->
                 o.move(acc, amount)
@@ -63,6 +64,7 @@ object Day18 {
     }
 
     fun area(corners: List<Position>): Long {
+        //https://en.wikipedia.org/wiki/Shoelace_formula
         val a = corners.zipWithNext().sumOf { (a, b) ->
             (a.y + b.y) * (a.x - b.x).toLong()
         }
