@@ -53,7 +53,11 @@ data class Rule(
     val test: RuleTest,
     val target: String,
     val ruleDef: String
-)
+) {
+    val condition: Condition? by lazy {
+        this.ruleDef.takeIf { it.isNotBlank() }?.let { Condition(it) }
+    }
+}
 
 data class Workflow(
     val name: String,
@@ -127,6 +131,22 @@ class WorkflowEngine(
         }
     }
 
+    fun getRanges(start: String, partRange: PartRange, target: String = "A"): Sequence<PartRange> {
+        if (start == target) {
+            return sequenceOf(partRange)
+        }
+        val w = workflowsByName[start] ?: return sequenceOf()
+        return sequence {
+            var current = partRange
+            w.rules.forEach { rule ->
+                val condition = rule.condition
+                val next = condition?.adapt(current) ?: current
+                yieldAll(getRanges(rule.target, next, target))
+                current = condition?.negated()?.adapt(current) ?: current
+            }
+        }
+    }
+
 }
 
 data class PartRange(
@@ -138,6 +158,10 @@ data class PartRange(
 
     val size: Long by lazy {
         x.size() * m.size() * a.size() * s.size()
+    }
+
+    fun contains(part: MachinePart): Boolean {
+        return part.x in x && part.m in m && part.a in a && part.s in s
     }
 
     fun updateX(f: (IntRange) -> IntRange): PartRange {
@@ -170,6 +194,10 @@ data class Condition(
     private val operation = match.groupValues[2]
     private val value = match.groupValues[3].toInt()
 
+    fun negated(): Condition {
+        return this.copy(negate = true)
+    }
+
     fun adapt(partRange: PartRange): PartRange {
         val f: (IntRange) -> IntRange = when (operation) {
             ">" -> {
@@ -198,6 +226,11 @@ data class Condition(
             else -> error("Unknown attribute $attribute")
         }
     }
+
+    override fun toString(): String {
+        return "${if (negate) "!" else ""}$rule"
+    }
+
 }
 
 private fun IntRange.atLeast(n: Int): IntRange {
@@ -206,41 +239,6 @@ private fun IntRange.atLeast(n: Int): IntRange {
 
 private fun IntRange.atMost(n: Int): IntRange {
     return this.first..this.last.coerceAtMost(n)
-}
-
-private fun buildConditions(
-    from: String,
-    current: List<Condition>,
-    reverseIndex: Map<String, List<String>>,
-    workflowsByName: Map<String, Workflow>
-): Sequence<List<Condition>> {
-    val origins = reverseIndex[from] ?: return sequenceOf(current)
-    return origins
-        .asSequence()
-        .flatMap { origin ->
-            val workflow = workflowsByName[origin] ?: error("Unknown workflow: $origin")
-            conditionsForWorkflow(workflow, from, current, origin, reverseIndex, workflowsByName)
-        }
-}
-
-private fun conditionsForWorkflow(
-    workflow: Workflow,
-    from: String,
-    current: List<Condition>,
-    origin: String,
-    reverseIndex: Map<String, List<String>>,
-    workflowsByName: Map<String, Workflow>
-): Sequence<List<Condition>> {
-    val i = workflow.rules.indexOfFirst { it.target == from }
-    assert(i > -1) { "Workflow ${workflow.name} doesn't have a rule targeting $from" }
-    val negations = workflow
-        .rules
-        .subList(0, i)
-        .map { Condition(it.ruleDef, true) }
-
-    val assertion = workflow.rules[i].ruleDef.takeIf { it.isNotBlank() }?.let { Condition(it) }
-    val newConditions = current + negations + (assertion?.let { listOf(it) } ?: listOf())
-    return buildConditions(origin, newConditions, reverseIndex, workflowsByName)
 }
 
 private fun buildRange(conditions: List<Condition>): PartRange {
@@ -274,19 +272,11 @@ object Day19 {
     }
 
     fun solve2(input: String): Long {
-        val (workflows, parts) = parseInput(input)
-        val reverseIndex = workflows
-            .flatMap { w ->
-                w.rules.map { rule -> rule.target to w.name }
-            }.groupBy { it.first }
-            .mapValues { (_, values) -> values.map { it.second } }
-        val workflowsByName: Map<String, Workflow> = workflows.associateBy { it.name }
-        val conditions = buildConditions("A", listOf(), reverseIndex, workflowsByName).toList()
-        val ranges = conditions
-            .map { buildRange(it) }
-            .distinct()
-            .toList()
-        return ranges.sumOf { it.size }
+        val (workflows, _) = parseInput(input)
+        val engine = WorkflowEngine(workflows)
+        val acceptedRanges = engine.getRanges("in", PartRange(), "A").toList()
+        return acceptedRanges.sumOf { it.size }
     }
+
 
 }
