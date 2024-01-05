@@ -1,5 +1,7 @@
 package com.ctl.aoc.kotlin.y2023
 
+import com.ctl.aoc.kotlin.utils.lcm
+
 
 typealias BusId = Int
 typealias Pulse = Boolean
@@ -28,95 +30,117 @@ data class PulseInput(
 }
 
 data class ModuleState(
-    val moduleName: String,
-    val state: Int
+    val lowCount: Long,
+    val highCount: Long
 )
 
-interface PulseModule {
-    fun nextBusId(): BusId
+abstract class PulseModule {
 
-    fun connectsTo(pulseAddress: PulseAddress)
-    fun process(pulseInput: PulseInput): Sequence<PulseInput>
-    fun getState(): ModuleState
+    val outputs: MutableList<PulseAddress> = mutableListOf()
 
-    val name: String
-}
+    private var lowCount: Long = 0L
+    private var highCount: Long = 0L
+    abstract fun nextBusId(): BusId
 
-class GenericModule(override val name: String) : PulseModule {
+    abstract val prefix: String
 
-    private val outputs: MutableList<PulseAddress> = mutableListOf()
-    override fun nextBusId(): BusId = 0
-    override fun connectsTo(pulseAddress: PulseAddress) {
+    fun describe(): String = "$name ($prefix)"
+
+    fun reset() {
+        lowCount = 0
+        highCount = 0
+        innerReset()
+    }
+
+    abstract fun innerReset()
+
+    fun connectsTo(pulseAddress: PulseAddress) {
         outputs.add(pulseAddress)
     }
 
-    override fun process(pulseInput: PulseInput): Sequence<PulseInput> {
-        return outputs
-            .asSequence()
-            .map { addr -> PulseInput(name, addr, pulseInput.pulse) }
+    fun process(pulseInput: PulseInput): Sequence<PulseInput> {
+        if (pulseInput.pulse) {
+            highCount++
+        } else {
+            lowCount++
+        }
+        return innerProcess(pulseInput)
     }
 
-    override fun getState(): ModuleState = ModuleState(name, 0)
+    abstract fun innerProcess(pulseInput: PulseInput): Sequence<PulseInput>
+
+    fun getState(): ModuleState {
+        return ModuleState(lowCount, highCount)
+    }
+
+    abstract val name: String
+
+    protected fun sendToAll(pulse: Pulse): Sequence<PulseInput> {
+        return outputs
+            .asSequence()
+            .map { addr -> PulseInput(name, addr, pulse) }
+    }
 }
 
-class FlipFlopModule(override val name: String) : PulseModule {
+class GenericModule(override val name: String) : PulseModule() {
 
-    private val outputs: MutableList<PulseAddress> = mutableListOf()
+    override fun nextBusId(): BusId = 0
+    override val prefix: String
+        get() = ""
+
+    override fun innerReset() {}
+
+    override fun innerProcess(pulseInput: PulseInput): Sequence<PulseInput> {
+        return sendToAll(pulseInput.pulse)
+    }
+
+}
+
+class FlipFlopModule(override val name: String) : PulseModule() {
 
     private var on: Boolean = false
     override fun nextBusId(): BusId = 0
 
-    override fun connectsTo(pulseAddress: PulseAddress) {
-        outputs.add(pulseAddress)
+    override val prefix: String
+        get() = "%"
+
+    override fun innerReset() {
+        this.on = false
     }
 
-    override fun process(pulseInput: PulseInput): Sequence<PulseInput> {
+    override fun innerProcess(pulseInput: PulseInput): Sequence<PulseInput> {
         if (pulseInput.pulse) {
             return emptySequence()
         }
         this.on = !on
-        return outputs
-            .asSequence()
-            .map { addr -> PulseInput(name, addr, on) }
-    }
-
-    override fun getState(): ModuleState {
-        return ModuleState(name, if (on) 1 else 0)
+        return sendToAll(on)
     }
 }
 
-class ConjunctionModule(override val name: String) : PulseModule {
-
-    private val outputs: MutableList<PulseAddress> = mutableListOf()
+class ConjunctionModule(override val name: String) : PulseModule() {
 
     private val memory: MutableList<Pulse> = mutableListOf()
 
     private var nextBusId: BusId = 0
+
+    override val prefix: String
+        get() = "&"
+
+    override fun innerReset() {
+        memory.indices.forEach {
+            memory[it] = LOW
+        }
+    }
+
     override fun nextBusId(): BusId {
         memory.add(LOW)
         return nextBusId++
     }
 
-    override fun connectsTo(pulseAddress: PulseAddress) {
-        outputs.add(pulseAddress)
-    }
-
-    override fun process(pulseInput: PulseInput): Sequence<PulseInput> {
+    override fun innerProcess(pulseInput: PulseInput): Sequence<PulseInput> {
         memory[pulseInput.address.busId] = pulseInput.pulse
         val pulse = !memory.all { it }
-        return outputs
-            .asSequence()
-            .map { addr -> PulseInput(name, addr, pulse) }
-    }
-
-    override fun getState(): ModuleState {
-        val i = memory.foldIndexed(0) { i, acc, p ->
-            val next = if (p) {
-                1.shl(memory.size - i)
-            } else 0
-            acc or next
-        }
-        return ModuleState(name, i)
+        return sendToAll(pulse)
     }
 
 }
@@ -124,7 +148,7 @@ class ConjunctionModule(override val name: String) : PulseModule {
 data class PulseState(
     val lowCount: Long,
     val highCount: Long,
-    val modules: Set<ModuleState>
+    val modules: Map<String, ModuleState>
 )
 
 class PulseCircuit {
@@ -137,6 +161,23 @@ class PulseCircuit {
         return generateSequence(state()) { pushButton() }
     }
 
+    fun reset() {
+        lowCount = 0
+        highCount = 0
+        modules.values.forEach { it.reset() }
+    }
+
+    fun findIndex(module: String, predicate: (ModuleState) -> Boolean): Int {
+        return findIndex { predicate(it.modules[module]!!) }
+    }
+
+    fun findIndex(predicate: (PulseState) -> Boolean): Int {
+        return pushButtons()
+            .withIndex()
+            .first { predicate(it.value) }
+            .index
+    }
+
     fun pushButton(): PulseState {
         var newLow = 0L
         var newHigh = 0L
@@ -145,7 +186,6 @@ class PulseCircuit {
         var current: PulseInput
         while (queue.isNotEmpty()) {
             current = queue.removeFirst()
-//            println(current)
             if (current.pulse) {
                 newHigh++
             } else {
@@ -155,7 +195,6 @@ class PulseCircuit {
             module.process(current)
                 .forEach { next -> queue.addLast(next) }
         }
-//        println("")
         lowCount += newLow
         highCount += newHigh
 
@@ -168,12 +207,8 @@ class PulseCircuit {
         )
     }
 
-    private fun moduleStates(): Set<ModuleState> {
-        return modules
-            .values
-            .asSequence()
-            .map { it.getState() }
-            .toSet()
+    private fun moduleStates(): Map<String, ModuleState> {
+        return modules.mapValues { it.value.getState() }
     }
 
     fun importConfig(input: Sequence<String>) {
@@ -216,6 +251,20 @@ class PulseCircuit {
     private fun addModule(module: PulseModule) {
         modules[module.name] = module
     }
+
+    fun printDependencies() {
+        println("button -> broadcaster")
+        modules.values.forEach { module ->
+            module.outputs.forEach { output ->
+                val target: PulseModule = modules[output.module] ?: error("")
+                println(
+                    """
+                    "${module.describe()}" -> "${target.describe()}" 
+                """.trimIndent()
+                )
+            }
+        }
+    }
 }
 
 
@@ -224,11 +273,25 @@ object Day20 {
         val circuit = PulseCircuit()
         circuit.importConfig(input)
         val s = circuit.pushButtons().drop(1000).first()
-        println(s)
         return s.highCount * s.lowCount
     }
 
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
+    fun solve2(input: Sequence<String>): Long {
+        val circuit = PulseCircuit()
+        circuit.importConfig(input)
+//        circuit.printDependencies()
+
+        val ct = circuit.findIndex("ct") { it.lowCount > 0 }
+        circuit.reset()
+        val kp = circuit.findIndex("kp") { it.lowCount > 0 }
+        circuit.reset()
+        val xc = circuit.findIndex("xc") { it.lowCount > 0 }
+        circuit.reset()
+        val ks = circuit.findIndex("ks") { it.lowCount > 0 }
+        circuit.reset()
+
+        return lcm(sequenceOf(ct, kp, xc, ks)
+            .map { it.toBigInteger() }).toLong()
     }
+
 }
