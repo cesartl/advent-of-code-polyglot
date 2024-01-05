@@ -1,9 +1,7 @@
 package com.ctl.aoc.kotlin.y2023
 
-import com.ctl.aoc.kotlin.utils.Dijkstra
-import com.ctl.aoc.kotlin.utils.Grid
-import com.ctl.aoc.kotlin.utils.Position
-import com.ctl.aoc.kotlin.utils.parseGrid
+import com.ctl.aoc.kotlin.utils.*
+import com.ctl.aoc.kotlin.y2021.Day22.size
 
 
 typealias Positions = List<Position>
@@ -31,48 +29,61 @@ data class WalkingState(
 
 data class InfiniteGrid(
     val grid: Grid<Char>
-){
+) {
+
+    val xMod = grid.xRange.size().toInt()
+    val yMod = grid.yRange.size().toInt()
+
+    val startPosition = grid.map.entries.find { it.value == 'S' }?.key ?: error("No start")
+    fun get(p: Position): Char? {
+        val (x, y) = p
+        val xi = x.mod(xMod)
+        val yi = y.mod(yMod)
+        return grid.map[Position(xi, yi)]
+    }
+
+    fun reachablePlots(maxStep: Int): Long {
+        val result = Dijkstra.traverseInt(
+            start = startPosition,
+            end = null,
+            nodeGenerator = { current ->
+                current.adjacent().filterNot { get(it) == '#' }
+            },
+            constraints = listOf(StepConstraintInt(maxStep)),
+            distance = { _, _ -> 1 }
+        )
+        val parity = maxStep % 2
+        return result.steps.count { it.value % 2 == parity }.toLong()
+    }
 
 }
 
 object Day21 {
-    fun solve1(input: Sequence<String>, maxStep: Int): Int {
-        val grid = parseGrid(input)
-        val walls = grid.map.filter { it.value == '#' }.keys.toSet()
-        val startPosition = grid.map.entries.find { it.value == 'S' }?.key ?: error("No start")
-
-        val start = WalkingState(maxStep, startPosition)
-
-        val result = Dijkstra.traverseInt(
-            start = start,
-            end = null,
-            nodeGenerator = { current ->
-                current.next().filter { grid.inScope(it.position) }.filterNot { walls.contains(it.position) }
-            },
-            distance = { _, _ -> 1 }
-        )
-
-//        val outreach = walk(start, grid).drop(maxStep).first().toSet()
-
-
-//        grid.yRange.forEach { y ->
-//            grid.xRange.forEach { x ->
-//                val p = Position(x, y)
-//                if (outreach.contains(p)) {
-//                    print('0')
-//                } else if (walls.contains(p)) {
-//                    print('#')
-//                } else {
-//                    print('.')
-//                }
-//            }
-//            println()
-//        }
-
-        return result.steps.count { it.key.remainingSteps == 0 }
+    fun solve1(input: Sequence<String>, maxStep: Int): Long {
+        val grid = InfiniteGrid(parseGrid(input))
+        return grid.reachablePlots(maxStep)
     }
 
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
+    fun solve2(input: Sequence<String>): Long {
+        val grid = InfiniteGrid(parseGrid(input))
+
+        val target = 26501365
+        val n = (target - 65) / grid.xMod
+
+        val interpolate = 3
+
+        val seed = generateSequence(65) { it + grid.xMod }
+            .map { grid.reachablePlots(it) }
+            .take(interpolate)
+            .toList()
+
+        println("seed: $seed")
+
+
+        val r = generateSequence(seed) { it.drop(1) + Day9.extrapolateRight(it) }
+            .drop(n - interpolate + 1)
+            .first()
+
+        return r.last()
     }
 }
