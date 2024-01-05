@@ -2,6 +2,7 @@ package com.ctl.aoc.kotlin.y2023
 
 import com.ctl.aoc.kotlin.utils.*
 import com.ctl.aoc.kotlin.y2021.Day22.size
+import java.math.BigInteger
 
 
 typealias Positions = List<Position>
@@ -85,5 +86,31 @@ object Day21 {
             .first()
 
         return r.last()
+    }
+
+    fun solve2Bis(input: Sequence<String>): Long {
+        //https://github.com/villuna/aoc23/wiki/A-Geometric-solution-to-advent-of-code-2023,-day-21
+        val grid = parseGrid(input)
+        val startPosition = grid.map.entries.find { it.value == 'S' }?.key ?: error("No start")
+        val pathing = Dijkstra.traverseInt(
+            start = startPosition,
+            end = null,
+            nodeGenerator = { current ->
+                current.adjacent().filter { grid.inScope(it) }.filterNot { grid.map[it] == '#' }
+            },
+            distance = { _, _ -> 1 }
+        )
+
+        val target = 26501365
+        val n = ((target - 65) / grid.xRange.size().toInt()).toBigInteger()
+
+        val evenCells = pathing.steps.count { it.value % 2 == 0 }.toBigInteger()
+        val oddCells = pathing.steps.count { it.value % 2 == 1 }.toBigInteger()
+
+        val evenCorners = pathing.steps.count { it.value % 2 == 0 && it.value > 65 }.toBigInteger()
+        val oddCorners = pathing.steps.count { it.value % 2 == 1 && it.value > 65 }.toBigInteger()
+
+        val r = (n + BigInteger.ONE) * (n + BigInteger.ONE) * oddCells + n * n * evenCells - (n + BigInteger.ONE) * oddCorners + n * evenCorners
+        return r.toLong()
     }
 }
