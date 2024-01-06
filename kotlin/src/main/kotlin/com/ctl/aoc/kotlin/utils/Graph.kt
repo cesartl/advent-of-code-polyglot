@@ -94,6 +94,14 @@ class Graph<T> {
         }
     }.toString()
 
+    fun describe(f: (T) -> String = {it.toString()}){
+        adjacencyMap.forEach { (from, tos) ->
+            tos.forEach { to ->
+                println("${f(from)} -> ${f(to)}")
+            }
+        }
+    }
+
     fun traversal(startNode: T, storage: Storage<T>, index: (node: T) -> String = { it.toString() }): Sequence<T> {
         return traversal(startNode, storage, index) { adjacencyMap[it]?.asSequence() ?: emptySequence() }
     }
