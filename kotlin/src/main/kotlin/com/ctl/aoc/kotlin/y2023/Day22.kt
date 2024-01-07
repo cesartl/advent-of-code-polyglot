@@ -143,61 +143,87 @@ private fun String.parseBrick(id: Int): SandBrick {
     return SandBrick(id, a, b, line)
 }
 
+fun settleBricks(input: Sequence<String>): List<SandBrick> {
+    val bricks = input.mapIndexed { i, s -> s.parseBrick(i) }.toList()
+    val sortedBricks = bricks.sortedBy { it.minZ }
+    val restedPoints = mutableSetOf<Position3d>()
+    val settledBrick = mutableListOf<SandBrick>()
+    sortedBricks.forEach { brick ->
+        if (brick.minZ == 1) {
+            restedPoints.addAll(brick.points)
+            settledBrick.add(brick)
+        } else {
+            var current: SandBrick
+            var next: SandBrick = brick
+            do {
+                current = next
+                next = current.moveDown()
+            } while (next.points.none { restedPoints.contains(it) } && next.minZ > 0)
+            restedPoints.addAll(current.points)
+            settledBrick.add(current)
+        }
+    }
+    return settledBrick
+}
+
+fun fallingBricks(start: SandBrick, originalGraph: Graph<SandBrick>): Int {
+    val queue = ArrayDeque<SandBrick>()
+    val graph = originalGraph.copy()
+    queue.addFirst(start)
+    var count = 0
+    var current: SandBrick
+    while (queue.isNotEmpty()) {
+        current = queue.removeFirst()
+        count++
+        val above = graph.incomingNodes(current)
+        above.forEach {
+            graph.removeEdge(it, current)
+            if (graph.outgoingNodes(it).isEmpty()) {
+                queue.addLast(it)
+            }
+        }
+    }
+    return count - 1
+}
+
+private fun canBeRemoved(brick: SandBrick, graph: Graph<SandBrick>): Boolean {
+    return graph.incomingNodes(brick).all { graph.outgoingNodes(it).size > 1 }
+}
+
+private fun buildGraph(restedBrick: List<SandBrick>): Graph<SandBrick> {
+    val pointsToBricks = restedBrick
+        .asSequence()
+        .flatMap { brick -> brick.points.map { it to brick } }
+        .toMap()
+
+    val graph = Graph<SandBrick>()
+    restedBrick.forEach { brick ->
+        brick.points
+            .asSequence()
+            .filter { it.z == brick.minZ }
+            .map { it - Position3d(0, 0, 1) }
+            .mapNotNull { pointsToBricks[it] }
+            .forEach {
+                graph.addDirectedEdge(brick, it)
+            }
+    }
+    return graph
+}
 
 object Day22 {
     fun solve1(input: Sequence<String>): Int {
-        val bricks = input.mapIndexed { i, s -> s.parseBrick(i) }.toList()
-        val restedBrick = settleBricks(bricks)
-        println("rested")
-
-        val pointsToBricks = restedBrick
-            .asSequence()
-            .flatMap { brick -> brick.points.map { it to brick } }
-            .toMap()
-
-        val graph = Graph<SandBrick>()
-        restedBrick.forEach { brick ->
-            brick.points
-                .asSequence()
-                .filter { it.z == brick.minZ }
-                .map { it - Position3d(0, 0, 1) }
-                .mapNotNull { pointsToBricks[it] }
-                .forEach {
-                    graph.addDirectedEdge(brick, it)
-                }
-        }
-//        graph.describe { (it.id).toString() }
-        return restedBrick.count { canBeRemoved(it, graph) }
-    }
-
-    private fun canBeRemoved(brick: SandBrick, graph: Graph<SandBrick>): Boolean {
-        return graph.incomingNodes(brick).all { graph.outgoingNodes(it).size > 1 }
-    }
-
-    private fun settleBricks(bricks: List<SandBrick>): MutableList<SandBrick> {
-        val sortedBricks = bricks.sortedBy { it.minZ }
-
-        val restedPoints = mutableSetOf<Position3d>()
-        val restedBrick = mutableListOf<SandBrick>()
-        sortedBricks.forEach { brick ->
-            if (brick.minZ == 1) {
-                restedPoints.addAll(brick.points)
-                restedBrick.add(brick)
-            } else {
-                var current: SandBrick
-                var next: SandBrick = brick
-                do {
-                    current = next
-                    next = current.moveDown()
-                } while (next.points.none { restedPoints.contains(it) } && next.minZ > 0)
-                restedPoints.addAll(current.points)
-                restedBrick.add(current)
-            }
-        }
-        return restedBrick
+        val bricks = settleBricks(input)
+        val graph = buildGraph(bricks)
+        //        graph.describe { ('a'+it.id).toString() }
+        return bricks.count { canBeRemoved(it, graph) }
     }
 
     fun solve2(input: Sequence<String>): Int {
-        TODO()
+        val bricks = settleBricks(input)
+        val graph = buildGraph(bricks)
+        val falling = bricks.map { fallingBricks(it, graph) }
+        return falling.sum()
     }
+
+
 }

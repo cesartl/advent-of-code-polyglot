@@ -37,7 +37,12 @@ class Queue<T> : Storage<T> {
 
 }
 
-fun <T> traversal(startNode: T, storage: Storage<T>, index: (node: T) -> String = { it.toString() }, nodeGenerator: NodeGenerator<T>): Sequence<T> {
+fun <T> traversal(
+    startNode: T,
+    storage: Storage<T>,
+    index: (node: T) -> String = { it.toString() },
+    nodeGenerator: NodeGenerator<T>
+): Sequence<T> {
     storage.push(startNode)
     val visited = mutableSetOf<String>()
     return sequence {
@@ -58,6 +63,18 @@ class Graph<T> {
     val adjacencyMap: HashMap<T, HashSet<T>> = HashMap()
     val incomingMap: HashMap<T, HashSet<T>> = HashMap()
 
+    fun copy(): Graph<T> {
+        val copy = Graph<T>()
+        adjacencyMap.forEach { (key, values) ->
+            copy.adjacencyMap[key] = HashSet(values)
+        }
+        incomingMap.forEach { (key, values) ->
+            copy.incomingMap[key] = HashSet(values)
+        }
+        return copy
+    }
+
+
     fun outGoingSize(): Int = adjacencyMap.size
 
     fun addEdge(source: T, dest: T) {
@@ -67,10 +84,10 @@ class Graph<T> {
 
     fun addDirectedEdge(source: T, dest: T) {
         adjacencyMap
-                .computeIfAbsent(source) { HashSet() }
-                .add(dest)
+            .computeIfAbsent(source) { HashSet() }
+            .add(dest)
         incomingMap.computeIfAbsent(dest) { HashSet() }
-                .add(source)
+            .add(source)
     }
 
     fun removeEdge(source: T, dest: T) {
@@ -94,7 +111,7 @@ class Graph<T> {
         }
     }.toString()
 
-    fun describe(f: (T) -> String = {it.toString()}){
+    fun describe(f: (T) -> String = { it.toString() }) {
         adjacencyMap.forEach { (from, tos) ->
             tos.forEach { to ->
                 println("${f(from)} -> ${f(to)}")
