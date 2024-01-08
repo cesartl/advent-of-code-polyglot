@@ -104,7 +104,7 @@ data class Position(val x: Int, val y: Int) {
 }
 
 fun String.toPosition3d(): Position3d {
-    val s = this.split(",").map { it.toInt() }
+    val s = this.split(",").map { it.trim().toInt() }
     return Position3d(s[0], s[1], s[2])
 }
 
