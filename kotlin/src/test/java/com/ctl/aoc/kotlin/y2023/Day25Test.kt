@@ -11,9 +11,4 @@ internal class Day25Test {
     fun solve1() {
         println(Day25.solve1(puzzleInput))
     }
-
-    @Test
-    fun solve2() {
-        println(Day25.solve2(puzzleInput))
-    }
 }
