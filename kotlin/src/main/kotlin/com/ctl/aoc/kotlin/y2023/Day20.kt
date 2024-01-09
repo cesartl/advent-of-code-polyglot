@@ -265,6 +265,12 @@ class PulseCircuit {
             }
         }
     }
+
+    fun findPredecessors(module: String): Sequence<PulseModule> {
+        return modules.values
+            .asSequence()
+            .filter { m -> m.outputs.any { it.module == module } }
+    }
 }
 
 
@@ -281,17 +287,13 @@ object Day20 {
         circuit.importConfig(input)
 //        circuit.printDependencies()
 
-        val ct = circuit.findIndex("ct") { it.lowCount > 0 }
-        circuit.reset()
-        val kp = circuit.findIndex("kp") { it.lowCount > 0 }
-        circuit.reset()
-        val xc = circuit.findIndex("xc") { it.lowCount > 0 }
-        circuit.reset()
-        val ks = circuit.findIndex("ks") { it.lowCount > 0 }
-        circuit.reset()
-
-        return lcm(sequenceOf(ct, kp, xc, ks)
-            .map { it.toBigInteger() }).toLong()
+        val cycles = circuit.findPredecessors("rx")
+            .flatMap { circuit.findPredecessors(it.name) }
+            .map { m ->
+                circuit.reset()
+                circuit.findIndex(m.name) { it.lowCount > 0 }
+            }.map { it.toBigInteger() }
+        return lcm(cycles).toLong()
     }
 
 }
