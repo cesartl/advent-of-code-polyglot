@@ -10,7 +10,7 @@ object Day6p2 {
             for (x in 0..maxX) {
                 for (y in 0..maxY) {
                     val value = map[Point(x, y)] ?: CoordinateValue(".", -1)
-                    if (value.distance == 0) print(value.coordinate.toUpperCase()) else print(value.coordinate)
+                    if (value.distance == 0) print(value.coordinate.uppercase()) else print(value.coordinate)
                 }
                 println()
             }
@@ -26,8 +26,8 @@ object Day6p2 {
     private fun Point.distance(other: Point): Int = Math.abs(this.x - other.x) + Math.abs(this.y - other.y)
 
     private fun buildGrid(points: Sequence<Point>): Grid {
-        val maxX = points.maxByOrNull { it.x }?.x ?: 0
-        val maxY = points.maxByOrNull { it.y }?.y ?: 0
+        val maxX = points.maxBy { it.x }?.x ?: 0
+        val maxY = points.maxBy { it.y }?.y ?: 0
         val map = points.mapIndexed { idx, p -> p to CoordinateValue("${'a' + idx}", 0) }.toMap()
         return Grid(maxX + 1, maxY + 1, map.toMutableMap(), map.keys.toList())
     }
@@ -47,7 +47,7 @@ object Day6p2 {
         return count
     }
 
-    
+
     fun solve2(lines: Sequence<String>, max: Int): Int {
         val points = lines.map { parsePoint(it) }
         val grid = buildGrid(points)

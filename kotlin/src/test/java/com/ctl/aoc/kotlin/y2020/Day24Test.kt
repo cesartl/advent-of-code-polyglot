@@ -32,7 +32,7 @@ wseweeenwnesenwwwswnew""".splitToSequence("\n")
 
     @Test
     internal fun parse() {
-        val parsed = example.map { line -> Day24.Direction.parseDirections(line).joinToString("") { it.toString().toLowerCase() } }.toList()
+        val parsed = example.map { line -> Day24.Direction.parseDirections(line).joinToString("") { it.toString().lowercase() } }.toList()
 
         assertEquals(parsed, example.toList())
     }

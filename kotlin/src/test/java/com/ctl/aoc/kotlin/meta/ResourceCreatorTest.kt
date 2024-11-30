@@ -6,6 +6,6 @@ internal class ResourceCreatorTest {
 
     @Test
     fun createObjectFile() {
-        ResourceCreator.createResources(2023)
+        ResourceCreator.createResources(2024)
     }
 }

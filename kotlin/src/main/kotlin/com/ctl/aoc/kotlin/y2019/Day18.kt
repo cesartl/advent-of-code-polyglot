@@ -68,7 +68,7 @@ object Day18 {
                         is Tile.Wall -> false
                         is Tile.Empty -> true
                         is Tile.Key -> true
-                        is Tile.Door -> keys.contains(tile.id.toLowerCase())
+                        is Tile.Door -> keys.contains(tile.id.uppercase())
                     }
                 }
                 .map { it.second }
@@ -126,10 +126,14 @@ object Day18 {
                 queue = JavaPriorityQueue(),
                 constraints = listOf(constraint)
         )
-        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minByOrNull { it.value }?.toPair()!!
+        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minBy { it.value }?.toPair()!!
         println("Cache rate ${cacheHit.toDouble() / (cacheHit + cacheMiss)}")
+
+
         return count
     }
+
+
 
     private fun fullDijkstraMultiRobot(grid: Grid, points: List<Point>): Long {
         pathingCache.clear()
@@ -155,7 +159,7 @@ object Day18 {
                 queue = JavaPriorityQueue(),
                 constraints = listOf(constraint)
         )
-        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minByOrNull { it.value }?.toPair()!!
+        val (node, count) = steps.filter { it.key.keys.size == grid.keys.size }.minBy { it.value }?.toPair()!!
         return count
     }
 
