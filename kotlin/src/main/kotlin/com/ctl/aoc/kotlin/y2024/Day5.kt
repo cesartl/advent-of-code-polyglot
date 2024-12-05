@@ -20,6 +20,30 @@ object Day5 {
             .sum()
     }
 
+    fun solve1Bis(input: String): Int {
+        val (rules, pages) = parseInput(input)
+        val map = rules.asSequence()
+            .flatMap {
+                sequence {
+                    yield((it.from to it.to) to -1)
+                    yield((it.to to it.from) to 1)
+                }
+            }
+            .toMap()
+        return pages.asSequence()
+            .filter { page ->
+                val sorted = page.sortedWith { a, b ->
+                    map[a to b] ?: error("Missing $a $b")
+                }
+                page == sorted
+            }
+            .map { page ->
+                page[page.size / 2]
+            }
+            .sum()
+
+    }
+
     private fun isSorted(sortedByIndex: Map<Int, Int>, page: List<Int>): Boolean {
         (0 until page.size - 1).forEach { i ->
             (i + 1 until page.size).forEach { j ->

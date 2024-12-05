@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2024
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timed
 import org.junit.jupiter.api.Test
 
 internal class Day5Test {
@@ -40,7 +41,8 @@ internal class Day5Test {
     fun solve1() {
         println(Day5.solve1(example))
         //<10604
-        println(Day5.solve1(puzzleInput))
+        println(timed { Day5.solve1(puzzleInput)})
+        println(timed { Day5.solve1Bis(puzzleInput)})
     }
 
     @Test
