@@ -7,13 +7,26 @@ internal class Day6Test {
 
     val puzzleInput = InputUtils.downloadAndGetLines(2024, 6)
 
+    val example = """....#.....
+.........#
+..........
+..#.......
+.......#..
+..........
+.#..^.....
+........#.
+#.........
+......#...""".splitToSequence("\n")
+
     @Test
     fun solve1() {
+        println(Day6.solve1(example))
         println(Day6.solve1(puzzleInput))
     }
 
     @Test
     fun solve2() {
+        println(Day6.solve2(example))
         println(Day6.solve2(puzzleInput))
     }
 }
