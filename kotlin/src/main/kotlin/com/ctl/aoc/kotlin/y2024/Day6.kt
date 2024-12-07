@@ -4,12 +4,12 @@ import com.ctl.aoc.kotlin.utils.*
 
 object Day6 {
 
-    data class PatrolMap(val grid: Grid<Char>, val heading: Heading) {
+    data class PatrolMap(val grid: Grid<Char>, val heading: Heading, val obstacle: Position? = null) {
         fun next(): PatrolMap? {
             val next = heading.advance()
             return if (grid.inScope(next.position)) {
                 val c = grid.map[next.position]
-                if (c == '#') {
+                if (c == '#' || next.position == obstacle) {
                     this.goTo(heading.turnRight())
                 } else {
                     this.goTo(heading = next)
@@ -50,8 +50,7 @@ object Day6 {
             .map { it.heading.position }
             .drop(1)
             .filter { obstacle ->
-                val newGrid = (map.grid.map + (obstacle to '#'))
-                val newMap = map.copy(grid = map.grid.copy(map = newGrid))
+                val newMap = map.copy(obstacle = obstacle)
                 newMap.isLoop()
             }
             .toSet()
@@ -59,7 +58,13 @@ object Day6 {
     }
 
     private fun parseInput(input: Sequence<String>): PatrolMap {
-        val grid = parseGrid(input)
+        val grid = parseGrid(input){
+            when(it){
+                '#' -> it
+                '^' -> it
+                else -> null
+            }
+        }
         val start = grid.map.entries.first { it.value == '^' }.key
         return PatrolMap(grid, Heading(start, N))
     }
