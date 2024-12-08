@@ -1,5 +1,11 @@
 package com.ctl.aoc.kotlin.y2024
 
+import com.ctl.aoc.kotlin.y2024.Day7.Operator
+import kotlin.math.floor
+import kotlin.math.log10
+import kotlin.math.pow
+
+private val operatorsCache: MutableMap<Int, List<List<Operator>>> = mutableMapOf()
 
 object Day7 {
 
@@ -21,33 +27,42 @@ object Day7 {
         }
     }
 
-    data class State(val result: Long, val operators: List<Operator>)
+    private val POWERS_OF_TEN = (0..20).map { 10.0.pow(it.toDouble()).toLong() }
 
-    private val operatorsCache: MutableMap<Int, List<List<Operator>>> = mutableMapOf()
+    data object Concat2 : Operator() {
+        override fun apply(x: Long, y: Long): Long {
+            val exp = floor( log10(y.toDouble())).toInt() + 1
+            return x * Day7.POWERS_OF_TEN[exp] + y
+        }
+    }
+
+    data object Concat3 : Operator() {
+        override fun apply(x: Long, y: Long): Long {
+            return concatNumbers(x, y)
+        }
+
+    }
+
+    fun concatNumbers(a: Long, b: Long): Long {
+        var bCopy = b
+        var multiplier = 1
+
+        // Calculate 10^n, where n is the number of digits in b
+        while (bCopy > 0) {
+            multiplier *= 10
+            bCopy /= 10
+        }
+
+        // Concatenate the numbers
+        return a * multiplier + b
+    }
+
+    data class State(val result: Long, val operators: List<Operator>)
 
     data class Equation(val result: Long, val numbers: List<Long>) {
 
-        fun isPossible(): Boolean {
-            val n = numbers.size - 1
-            val operators = operatorsCache.computeIfAbsent(n) {
-                generateOperators(
-                    numbers.size - 1,
-                    listOf(Add, Mul),
-                    listOf(emptyList())
-                )
-            }
-            return operators.any { isMatch(it) }
-        }
-
-        fun isPossible2(): Boolean {
-            val n = numbers.size - 1
-            val operators = operatorsCache.computeIfAbsent(n) {
-                generateOperators(
-                    numbers.size - 1,
-                    listOf(Add, Mul, Concat),
-                    listOf(emptyList())
-                )
-            }
+        fun isPossible(operatorsMap: Map<Int, List<List<Operator>>>): Boolean {
+            val operators = operatorsMap[numbers.size - 1] ?: emptyList()
             return operators.any { isMatch(it) }
         }
 
@@ -55,26 +70,41 @@ object Day7 {
             val first = numbers.first()
             val result = numbers.asSequence()
                 .drop(1)
-                .fold(State(first, operators)) { state, current ->
-                    val result = state.operators.first().apply(state.result, current)
-                    State(result, state.operators.drop(1))
+                .foldIndexed(State(first, operators)) {i, state, current ->
+                    val result = state.operators[i].apply(state.result, current)
+
+                    if (result > this.result) {
+                        return false
+                    }
+
+                    State(result, state.operators)
                 }
             return result.result == this.result
         }
     }
 
     fun solve1(input: Sequence<String>): Long {
-        return input
+        val equations = input
             .map { parseEquation(it) }
-            .filter { it.isPossible() }
+            .toList()
+        val maxN = equations.maxOfOrNull { it.numbers.size } ?: 0
+        val operators = generateOperators(maxN-1, listOf(Add, Mul))
+        return equations
+            .asSequence()
+            .filter { it.isPossible(operators) }
             .map { it.result }
             .sum()
     }
 
     fun solve2(input: Sequence<String>): Long {
-        return input
+        val equations = input
             .map { parseEquation(it) }
-            .filter { it.isPossible2() }
+            .toList()
+        val maxN = equations.maxOfOrNull { it.numbers.size } ?: 0
+        val operators = generateOperators(maxN-1, listOf(Add, Mul, Concat3))
+        return equations
+            .asSequence()
+            .filter { it.isPossible(operators) }
             .map { it.result }
             .sum()
     }
@@ -85,18 +115,16 @@ object Day7 {
         return Equation(result.trim().toLong(), x)
     }
 
-    private tailrec fun <T> generateOperators(
-        n: Int,
-        operators: List<T>,
-        acc: List<List<T>>
-    ): List<List<T>> {
-        if (n == 0) {
-            return acc
+    private fun generateOperators(n: Int, operators: List<Operator>): Map<Int, List<List<Operator>>>{
+        val cache = mutableMapOf<Int, List<List<Operator>>>()
+        (1 .. n).forEach { i ->
+            val acc = cache[i - 1] ?: listOf(emptyList())
+            val newAcc = acc.flatMap { line ->
+                operators.map { operator -> line + operator }
+            }
+            cache[i] = newAcc
         }
-        val newAcc = acc.flatMap { line ->
-            operators.map { operator -> line + operator }
-        }
-        return generateOperators(n - 1, operators, newAcc)
+        return cache
     }
 }
 
