@@ -92,7 +92,6 @@ object Lists {
             }
         }
     }
-
     /**
      * Returns all the {collection.size}! endomorphisms from the given collection onto itself
      */
@@ -166,6 +165,17 @@ fun Array<CharArray>.transpose(): Array<CharArray> {
     return Array(cols) { j ->
         CharArray(rows) { i ->
             this[i][j]
+        }
+    }
+}
+
+fun <T> List<T>.pairs(): Sequence<Pair<T, T>>{
+    val list = this
+    return sequence {
+        list.indices.forEach { i ->
+            (i + 1 until list.size).forEach { j ->
+                yield(list[i] to list[j])
+            }
         }
     }
 }
