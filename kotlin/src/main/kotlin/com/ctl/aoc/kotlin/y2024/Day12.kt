@@ -58,12 +58,16 @@ object Day12 {
 
         return region.plants.sumOf {p ->
             val directions = listOf(N, E, W, S)
-            directions.count {d ->
+            directions.count {direction ->
+                val a1 = direction.move(p)
+                val d = direction.rotate(90).move(a1)
+                val a2 = direction.rotate(90).move(p)
+
                 //check triangle around p
-                val t1 = grid.map[d.move(p)]
-                val t2 = grid.map[d.rotate(90).move(d.move(p))]
-                val t3 = grid.map[d.rotate(90).move(p)]
-                (t1 != plantType && t3 != plantType) || (t1 == plantType && t2 != plantType && t3 == plantType)
+                val a1Plant = grid.map[a1]
+                val dPlant = grid.map[d]
+                val a2Plant = grid.map[a2]
+                (a1Plant != plantType && a2Plant != plantType) || (a1Plant == plantType && dPlant != plantType && a2Plant == plantType)
             }
         }
     }
