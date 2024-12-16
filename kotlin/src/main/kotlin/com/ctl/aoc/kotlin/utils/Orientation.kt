@@ -46,6 +46,18 @@ data class Position(val x: Int, val y: Int) {
         return Position(x = x - other.x, y = y - other.y)
     }
 
+    operator fun rem (other: Position): Position {
+        return Position(x = x % other.x, y = y % other.y)
+    }
+
+    operator fun div(other: Position): Position {
+        return Position(x = x / other.x, y = y / other.y)
+    }
+
+    infix fun divMod(other: Position): Pair<Position, Position>{
+        return Pair(this / other, this % other)
+    }
+
     fun scalar(ratio: Int): Position {
         return copy(x = x * ratio, y = y * ratio)
     }
