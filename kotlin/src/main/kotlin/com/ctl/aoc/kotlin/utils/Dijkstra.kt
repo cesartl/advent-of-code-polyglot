@@ -11,6 +11,7 @@ typealias DistanceInt<T> = (T, T) -> Int
 
 data class PathingResult<T>(val steps: Map<T, Long>, val previous: Map<T, T>, val lastNode: T? = null)
 data class PathingResultInt<T>(val steps: Map<T, Int>, val previous: Map<T, T>, val lastNode: T? = null)
+data class MutliPathingResultInt<T>(val steps: Map<T, Int>, val previous: Map<T, Set<T>>, val lastNode: T? = null)
 
 sealed class Constraint<T>
 data class StepConstraint<T>(val maxSteps: Long) : Constraint<T>()
@@ -32,6 +33,26 @@ fun <T> findPath(end: T, prev: Map<T, T>): List<T> {
 
 fun <T> PathingResult<T>.findPath(end: T): List<T> = findPath(end, this.previous)
 fun <T> PathingResultInt<T>.findPath(end: T): List<T> = findPath(end, this.previous)
+
+fun <T> MutliPathingResultInt<T>.findPaths(end: T): Sequence<List<T>> {
+    return findPaths(this, end)
+}
+
+private fun <T> MutliPathingResultInt<T>.findPaths(
+    result: MutliPathingResultInt<T>,
+    end: T
+): Sequence<List<T>> {
+    return sequence {
+        val previous = result.previous[end]
+        if (previous != null) {
+            previous.asSequence()?.forEach {
+                yieldAll(findPaths(it).map { p -> p + end })
+            }
+        } else {
+            yield(listOf(end))
+        }
+    }
+}
 
 object Dijkstra {
 
@@ -138,6 +159,48 @@ object Dijkstra {
         }
         return PathingResultInt(steps, prevs, current)
     }
+
+    fun <T> traverseMultiIntPredicate(
+        start: T,
+        end: (T?) -> Boolean,
+        nodeGenerator: NodeGenerator<T>,
+        distance: DistanceInt<T>,
+        constraints: List<ConstraintInt<T>> = listOf(),
+        queue: MinPriorityQueueInt<T> = JavaPriorityQueueInt(),
+        heuristic: (T) -> Int = { 0 }
+    ): MutliPathingResultInt<T> {
+        val steps = mutableMapOf<T, Int>()
+        val prevs = mutableMapOf<T, Set<T>>()
+
+        val visited = mutableSetOf<T>()
+
+        steps[start] = 0
+        queue.insert(start, 0)
+
+        var current: T? = null
+
+        while (!queue.isEmpty && (!end(current)) && constraintsMetInt(current, steps, constraints)) {
+            current = queue.extractMinimum()!!
+            nodeGenerator(current).filter { !visited.contains(it) }.forEach { n ->
+                if (!queue.contains(n)) {
+                    queue.insert(n, Int.MAX_VALUE)
+                }
+                val stepsToCurrent = steps[current] ?: 0
+                val alt = stepsToCurrent + distance(current, n) // new distance to reach n
+                val existing = steps[n] ?: Int.MAX_VALUE
+                if (alt < existing) {
+                    steps[n] = alt
+                    prevs[n] = setOf(current)
+                    queue.decreasePriority(n, alt + heuristic(n))
+                } else if (alt == existing) {
+                    prevs[n] = prevs[n]!! + current
+                }
+            }
+            visited.add(current)
+        }
+        return MutliPathingResultInt(steps, prevs, current)
+    }
+
 
     private fun <T> isConstraintMet(current: T, steps: Map<T, Long>, constraint: Constraint<T>): Boolean =
         when (constraint) {
