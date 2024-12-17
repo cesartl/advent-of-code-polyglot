@@ -73,7 +73,13 @@ object Day15 {
     fun solve2(input: String): Int {
         val (largeWarehouse, instructions) = parseLargeWarehouse(input)
         largeWarehouse.print()
-        TODO()
+        val result = instructions.fold(largeWarehouse) { w, i ->
+            val r = w.moveRobot(i)
+//            r.print()
+            r
+        }
+        result.print()
+        return result.gpsValue
     }
 
     data class LargeBox(val left: Position, val right: Position)
@@ -86,20 +92,92 @@ object Day15 {
         val yRange: IntRange
     ) {
 
-        private val boxPositions = boxes.flatMap { listOf(it.left, it.right) }.toSet()
+        val gpsValue: Int by lazy {
+            boxes.sumOf { (left, _) -> left.x + 100 * left.y }
+        }
+
+        private val boxIndex: Map<Position, LargeBox> =
+            boxes.flatMap { box -> listOf(box.left, box.right).map { it to box } }.toMap()
 
         fun moveRobot(instruction: Char): LargeWarehouse {
-            TODO()
+            val direction = parseInstruction(instruction)
+            val nextRobot = direction.move(robot)
+
+            if (walls.contains(nextRobot)) {
+                return this
+            }
+
+            if (!boxIndex.contains(nextRobot)) {
+                return this.copy(robot = nextRobot)
+            }
+
+            val boxesToMove = findBoxesToMove(direction, nextRobot)
+            val blockedBoxes = boxesToMove.filter { box -> isBlocked(direction, box) }
+
+            //If a single box is blocked we can't move
+            if (blockedBoxes.isNotEmpty()) {
+                return this
+            }
+
+            val newBoxes = boxes.toMutableSet()
+            newBoxes.removeAll(boxesToMove.toSet())
+            newBoxes.addAll(boxesToMove.map { box ->
+                val left = direction.move(box.left)
+                val right = direction.move(box.right)
+                LargeBox(left, right)
+            })
+            return this.copy(boxes = newBoxes, robot = nextRobot)
+        }
+
+        private fun isBlocked(direction: Orientation, largeBox: LargeBox): Boolean {
+            return when (direction) {
+                N, S -> {
+                    val nextLeft = direction.move(largeBox.left)
+                    val nextRight = direction.move(largeBox.right)
+                    walls.contains(nextLeft) || walls.contains(nextRight)
+                }
+
+                E -> {
+                    val nextRight = direction.move(largeBox.right)
+                    walls.contains(nextRight)
+                }
+
+                W -> {
+                    val nextLeft = direction.move(largeBox.left)
+                    walls.contains(nextLeft)
+                }
+            }
+        }
+
+        private fun findBoxesToMove(direction: Orientation, p: Position): List<LargeBox> {
+            val box = boxIndex[p] ?: return listOf()
+            return listOf(box) + when (direction) {
+                N, S -> {
+                    findBoxesToMove(
+                        direction, direction.move(box.left)
+                    ) + findBoxesToMove(
+                        direction, direction.move(box.right)
+                    )
+                }
+
+                E -> {
+                    findBoxesToMove(direction, direction.move(box.right))
+                }
+
+                W -> {
+                    findBoxesToMove(direction, direction.move(box.left))
+                }
+            }
         }
 
         fun print() {
             yRange.forEach { y ->
                 var x = 0
-                while(x in xRange){
+                while (x in xRange) {
                     val p = Position(x, y)
                     when {
                         walls.contains(p) -> print('#')
-                        boxPositions.contains(p) -> {
+                        boxIndex.containsKey(p) -> {
                             print("[]")
                             x++
                         }
@@ -111,6 +189,7 @@ object Day15 {
                 }
                 println()
             }
+            println()
         }
     }
 
