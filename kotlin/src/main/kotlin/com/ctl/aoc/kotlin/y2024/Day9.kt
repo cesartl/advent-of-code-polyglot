@@ -1,7 +1,5 @@
 package com.ctl.aoc.kotlin.y2024
 
-import java.math.BigInteger
-
 object Day9 {
     fun solve1(input: String): Long {
         val files = input
@@ -57,7 +55,7 @@ object Day9 {
         }
     }
 
-    fun solve2(input: String): String {
+    fun solve2(input: String): Long {
         val files = input
             .trim()
             .map { it.digitToInt() }
@@ -84,31 +82,30 @@ object Day9 {
             }
         }
 
+
+        var checkSum = 0L
         fileSpecs.reversed().forEach { (id, position, size) ->
-            freeSpaces.withIndex().firstOrNull { (_, freeSpace) ->
+            val match = freeSpaces.withIndex().firstOrNull { (_, freeSpace) ->
                 freeSpace.index < position && freeSpace.size >= size
-            }?.let { (f, freeSpace) ->
+            }
+            if(match != null){
+                val (f, freeSpace) = match
                 repeat(size) { i ->
-                    blocks[freeSpace.index + i] = id
-                    blocks[position + i] = -1
+                    checkSum+= id * (freeSpace.index + i).toLong()
                 }
+
                 freeSpace.index += size
                 freeSpace.size -= size
                 if (freeSpace.size == 0) {
                     freeSpaces.removeAt(f)
                 }
-            }
-        }
-
-        return blocks
-            .foldIndexed(BigInteger.ZERO) { index, acc, i ->
-                if (i == -1) {
-                    acc
-                } else {
-                    acc + index.toBigInteger() * i.toBigInteger()
+            }else{
+                repeat(size) { i ->
+                    checkSum+= id * (position + i).toLong()
                 }
             }
-            .toString()
+        }
+        return checkSum
     }
 
 
