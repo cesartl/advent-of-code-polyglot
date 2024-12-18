@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2024
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timedMs
 import org.junit.jupiter.api.Test
 
 internal class Day18Test {
@@ -41,7 +42,8 @@ internal class Day18Test {
 
     @Test
     fun solve2() {
-        println(Day18.solve2(example, 6, 12))
-        println(Day18.solve2(puzzleInput))
+        println(timedMs { Day18.solve2BinarySearch(puzzleInput) })
+//        println(Day18.solve2(example, 6, 12))
+        println(timedMs { Day18.solve2(puzzleInput) })
     }
 }

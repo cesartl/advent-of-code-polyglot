@@ -4,35 +4,62 @@ import com.ctl.aoc.kotlin.utils.Dijkstra
 import com.ctl.aoc.kotlin.utils.Position
 
 object Day18 {
-    fun solve1(input: Sequence<String>, max: Int = 70, n : Int = 1024): Long {
+    fun solve1(input: Sequence<String>, max: Int = 70, n: Int = 1024): Long {
         val bytes = input.map {
             Position.parse(it)
-        }.take(n).toList()
+        }.take(n).toSet()
 
         return findPath(max, bytes)
     }
 
-    fun solve2(input: Sequence<String>, max: Int = 70, n : Int = 1024): String {
+    fun solve2(input: Sequence<String>, max: Int = 70, n: Int = 1024): String {
         val allBytes = input.map {
             Position.parse(it)
         }.toList()
 
-        val i = generateSequence(n) { it + 1 }
-            .map {
-                val bytes = allBytes.take(it).toList()
-                it to findPath(max, bytes)
-            }
-            .first { it.second < 0 }
-            .first
-        val (x, y) = allBytes[i -1]
+        val byteSet = mutableSetOf<Position>()
+        byteSet.addAll(allBytes.take(n))
+        var result: Long
+        var i = n - 1
+        do {
+            i++
+            byteSet.add(allBytes[i])
+            result = findPath(max, byteSet)
+        } while (result > 0)
+
+        println("j: $i")
+        val (x, y) = allBytes[i]
         return "$x,$y"
     }
 
-    private fun findPath(max: Int, bytes: List<Position>): Long {
+    fun solve2BinarySearch(input: Sequence<String>, max: Int = 70, n: Int = 1024): String {
+        val allBytes = input.map {
+            Position.parse(it)
+        }.toList()
+        val i = binary(allBytes, max, n, allBytes.size - 1)
+        println("i: $i")
+        val (x, y) = allBytes[i]
+        return "$x,$y"
+    }
+
+    private fun binary(allBytes: List<Position>, max: Int, low: Int, high: Int): Int {
+        if (low > high) {
+            return high
+        }
+        val mid = (low + high) / 2
+        val bytes = allBytes.asSequence().take(mid).toSet()
+        val result = findPath(max, bytes)
+        return if (result == -1L) {
+            binary(allBytes, max, low, mid - 1)
+        } else {
+            binary(allBytes, max, mid + 1, high)
+        }
+    }
+
+
+    private fun findPath(max: Int, bytes: Set<Position>): Long {
         val xRange = 0..max
         val yRange = 0..max
-
-        val bytesSet = bytes.toSet()
 
         val result = Dijkstra.traverse(
             start = Position(0, 0),
@@ -40,7 +67,7 @@ object Day18 {
             nodeGenerator = {
                 it.adjacent()
                     .filter { (x, y) -> x in xRange && y in yRange }
-                    .filterNot { p -> bytesSet.contains(p) }
+                    .filterNot { p -> bytes.contains(p) }
             },
             distance = { _, _ -> 1 },
         )
