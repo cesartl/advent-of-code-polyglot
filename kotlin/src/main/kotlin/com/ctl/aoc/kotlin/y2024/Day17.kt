@@ -1,17 +1,21 @@
 package com.ctl.aoc.kotlin.y2024
 
+import java.math.BigInteger
+
 object Day17 {
 
     class ChronospatialComputer(
-        val program: IntArray,
+        val program: List<Int>,
         val output: (Int) -> Unit = {},
     ) {
-        val registers: MutableMap<Char, Int> = mutableMapOf()
+        val registers: MutableMap<Char, BigInteger> = mutableMapOf()
         var pointer = 0
         var terminated = false
 
         fun execute(debug: Boolean = false) {
-            if(debug){
+
+
+            if (debug) {
                 println(program.joinToString(separator = ","))
             }
             while (!terminated) {
@@ -30,14 +34,14 @@ object Day17 {
             }
         }
 
-        fun registerValue(register: Char): Int = registers[register] ?: 0
-        fun setRegister(register: Char, value: Int) {
+        fun registerValue(register: Char): BigInteger = registers[register] ?: BigInteger.ZERO
+        fun setRegister(register: Char, value: BigInteger) {
             registers[register] = value
         }
 
-        fun combo(operand: Int): Int {
+        fun combo(operand: Int): BigInteger {
             return when (operand) {
-                0, 1, 2, 3 -> operand
+                0, 1, 2, 3 -> operand.toBigInteger()
                 4 -> registerValue('A')
                 5 -> registerValue('B')
                 6 -> registerValue('C')
@@ -71,7 +75,7 @@ object Day17 {
         data object Adv : OpCode() {
             override fun ChronospatialComputer.evaluate(operand: Int) {
                 val numerator = registerValue('A')
-                val combo = 1 shl combo(operand)
+                val combo = BigInteger.TWO.pow(combo(operand).toInt())
                 val div = numerator / combo
                 setRegister('A', div)
             }
@@ -80,7 +84,7 @@ object Day17 {
         data object Bxl : OpCode() {
             override fun ChronospatialComputer.evaluate(operand: Int) {
                 val b = registerValue('B')
-                val xor = b xor operand
+                val xor = b xor operand.toBigInteger()
                 setRegister('B', xor)
             }
         }
@@ -88,14 +92,14 @@ object Day17 {
         data object Bst : OpCode() {
             override fun ChronospatialComputer.evaluate(operand: Int) {
                 val combo = combo(operand)
-                setRegister('B', combo % 8)
+                setRegister('B', combo % 8.toBigInteger())
             }
         }
 
         data object Jnz : OpCode() {
             override fun ChronospatialComputer.evaluate(operand: Int) {
                 val a = registerValue('A')
-                if (a != 0) {
+                if (a != BigInteger.ZERO) {
                     pointer = operand
                 } else {
                     pointer += 2
@@ -117,14 +121,14 @@ object Day17 {
 
         data object Out : OpCode() {
             override fun ChronospatialComputer.evaluate(operand: Int) {
-                output(combo(operand) % 8)
+                output((combo(operand) % 8.toBigInteger()).toInt())
             }
         }
 
         data object Bdv : OpCode() {
             override fun ChronospatialComputer.evaluate(operand: Int) {
                 val numerator = registerValue('A')
-                val combo = 1 shl combo(operand)
+                val combo = BigInteger.TWO.pow(combo(operand).toInt())
                 val div = numerator / combo
                 setRegister('B', div)
             }
@@ -133,7 +137,7 @@ object Day17 {
         data object Cdv : OpCode() {
             override fun ChronospatialComputer.evaluate(operand: Int) {
                 val numerator = registerValue('A')
-                val combo = 1 shl combo(operand)
+                val combo = BigInteger.TWO.pow(combo(operand).toInt())
                 val div = numerator / combo
                 setRegister('C', div)
             }
@@ -154,20 +158,80 @@ object Day17 {
         return outputs.joinToString(separator = ",")
     }
 
-    fun solve2(input: String): Int {
-        TODO()
+    data class State(val octalIndex: Int, val octals: CharArray, val output: List<Int>)
+
+    fun solve2(input: String): BigInteger {
+        val (_, program) = input.parseProgram()
+        println(program.joinToString())
+
+        val a = findQuine(program)!!
+        println(runProgram(program, a))
+        return a
     }
-}
 
-private val regex = """Register ([ABC]): (\d+)""".toRegex()
+    private fun findQuine(program: List<Int>): BigInteger? {
+        val n = program.size
+        println(n)
+        val start = BigInteger.valueOf(8).pow(n - 1)
+        val octals = CharArray(n) { '0' }
+        octals[0] = '1'
 
-private fun String.parseProgram(): Pair<Map<Char, Int>, IntArray> {
-    val (registers, programString) = this.trim().split("\n\n")
-    val registerMap = registers.lines().map {
-        val (register, value) = regex.matchEntire(it)!!.destructured
-        register[0] to value.toInt()
-    }.toMap()
-    val i = programString.indexOf(':')
-    val program = programString.substring(i + 1).trim().split(",").map { it.toInt() }.toIntArray()
-    return registerMap to program
+        val queue = ArrayDeque<State>()
+        queue.add(State(0, octals.copyOf(), runProgram(program, start)))
+        while (queue.isNotEmpty()) {
+            val state = queue.removeFirst()
+            if (state.output == program) {
+                return state.octals.joinToString("").toLong(8).toBigInteger()
+            }
+            if (state.octalIndex < n) {
+                findOctal(program, state.octals, state.octalIndex)
+                    .map { it.copy(octalIndex = it.octalIndex + 1) }
+                    .forEach { queue.add(it) }
+            }
+        }
+        return null
+    }
+
+    private fun findOctal(program: List<Int>, octals: CharArray, i: Int): Sequence<State> {
+        val programIndex = program.size - 1 - i
+        val target = program[programIndex]
+        println("target at $programIndex = $target")
+        val start = if (i == 0) 1 else 0
+        return generateSequence(start) { it + 1 }
+            .takeWhile { it < 8 }
+            .map { octal ->
+                val copy = octals.copyOf()
+                copy[i] = octal.toString(8).single()
+                val a = copy.joinToString("").toBigInteger(8)
+                println("a = ${a.toString(8)}")
+                val output = runProgram(program, a)
+                println("Output = $output")
+                println("Value at target: ${output[programIndex]}")
+                State(octalIndex = i, octals = copy, output = output)
+            }
+            .filter { it.output[programIndex] == target }
+    }
+
+    private fun runProgram(program: List<Int>, a: BigInteger): List<Int> {
+        val outputs = mutableListOf<Int>()
+        val computer = ChronospatialComputer(program = program) {
+            outputs.add(it)
+        }
+        computer.registers['A'] = a
+        computer.execute()
+        return outputs
+    }
+
+    private val regex = """Register ([ABC]): (\d+)""".toRegex()
+
+    private fun String.parseProgram(): Pair<Map<Char, BigInteger>, List<Int>> {
+        val (registers, programString) = this.trim().split("\n\n")
+        val registerMap = registers.lines().associate {
+            val (register, value) = regex.matchEntire(it)!!.destructured
+            register[0] to value.toBigInteger()
+        }
+        val i = programString.indexOf(':')
+        val program = programString.substring(i + 1).trim().split(",").map { it.toInt() }.toList()
+        return registerMap to program
+    }
 }
