@@ -37,6 +37,8 @@ internal class Day20Test {
         //>171870
         //>906433
         //906410
+        //!1027121
+        //1027164
         println(Day20.solve2(puzzleInput))
     }
 }

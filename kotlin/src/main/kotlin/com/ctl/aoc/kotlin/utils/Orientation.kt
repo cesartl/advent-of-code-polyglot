@@ -17,6 +17,16 @@ data class Heading(
 
 data class Position(val x: Int, val y: Int) {
     fun adjacent(): Sequence<Position> = sequenceOf(N, S, E, W).map { it.move(this) }
+
+    fun atDistance(n: Int): Sequence<Position> = sequence {
+        for (i in 0..<n) {
+            yield(Position(x + i, y - n + i))
+            yield(Position(x + n - i, y + i))
+            yield(Position(x - i, y + n - i))
+            yield(Position(x - n + i, y - i))
+        }
+    }
+
     fun neighbours(): Sequence<Position> = sequence {
         yield(Position(x, y - 1))
         yield(Position(x + 1, y - 1))
@@ -46,7 +56,7 @@ data class Position(val x: Int, val y: Int) {
         return Position(x = x - other.x, y = y - other.y)
     }
 
-    operator fun rem (other: Position): Position {
+    operator fun rem(other: Position): Position {
         return Position(x = x % other.x, y = y % other.y)
     }
 
@@ -54,7 +64,7 @@ data class Position(val x: Int, val y: Int) {
         return Position(x = x / other.x, y = y / other.y)
     }
 
-    infix fun divMod(other: Position): Pair<Position, Position>{
+    infix fun divMod(other: Position): Pair<Position, Position> {
         return Pair(this / other, this % other)
     }
 
