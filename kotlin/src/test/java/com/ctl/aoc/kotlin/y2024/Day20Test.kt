@@ -32,6 +32,9 @@ internal class Day20Test {
 
     @Test
     fun solve2() {
+        println(Day20.solve2(example))
+        //>171771
+        //>171870
         println(Day20.solve2(puzzleInput))
     }
 }

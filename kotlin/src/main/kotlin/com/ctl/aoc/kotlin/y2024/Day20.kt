@@ -4,48 +4,14 @@ import com.ctl.aoc.kotlin.utils.*
 
 object Day20 {
     fun solve1(input: Sequence<String>): Int {
-        val distances = mutableMapOf<Position, Long>()
-        val grid = parseGrid(input) {
-            when (it) {
-                '.' -> null
-                else -> it
-            }
-        }
-        val start = grid.map.entries.single { it.value == 'S' }.key
-        val end = grid.map.entries.single { it.value == 'E' }.key
-        val result = pathingResult(start, grid)
-
-        val best = result.steps[end]!!
-
-        result.steps.forEach { (position, distance) ->
-            distances[position] = best - distance
-        }
-
-        val path = result.findPath(end)
-
-        val cheats = mutableMapOf<Pair<Position, Position>, Long>()
-        path.drop(0).forEach { p ->
-            p.adjacent()
-                .filter { grid.inScope(p) }
-                .filter { grid.map[it] == '#' }
-                .forEach { cheat1 ->
-                    cheat1.adjacent()
-                        .filter { grid.inScope(it) && grid.map[it] != '#' }
-                        .filter { it != p }
-                        .forEach { candidate ->
-                            checkCheat(
-                                distances = distances,
-                                p = p,
-                                grid = grid,
-                                enter = cheat1,
-                                exit = candidate,
-                                cheats = cheats,
-                                end = end
-                            )
-                        }
-                }
-        }
+        val cheats = buildCheats(input, 2)
         val grouped = cheats.entries.groupBy { it.value }
+        return cheats.entries.count { it.value >= 100 }
+    }
+
+    fun solve2(input: Sequence<String>): Int {
+        val cheats = buildCheats(input, 20)
+        val grouped = cheats.entries.filter { it.value >= 50 }.groupBy { it.value }
         return cheats.entries.count { it.value >= 100 }
     }
 
@@ -54,11 +20,11 @@ object Day20 {
         p: Position,
         grid: Grid<Char>,
         enter: Position,
-        exit: Position,
-        cheats: MutableMap<Pair<Position, Position>, Long>,
-        end: Position
+        exitState: State,
+        cheats: MutableMap<Pair<Position, Position>, Long>
     ) {
         val currentBest = distances[p] ?: return
+        val exit = exitState.position
         if (grid.inScope(exit) && grid.map[exit] != '#') {
             if (!distances.containsKey(exit)) {
                 println("Running pathing for $exit")
@@ -70,7 +36,7 @@ object Day20 {
 //                }
             }
             val distance = distances[exit] ?: error("No distance for $exit")
-            val saved = currentBest - distance - p.distance(exit)
+            val saved = currentBest - distance - exitState.distance
             if (saved > 1) {
                 cheats[enter to exit] = saved
             }
@@ -91,14 +57,13 @@ object Day20 {
         distance = { _, _ -> 1 },
     )
 
-    fun solve2(input: Sequence<String>): Int {
+
+    private fun buildCheats(
+        input: Sequence<String>,
+        n: Int
+    ): MutableMap<Pair<Position, Position>, Long> {
         val distances = mutableMapOf<Position, Long>()
-        val grid = parseGrid(input) {
-            when (it) {
-                '.' -> null
-                else -> it
-            }
-        }
+        val grid = parseGrid(input)
         val start = grid.map.entries.single { it.value == 'S' }.key
         val end = grid.map.entries.single { it.value == 'E' }.key
         val result = pathingResult(start, grid)
@@ -112,9 +77,56 @@ object Day20 {
         val path = result.findPath(end)
 
         val cheats = mutableMapOf<Pair<Position, Position>, Long>()
-        path.drop(0).forEach { p ->
+        path.forEach { p ->
+            p.adjacent()
+                .filter { grid.inScope(p) }
+                .filter { grid.map[it] == '#' }
+                .forEach { entry ->
+    //                    println("Checking from $entry")
+                    findExitNodes(grid, entry, n).forEach { exit ->
+                        checkCheat(
+                            distances = distances,
+                            p = p,
+                            grid = grid,
+                            enter = entry,
+                            exitState = exit,
+                            cheats = cheats
+                        )
+                    }
+                }
         }
-
-        TODO()
+        return cheats
     }
+
+    data class State(val position: Position, val remaining: Int, val distance: Int)
+
+    private fun findExitNodes(grid: Grid<Char>, entry: Position, cheatTime: Int): Sequence<State> =
+        sequence {
+            val visited = mutableSetOf<Position>()
+            val queue = ArrayDeque<State>()
+            queue.add(State(entry, cheatTime -1, 1))
+            while (queue.isNotEmpty()) {
+                val current = queue.removeFirst()
+//                println("Remaining ${current.remaining} at ${current.position}")
+                if (current.remaining > 0) {
+                    current.position
+                        .adjacent()
+                        .filterNot { visited.contains(it) }
+                        .filter { grid.inScope(it) }
+                        .forEach { next ->
+                            val nextState = State(next, current.remaining - 1, current.distance + 1)
+                            when (grid.map[next]) {
+                                '#' -> {
+                                    queue.add(nextState)
+                                }
+
+                                '.', 'E' -> {
+                                    yield(nextState)
+                                }
+                            }
+                        }
+                }
+                visited.add(current.position)
+            }
+        }
 }
