@@ -11,7 +11,7 @@ object Day20 {
 
     fun solve2(input: Sequence<String>): Int {
         val cheats = buildCheats(input, 20)
-        val grouped = cheats.entries.filter { it.value >= 50 }.groupBy { it.value }
+//        val grouped = cheats.entries.filter { it.value >= 50 }.groupBy { it.value }
         return cheats.entries.count { it.value >= 100 }
     }
 
@@ -27,13 +27,7 @@ object Day20 {
         val exit = exitState.position
         if (grid.inScope(exit) && grid.map[exit] != '#') {
             if (!distances.containsKey(exit)) {
-                println("Running pathing for $exit")
                 error("Not implemented")
-//                val result = pathingResult(exit, grid)
-//                val localBest = result.steps[end]!!
-//                result.steps.forEach { (position, distance) ->
-//                    distances[position] = localBest - distance
-//                }
             }
             val distance = distances[exit] ?: error("No distance for $exit")
             val saved = currentBest - distance - exitState.distance
@@ -82,7 +76,7 @@ object Day20 {
                 .filter { grid.inScope(p) }
                 .filter { grid.map[it] == '#' }
                 .forEach { entry ->
-    //                    println("Checking from $entry")
+                    //                    println("Checking from $entry")
                     findExitNodes(grid, entry, n).forEach { exit ->
                         checkCheat(
                             distances = distances,
@@ -104,28 +98,37 @@ object Day20 {
         sequence {
             val visited = mutableSetOf<Position>()
             val queue = ArrayDeque<State>()
-            queue.add(State(entry, cheatTime -1, 1))
+            queue.add(State(entry, cheatTime - 1, 1))
             while (queue.isNotEmpty()) {
                 val current = queue.removeFirst()
-//                println("Remaining ${current.remaining} at ${current.position}")
-                if (current.remaining > 0) {
-                    current.position
-                        .adjacent()
-                        .filterNot { visited.contains(it) }
-                        .filter { grid.inScope(it) }
-                        .forEach { next ->
-                            val nextState = State(next, current.remaining - 1, current.distance + 1)
-                            when (grid.map[next]) {
-                                '#' -> {
+                if (visited.contains(current.position)) {
+                    continue
+                }
+//                println("Distance: ${current}. queue: ${queue.size}. Visited: ${visited.size}")
+                current.position
+                    .adjacent()
+                    .filter { grid.inScope(it) }
+                    .forEach { next ->
+                        val nextState = State(next, current.remaining - 1, current.distance + 1)
+                        when (grid.map[next]) {
+                            '.' -> {
+                                yield(nextState)
+                                if (nextState.remaining > 0) {
                                     queue.add(nextState)
                                 }
-
-                                '.', 'E' -> {
-                                    yield(nextState)
+                            }
+                            'E' -> yield(nextState)
+                            '#' -> {
+                                if (nextState.remaining > 0) {
+                                    queue.add(nextState)
                                 }
                             }
                         }
-                }
+//                        if (nextState.remaining > 0) {
+//                            queue.add(nextState)
+//                        }
+                    }
+
                 visited.add(current.position)
             }
         }
