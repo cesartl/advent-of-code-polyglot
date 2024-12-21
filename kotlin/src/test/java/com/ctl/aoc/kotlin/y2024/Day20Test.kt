@@ -7,8 +7,26 @@ internal class Day20Test {
 
     val puzzleInput = InputUtils.downloadAndGetLines(2024, 20)
 
+    val example = """###############
+#...#...#.....#
+#.#.#.#.#.###.#
+#S#...#.#.#...#
+#######.#.#.###
+#######.#.#...#
+#######.#.###.#
+###..E#...#...#
+###.#######.###
+#...###...#...#
+#.#####.#.###.#
+#.#...#.#.#...#
+#.#.#.#.#.#.###
+#...#...#...###
+###############""".lineSequence()
+
     @Test
     fun solve1() {
+        println(Day20.solve1(example))
+        //>1498
         println(Day20.solve1(puzzleInput))
     }
 
