@@ -17,11 +17,6 @@ object Day21 {
         }
     }
 
-    private val numericKeyPad: Map<Char, Position> = numericKeypadGrid
-        .map
-        .entries
-        .associate { it.value to it.key }
-
     private val directionalKeypadGrid = """ ^A
         |<v>
     """.trimMargin().lineSequence().run {
@@ -33,12 +28,7 @@ object Day21 {
         }
     }
 
-    private val directionalKeyPad: Map<Char, Position> = directionalKeypadGrid
-        .map
-        .entries
-        .associate { it.value to it.key }
-
-    fun solve1(input: Sequence<String>): Int {
+    fun solve1(input: Sequence<String>): Long {
         return input.sumOf { code ->
             println("Code $code")
             val best = findBest(code)
@@ -47,35 +37,46 @@ object Day21 {
         }
     }
 
-    fun solve2(input: Sequence<String>): Int {
-        TODO()
+    fun solve2(input: Sequence<String>): Long {
+        return input.sumOf { code ->
+            println("Code $code")
+            val best = findBest(code, 25)
+            println("Best $best")
+            code.dropLast(1).toInt() * best
+        }
     }
 
-    private fun findBest(code: String): Int {
-        return allNumerical(code).flatMap { path ->
-            allDirectional(path)
-        }.flatMap {
-            allDirectional(it)
-        }.minOf { it.length }
-    }
-
-    private val cache: MutableMap<Pair<Char, Char>, Int> = mutableMapOf()
-
-
-    private fun allNumerical(code: String): List<String> {
-        var paths = listOf("")
-        "A$code".asSequence()
+    private fun findBest(code: String, n: Int = 2): Long {
+        return "A$code"
+            .asSequence()
             .zipWithNext()
-            .forEach { (from, to) ->
-                val newPaths = mutableListOf<String>()
-                paths.forEach { prefix ->
-                    numericalPaths(from, to).forEach { next ->
-                        newPaths.add("$prefix$next")
-                    }
-                }
-                paths = newPaths
+            .map { (from, to) ->
+                numericalPaths(from, to)
+                    .asSequence()
+                    .map { findBestDirectional(it, n) }
+                    .min()
             }
-        return paths
+            .sum()
+    }
+
+    private val cache = mutableMapOf<Pair<String, Int>, Long>()
+
+    private fun findBestDirectional(path: String, n: Int): Long {
+        val cached = cache[path to n]
+        if(cached != null){
+            return cached
+        }
+        if (n == 0) {
+            return path.length.toLong()
+        }
+        val min = allDirectional(path)
+            .asSequence()
+            .map { newPath ->
+                findBestDirectional(newPath, n - 1)
+            }
+            .min()
+        cache[path to n] = min
+        return min
     }
 
     private fun allDirectional(path: String): List<String> {
@@ -95,12 +96,18 @@ object Day21 {
         return paths
     }
 
+    private val pathCache: MutableMap<Pair<Char, Char>, List<String>> = mutableMapOf()
+
     private fun numericalPaths(from: Char, to: Char): List<String> {
-        return allPath(numericKeypadGrid, from, to)
+        return pathCache.computeIfAbsent(from to to) {
+            allPath(numericKeypadGrid, from, to)
+        }
     }
 
     private fun directionalPaths(from: Char, to: Char): List<String> {
-        return allPath(directionalKeypadGrid, from, to)
+        return pathCache.computeIfAbsent(from to to) {
+            allPath(directionalKeypadGrid, from, to)
+        }
     }
 
     data class PathingState(val position: Position, val path: List<Orientation>, val visited: Set<Position>)
