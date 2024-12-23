@@ -17,7 +17,7 @@ internal class Day21Test {
     fun solve1() {
         println(Day21.solve1(example))
         //<161468
-//        println(Day21.solve1(puzzleInput))
+        println(Day21.solve1(puzzleInput))
     }
 
     @Test

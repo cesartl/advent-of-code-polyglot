@@ -1,7 +1,6 @@
 package com.ctl.aoc.kotlin.y2024
 
-import com.ctl.aoc.kotlin.utils.Position
-import com.ctl.aoc.kotlin.utils.parseGrid
+import com.ctl.aoc.kotlin.utils.*
 
 object Day21 {
 
@@ -40,67 +39,112 @@ object Day21 {
         .associate { it.value to it.key }
 
     fun solve1(input: Sequence<String>): Int {
-        println(buildFullSequence("233A"))
         return input.sumOf { code ->
-            buildFullSequence(code)
+            println("Code $code")
+            val best = findBest(code)
+            println("Best $best")
+            code.dropLast(1).toInt() * best
         }
-    }
-
-    private fun buildFullSequence(code: String): Int {
-        val numeric = buildNumericalPadSequence(code)
-        val directional1 = buildDirectionalKeyPad(numeric)
-        val directional2 = buildDirectionalKeyPad(directional1)
-        val codeValue = code.dropLast(1).toInt()
-        println("$codeValue -> ${directional2.length}")
-        return codeValue * directional2.length
     }
 
     fun solve2(input: Sequence<String>): Int {
         TODO()
     }
 
-    private fun buildNumericalPadSequence(code: String): String {
-        return "A$code".asSequence()
-            .zipWithNext()
-            .map { (a, b) ->
-                val from = numericKeyPad[a]!!
-                val to = numericKeyPad[b]!!
-                val diff = to - from
-                val vFirst = from.y == 3 && to.x == 0
-                if(vFirst){
-                    println("VFirst $a -> $b")
-                }
-                buildInstructions(diff, vFirst)
-            }
-            .joinToString(separator = "")
+    private fun findBest(code: String): Int {
+        return allNumerical(code).flatMap { path ->
+            allDirectional(path)
+        }.flatMap {
+            allDirectional(it)
+        }.minOf { it.length }
     }
 
-    private fun buildDirectionalKeyPad(instructions: String): String {
-        return "A$instructions".asSequence()
+    private val cache: MutableMap<Pair<Char, Char>, Int> = mutableMapOf()
+
+
+    private fun allNumerical(code: String): List<String> {
+        var paths = listOf("")
+        "A$code".asSequence()
             .zipWithNext()
-            .mapIndexed { i, (a, b) ->
-                val from = directionalKeyPad[a]!!
-                val to = directionalKeyPad[b]!!
-                val diff = to - from
-                val vFirst = from.y == 0 && b == '<'
-                if(vFirst){
-                    println("VFirst $a -> $b")
+            .forEach { (from, to) ->
+                val newPaths = mutableListOf<String>()
+                paths.forEach { prefix ->
+                    numericalPaths(from, to).forEach { next ->
+                        newPaths.add("$prefix$next")
+                    }
                 }
-                buildInstructions(diff, true)
+                paths = newPaths
             }
-            .joinToString(separator = "")
+        return paths
     }
 
-    private fun buildInstructions(diff: Position, vFirst: Boolean = false): String {
-        val (dx, dy) = diff
-        val h = when {
-            dx > 0 -> ">".repeat(dx)
-            else -> "<".repeat(-dx)
-        }
-        val v = when {
-            dy > 0 -> "v".repeat(dy)
-            else -> "^".repeat(-dy)
-        }
-        return if (vFirst) "$v${h}A" else "$h${v}A"
+    private fun allDirectional(path: String): List<String> {
+        var paths = listOf("")
+        "A$path".asSequence()
+            .zipWithNext()
+            .forEach { (from, to) ->
+                val newPaths = mutableListOf<String>()
+                paths.forEach { prefix ->
+                    directionalPaths(from, to).forEach { next ->
+                        newPaths.add("$prefix$next")
+                    }
+                }
+                val best = newPaths.minOf { it.length }
+                paths = newPaths.filter { it.length == best }
+            }
+        return paths
     }
+
+    private fun numericalPaths(from: Char, to: Char): List<String> {
+        return allPath(numericKeypadGrid, from, to)
+    }
+
+    private fun directionalPaths(from: Char, to: Char): List<String> {
+        return allPath(directionalKeypadGrid, from, to)
+    }
+
+    data class PathingState(val position: Position, val path: List<Orientation>, val visited: Set<Position>)
+
+    private fun allPath(grid: Grid<Char>, from: Char, to: Char): List<String> {
+        val startPosition = grid.map.entries.singleOrNull { it.value == from }?.key ?: error("$from not found")
+        val start = PathingState(
+            startPosition,
+            emptyList(),
+            mutableSetOf(startPosition)
+        )
+        val queue = ArrayDeque<PathingState>()
+        queue.add(start)
+        val all = sequence {
+            while (queue.isNotEmpty()) {
+                val current = queue.removeFirst()
+                if (grid.map[current.position] == to) {
+                    yield(current.path.joinToString(separator = "", postfix = "A") { it.toDirection() })
+                    continue
+                }
+                listOf(N, E, S, W).map { orientation ->
+                    orientation to orientation.move(current.position)
+                }.filterNot { (_, nextPosition) ->
+                    current.visited.contains(nextPosition)
+                }.filter { (_, nextPosition) ->
+                    grid.inScope(nextPosition) && grid.map.containsKey(nextPosition)
+                }.forEach { (orientation, nextPosition) ->
+                    val nextState =
+                        PathingState(nextPosition, current.path + orientation, current.visited + nextPosition)
+                    queue.add(nextState)
+                }
+            }
+        }.toList()
+        if (all.isEmpty()) {
+            error("No path from '$from' to '$to'")
+        }
+        val best = all.minOf { it.length }
+        return all.filter { it.length == best }
+    }
+}
+
+private fun Orientation.toDirection(): String = when (this) {
+    N -> "^"
+    E -> ">"
+    S -> "v"
+    W -> "<"
 }
