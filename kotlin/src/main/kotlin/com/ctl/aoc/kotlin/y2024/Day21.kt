@@ -31,8 +31,9 @@ object Day21 {
     fun solve1(input: Sequence<String>): Long {
         return input.sumOf { code ->
             println("Code $code")
-            val best = findBest(code)
+            val best = findBest(code, 2)
             println("Best $best")
+            println("cache size ${cache.size}")
             code.dropLast(1).toInt() * best
         }
     }
@@ -46,54 +47,40 @@ object Day21 {
         }
     }
 
-    private fun findBest(code: String, n: Int = 2): Long {
+    private fun findBest(code: String, n: Int): Long {
         return "A$code"
             .asSequence()
             .zipWithNext()
             .map { (from, to) ->
                 numericalPaths(from, to)
-                    .asSequence()
-                    .map { findBestDirectional(it, n) }
-                    .min()
+                    .minOf { path ->
+                        "A$path".asSequence()
+                            .zipWithNext()
+                            .sumOf { (from, to) ->
+                                findBestDirectional(from, to, n)
+                            }
+                    }
             }
             .sum()
     }
 
-    private val cache = mutableMapOf<Pair<String, Int>, Long>()
+    private val cache: MutableMap<Pair<Pair<Char, Char>, Int>, Long> = mutableMapOf()
 
-    private fun findBestDirectional(path: String, n: Int): Long {
-        val cached = cache[path to n]
-        if(cached != null){
-            return cached
-        }
-        if (n == 0) {
-            return path.length.toLong()
-        }
-        val min = allDirectional(path)
-            .asSequence()
-            .map { newPath ->
-                findBestDirectional(newPath, n - 1)
-            }
-            .min()
-        cache[path to n] = min
-        return min
-    }
-
-    private fun allDirectional(path: String): List<String> {
-        var paths = listOf("")
-        "A$path".asSequence()
-            .zipWithNext()
-            .forEach { (from, to) ->
-                val newPaths = mutableListOf<String>()
-                paths.forEach { prefix ->
-                    directionalPaths(from, to).forEach { next ->
-                        newPaths.add("$prefix$next")
-                    }
+    private fun findBestDirectional(from: Char, to: Char, n: Int): Long {
+        return cache.getOrPut((from to to) to n) {
+            val allPaths = directionalPaths(from, to)
+            if (n == 1) {
+                allPaths.minOf { it.length }.toLong()
+            } else {
+                allPaths.minOf { path ->
+                    "A$path".asSequence()
+                        .zipWithNext()
+                        .sumOf { (from, to) ->
+                            findBestDirectional(from, to, n - 1)
+                        }
                 }
-                val best = newPaths.minOf { it.length }
-                paths = newPaths.filter { it.length == best }
             }
-        return paths
+        }
     }
 
     private val pathCache: MutableMap<Pair<Char, Char>, List<String>> = mutableMapOf()
