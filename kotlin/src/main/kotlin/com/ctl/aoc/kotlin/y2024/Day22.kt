@@ -7,43 +7,27 @@ object Day22 {
     }
 
     fun solve2(input: Sequence<String>): Int {
-        val all = mutableMapOf<String, Int>()
-
-        input.map { it.toLong() }
-            .flatMap { buildKeys(it) }
-            .forEach { (key, price) ->
-                all[key] = all.getOrDefault(key, 0) + price
-            }
-
-
+        val all = buildMap {
+            input.map { it.toLong() }
+                .forEach { buildKeys(it) }
+        }
         return all.maxOf { it.value }
     }
 
-    private fun allBananas(maps: List<Map<String, Int>>, candidate: String) : Int {
-        return maps.asSequence()
-            .map { it[candidate] ?: 0 }
-            .sum()
-    }
-
-
-    private fun buildKeys(secret: Long): Sequence<Pair<String, Int>> {
-        val prices = generateSequence(secret) { nextSecret(it) }
+    private fun MutableMap<String, Int>.buildKeys(secret: Long) {
+        generateSequence(secret) { nextSecret(it) }
             .take(2001)
             .map { it % 10 }
             .map { it.toInt() }
-            .toList()
-
-        return prices
-            .asSequence()
-            .zipWithNext { a, b -> b - a }
-            .windowed(size = 4, step = 1)
-            .withIndex()
-            .map { (index, window) ->
-                val key = window.joinToString(",")
-                val price = prices[index + window.size]
-                key to price
+            .windowed(5, 1)
+            .map { window ->
+                window.zipWithNext { a, b -> b - a } to window.last()
             }
-            .distinctBy { it.first }
+            .distinctBy { it.first }.forEach { (window, value) ->
+                val key = window.joinToString(separator = ",")
+                this[key] = this.getOrDefault(key, 0) + value
+            }
+
     }
 
     private fun secret(start: Long, n: Int): Long {
@@ -54,9 +38,9 @@ object Day22 {
 
 
     private fun nextSecret(secret: Long): Long {
-        val a = ((secret * 64) % MOD).mixAndPrune(secret)
+        val a = (secret * 64).mixAndPrune(secret)
         val b = (a / 32).mixAndPrune(a)
-        val c = ((b * 2048) % MOD).mixAndPrune(b)
+        val c = (b * 2048).mixAndPrune(b)
         return c
     }
 }
