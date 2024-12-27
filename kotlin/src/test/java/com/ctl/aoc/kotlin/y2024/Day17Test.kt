@@ -21,6 +21,7 @@ Program: 0,1,5,4,3,0"""
 
     @Test
     fun solve2() {
+        //109685330781408
         println(Day17.solve2(puzzleInput))
     }
 }

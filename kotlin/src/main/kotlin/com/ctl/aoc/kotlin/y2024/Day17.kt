@@ -164,12 +164,14 @@ object Day17 {
         val (_, program) = input.parseProgram()
         println(program.joinToString())
 
-        val a = findQuine(program)!!
-        println(runProgram(program, a))
-        return a
+        val all = findQuine(program).toList()
+        println(all)
+        val first = all.min()
+        println(runProgram(program, first))
+        return first
     }
 
-    private fun findQuine(program: List<Int>): BigInteger? {
+    private fun findQuine(program: List<Int>): Sequence<BigInteger> = sequence{
         val n = program.size
         println(n)
         val start = BigInteger.valueOf(8).pow(n - 1)
@@ -181,7 +183,7 @@ object Day17 {
         while (queue.isNotEmpty()) {
             val state = queue.removeFirst()
             if (state.output == program) {
-                return state.octals.joinToString("").toLong(8).toBigInteger()
+                yield(state.octals.joinToString("").toLong(8).toBigInteger())
             }
             if (state.octalIndex < n) {
                 findOctal(program, state.octals, state.octalIndex)
@@ -189,13 +191,12 @@ object Day17 {
                     .forEach { queue.add(it) }
             }
         }
-        return null
     }
 
     private fun findOctal(program: List<Int>, octals: CharArray, i: Int): Sequence<State> {
         val programIndex = program.size - 1 - i
         val target = program[programIndex]
-        println("target at $programIndex = $target")
+//        println("target at $programIndex = $target")
         val start = if (i == 0) 1 else 0
         return generateSequence(start) { it + 1 }
             .takeWhile { it < 8 }
@@ -203,10 +204,10 @@ object Day17 {
                 val copy = octals.copyOf()
                 copy[i] = octal.toString(8).single()
                 val a = copy.joinToString("").toBigInteger(8)
-                println("a = ${a.toString(8)}")
+//                println("a = ${a.toString(8)}")
                 val output = runProgram(program, a)
-                println("Output = $output")
-                println("Value at target: ${output[programIndex]}")
+//                println("Output = $output")
+//                println("Value at target: ${output[programIndex]}")
                 State(octalIndex = i, octals = copy, output = output)
             }
             .filter { it.output[programIndex] == target }
