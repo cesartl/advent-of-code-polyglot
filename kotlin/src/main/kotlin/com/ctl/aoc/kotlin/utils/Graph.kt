@@ -125,6 +125,67 @@ class Graph<T> {
 
     fun bfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Queue(), index)
     fun dfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Stack(), index)
+
+    fun findMaximalClique(): Set<T>? {
+        val cliques = mutableListOf<Set<T>>()
+        bronKerbosch2(mutableSetOf(), adjacencyMap.keys.toMutableSet(), mutableSetOf(), cliques)
+        return cliques.maxBy { it.size }
+    }
+
+    /*
+  algorithm BronKerbosch1(R, P, X) is
+    if P and X are both empty then
+        report R as a maximal clique
+    for each vertex v in P do
+        BronKerbosch1(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
+        P := P \ {v}
+        X := X ⋃ {v}
+     */
+    private fun bronKerbosch(r: MutableSet<T>, p: MutableSet<T>, x: MutableSet<T>): Set<T>? {
+        if (p.isEmpty() && x.isEmpty()) {
+            println("Found")
+            return r
+        }
+        p.toSet().forEach { v ->
+            val neighbors: Set<T> = adjacencyMap[v] ?: emptySet()
+            bronKerbosch(
+                (r + setOf(v)).toMutableSet(),
+                neighbors.intersect(setOf(v)).toMutableSet(),
+                neighbors.intersect(setOf(v)).toMutableSet()
+            )?.let {
+                return it
+            }
+            p.remove(v)
+            x.add(v)
+        }
+        return null
+    }
+
+    fun bronKerbosch2(
+        r: MutableSet<T>,  // Current clique
+        p: MutableSet<T>,  // Potential candidates
+        x: MutableSet<T>,  // Already processed vertices
+        cliques: MutableList<Set<T>>  // Resultant cliques
+    ) {
+        if (p.isEmpty() && x.isEmpty()) {
+            cliques.add(r) // Found a maximal clique
+            return
+        }
+
+        val pIter = p.toSet() // To prevent modifying the original set during iteration
+        for (v in pIter) {
+            val neighbors = adjacencyMap[v]?.toSet() ?: emptySet()
+            bronKerbosch2(
+                (r + v).toMutableSet(),
+                p.intersect(neighbors).toMutableSet(),
+                x.intersect(neighbors).toMutableSet(),
+                cliques
+            )
+            // Move vertex v from P to X
+            p -= v
+            x += v
+        }
+    }
 }
 
 
