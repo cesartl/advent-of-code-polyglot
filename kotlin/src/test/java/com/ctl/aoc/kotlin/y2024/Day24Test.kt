@@ -75,6 +75,7 @@ tnw OR pbm -> gnj"""
 
     @Test
     fun solve2() {
-        println(Day24.solve2(puzzleInput))
+//        println(Day24.solve2(puzzleInput))
+        println(Day24.solve2Bis(puzzleInput))
     }
 }

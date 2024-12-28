@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2024
 
 import com.ctl.aoc.kotlin.utils.Graph
+import com.ctl.aoc.kotlin.utils.pairs
 import com.ctl.aoc.kotlin.y2024.Day24.AndGate
 import com.ctl.aoc.kotlin.y2024.Day24.OrGate
 import com.ctl.aoc.kotlin.y2024.Day24.XOrGate
@@ -71,22 +72,27 @@ object Day24 {
         val initialValues: Map<String, Boolean>,
         val gates: List<Gate>
     ) {
-        val sorted: List<String> by lazy {
-            val rootNodes = ArrayDeque<String>()
-            rootNodes.addAll(initialValues.keys)
+
+        val graph: Graph<String> by lazy {
             val graph = Graph<String>()
             gates.forEach { gate ->
                 graph.addDirectedEdge(gate.output, gate.a)
                 graph.addDirectedEdge(gate.output, gate.b)
             }
+            graph
+        }
 
+        val sorted: List<String> by lazy {
+            val rootNodes = ArrayDeque<String>()
+            rootNodes.addAll(initialValues.keys)
+            val copy = graph.copy()
             val sorted = mutableListOf<String>()
             while (rootNodes.isNotEmpty()) {
                 val node = rootNodes.removeFirst()
                 sorted.add(node)
-                graph.incomingNodes(node).forEach { from ->
-                    graph.removeEdge(from, node)
-                    if (graph.outgoingNodes(from).isEmpty()) {
+                copy.incomingNodes(node).forEach { from ->
+                    copy.removeEdge(from, node)
+                    if (copy.outgoingNodes(from).isEmpty()) {
                         rootNodes.add(from)
                     }
                 }
@@ -120,22 +126,24 @@ object Day24 {
             return this.copy(gates = newGates)
         }
 
-        fun checkBits(init: Map<String, Boolean>) {
+        fun checkBits(init: Map<String, Boolean>): Int? {
             val values = init.toMutableMap()
             val x = getNumber("x", values)
             val y = getNumber("y", values)
-            println("x = $x")
-            println("y = $y")
+//            println("x = $x")
+//            println("y = $y")
             val sum = x + y
             val z = execute(values)
-            val zString = z.toString(2).reversed()
-            println("sum\t${sum.toString(2)}")
-            println("z\t${z.toString(2)}")
-            sum.toString(2).reversed().forEachIndexed { index, c ->
+            val zString = z.toString(2).padStart(46, '0').reversed()
+//            println("sum\t${sum.toString(2)}")
+//            println("z\t${z.toString(2)}")
+            sum.toString(2).padStart(46, '0').reversed().forEachIndexed { index, c ->
                 if (c != zString[index]) {
-                    println("Different at $index")
+//                    println("Different at $index")
+                    return index
                 }
             }
+            return null
         }
     }
 
@@ -143,6 +151,8 @@ object Day24 {
         val wiringSpec = input.parseWiringSpec()
         return wiringSpec.execute()
     }
+
+    private val MAX = "".padStart(46, '1').toLong(2)
 
     fun solve2(input: String): String {
         val reWire = setOf(
@@ -154,11 +164,11 @@ object Day24 {
         val wiringSpec = input.parseWiringSpec().rewrite(
             reWire
         )
-        val max = "".padStart(45, '1').toLong(2)
+
 
         repeat(10) {
-            val a = Random.nextLong(max)
-            val b = Random.nextLong(max)
+            val a = Random.nextLong(MAX)
+            val b = Random.nextLong(MAX)
             val values = mutableMapOf<String, Boolean>().setValues(a, b)
             wiringSpec.checkBits(values)
         }
@@ -167,6 +177,49 @@ object Day24 {
             .flatMap { it.toList() }
             .sorted()
             .joinToString(",")
+    }
+
+    fun solve2Bis(input: String): String {
+        var wiringSpec = input.parseWiringSpec()
+        var badBit: Int? = findBadWiring(wiringSpec)
+        val outputs = wiringSpec.gates.asSequence()
+            .map { it.output }
+            .toSet()
+        val wires = mutableSetOf<Pair<String, String>>()
+        while (badBit != null) {
+            println("Found bad wiring at bit $badBit")
+            val z = "z${badBit.toString().padStart(2, '0')}"
+            val neighbors = wiringSpec.graph.neighboursWithin(z, 4)
+                .filter { outputs.contains(it) }
+                .toList()
+            val wirePair = fixWire(wiringSpec, neighbors, badBit) ?: error("Couldnt fix wire")
+            wires.add(wirePair)
+            wiringSpec = wiringSpec.rewrite(setOf(wirePair))
+            println("Swapping $wirePair")
+            badBit = findBadWiring(wiringSpec)
+        }
+        return wires.flatMap { it.toList() }.sorted().joinToString(",")
+    }
+
+    private fun fixWire(wiringSpec: WiringSpec, candidates: List<String>, bitIndex: Int): Pair<String, String>? {
+        return candidates.pairs()
+            .firstOrNull { wires ->
+                val badBit = findBadWiring(wiringSpec.rewrite(setOf(wires)))
+                badBit == null || badBit > bitIndex
+            }
+    }
+
+    /**
+     * Return issue at bit index, lowest bit first
+     */
+    private fun findBadWiring(wiringSpec: WiringSpec): Int? {
+        return (0 until 20).asSequence().mapNotNull {
+            val values = mutableMapOf<String, Boolean>()
+            val x = Random.nextLong(MAX)
+            val y = Random.nextLong(MAX)
+            values.setValues(x, y)
+            wiringSpec.checkBits(values)
+        }.minOrNull()
     }
 
     private fun getNumber(prefix: String, values: Map<String, Boolean>): Long {
