@@ -123,6 +123,27 @@ class Graph<T> {
         return traversal(startNode, storage, index) { adjacencyMap[it]?.asSequence() ?: emptySequence() }
     }
 
+    private data class NodeWithDistance<T>(val node: T, val distance: Int)
+
+    fun neighboursWithin(start: T, distance: Int): Sequence<T> = sequence {
+        val visited = mutableSetOf<T>()
+        val queue = ArrayDeque<NodeWithDistance<T>>()
+        queue.add(NodeWithDistance(start, 0))
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
+            if (!visited.contains(current.node) && current.distance < distance) {
+                yield(current.node)
+                visited.add(current.node)
+                outgoingNodes(current.node).forEach {
+                    queue.add(NodeWithDistance(it, current.distance + 1))
+                }
+                incomingNodes(current.node).forEach {
+                    queue.add(NodeWithDistance(it, current.distance + 1))
+                }
+            }
+        }
+    }
+
     fun bfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Queue(), index)
     fun dfs(startNode: T, index: (node: T) -> String = { it.toString() }) = traversal(startNode, Stack(), index)
 
@@ -132,36 +153,7 @@ class Graph<T> {
         return cliques.maxBy { it.size }
     }
 
-    /*
-  algorithm BronKerbosch1(R, P, X) is
-    if P and X are both empty then
-        report R as a maximal clique
-    for each vertex v in P do
-        BronKerbosch1(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
-        P := P \ {v}
-        X := X ⋃ {v}
-     */
-    private fun bronKerbosch(r: MutableSet<T>, p: MutableSet<T>, x: MutableSet<T>): Set<T>? {
-        if (p.isEmpty() && x.isEmpty()) {
-            println("Found")
-            return r
-        }
-        p.toSet().forEach { v ->
-            val neighbors: Set<T> = adjacencyMap[v] ?: emptySet()
-            bronKerbosch(
-                (r + setOf(v)).toMutableSet(),
-                neighbors.intersect(setOf(v)).toMutableSet(),
-                neighbors.intersect(setOf(v)).toMutableSet()
-            )?.let {
-                return it
-            }
-            p.remove(v)
-            x.add(v)
-        }
-        return null
-    }
-
-    fun bronKerbosch2(
+    private fun bronKerbosch2(
         r: MutableSet<T>,  // Current clique
         p: MutableSet<T>,  // Potential candidates
         x: MutableSet<T>,  // Already processed vertices
