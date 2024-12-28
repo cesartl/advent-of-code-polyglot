@@ -61,9 +61,10 @@ object Day18 {
         val xRange = 0..max
         val yRange = 0..max
 
+        val end = Position(max, max)
         val result = Dijkstra.traverse(
             start = Position(0, 0),
-            end = Position(max, max),
+            end = end,
             nodeGenerator = {
                 it.adjacent()
                     .filter { (x, y) -> x in xRange && y in yRange }
@@ -72,7 +73,7 @@ object Day18 {
             distance = { _, _ -> 1 },
         )
 
-        return result.steps[Position(max, max)] ?: -1
+        return result.steps[end] ?: -1
     }
 
 
