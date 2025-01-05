@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2024
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timedMs
 import org.junit.jupiter.api.Test
 
 internal class Day14Test {
@@ -28,6 +29,7 @@ p=9,5 v=-3,-3""".lineSequence()
 
     @Test
     fun solve2() {
-        println(Day14.solve2(puzzleInput))
+//        println(timedMs { Day14.solve2(puzzleInput) })
+        println(timedMs { Day14.solve2Bis(puzzleInput) })
     }
 }

@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.utils
 
 import java.io.InputStream
+import java.io.Reader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -33,12 +34,18 @@ object InputUtils {
 
     fun getString(fileName: String): String = getStream(fileName).bufferedReader().use { it.readText() }
 
+    private fun getSequence(year: Int, day: Int): Sequence<Char> {
+        return getStream(year, day).bufferedReader().asCharSequence()
+    }
+
     private fun getStream(year: String, name: String): InputStream =
         this.javaClass.classLoader.getResourceAsStream("y$year/$name")
 
     fun getString(year: String, name: String): String = getStream(year, name).bufferedReader().use { it.readText() }
 
-    fun getString(year: Int, day: Int): String = getStream(year, day).bufferedReader().use { it.readText() }
+    fun getString(year: Int, day: Int): String = getStream(year, day).bufferedReader().use {
+        it.readText()
+    }
 
     fun getLines(year: String, name: String): Sequence<String> =
         getStream(year, name).bufferedReader().use { it.readLines().asSequence() }
@@ -65,6 +72,11 @@ object InputUtils {
         return getString(year, day)
     }
 
+    fun downloadAndGetSequence(year: Int, day: Int): Sequence<Char> {
+        downloadInputIfNeeded(year, day)
+        return getSequence(year, day)
+    }
+
     private fun downloadInputIfNeeded(year: Int, day: Int) {
         val resourcePath = resourcePath(year, day)
         if (!Files.exists(resourcePath)) {
@@ -81,4 +93,15 @@ object InputUtils {
         }
     }
 
+}
+
+fun Reader.asCharSequence(bufferSize: Int = 1024): Sequence<Char> = sequence {
+    val buffer = CharArray(bufferSize)
+    var charsRead = read(buffer)
+    while (charsRead != -1) {
+        for (i in 0 until charsRead) {
+            yield(buffer[i])
+        }
+        charsRead = read(buffer)
+    }
 }

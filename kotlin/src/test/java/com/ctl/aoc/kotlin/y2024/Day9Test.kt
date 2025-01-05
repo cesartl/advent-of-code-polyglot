@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 
 internal class Day9Test {
 
-    val puzzleInput = InputUtils.downloadAndGetString(2024, 9)
+    val puzzleInput = InputUtils.downloadAndGetSequence(2024, 9)
 
     val example = "2333133121414131402"
 
@@ -17,7 +17,7 @@ internal class Day9Test {
 
     @Test
     fun solve2() {
-        println(Day9.solve2(example))
+//        println(Day9.solve2(example))
 //        println(Day9.solve2("12345"))
         //6321896265143
         println (Day9.solve2(puzzleInput))
