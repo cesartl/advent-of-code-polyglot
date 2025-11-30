@@ -9,13 +9,17 @@ internal class Day_DAY_Test {
 
     val puzzleInput = InputUtils.downloadAndGetLines(_YEAR_, _DAY_)
 
+    val example = """foo""".lineSequence()
+
     @Test
     fun solve1() {
+        println(Day_DAY_.solve1(example))
         println(Day_DAY_.solve1(puzzleInput))
     }
 
     @Test
     fun solve2() {
+        println(Day_DAY_.solve2(example))
         println(Day_DAY_.solve2(puzzleInput))
     }
 }
