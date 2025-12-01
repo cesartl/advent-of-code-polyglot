@@ -45,13 +45,15 @@ object Day1 {
                 else -> error("Unknown direction $direction")
             }
             val count = rotation.drop(1).toInt()
-            val k0 = when (direction) {
+
+            //k == how many steps to reach 0
+            val k = when (direction) {
                 'R' -> {
-                    (n - dialPosition) % n
+                    n - dialPosition
                 }
 
                 'L' -> {
-                    dialPosition % n
+                    dialPosition
                 }
 
                 else -> error("Unknown direction $direction")
@@ -59,10 +61,10 @@ object Day1 {
 
             val newZeroCount = if (dialPosition == 0) {
                 count / n
-            } else if (count < k0) {
+            } else if (count < k) {
                 0
             } else {
-                1 + (count - k0) / n
+                1 + (count - k) / n
             }
 
             val newPosition = dialPosition + sign * (count % n)
