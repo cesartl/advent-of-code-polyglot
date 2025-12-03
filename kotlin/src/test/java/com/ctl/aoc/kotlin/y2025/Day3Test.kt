@@ -9,7 +9,10 @@ internal class Day3Test {
 
     val puzzleInput = InputUtils.downloadAndGetLines(2025, 3)
 
-    val example = """foo""".lineSequence()
+    val example = """987654321111111
+811111111111119
+234234234234278
+818181911112111""".lineSequence()
 
     @Test
     fun solve1() {

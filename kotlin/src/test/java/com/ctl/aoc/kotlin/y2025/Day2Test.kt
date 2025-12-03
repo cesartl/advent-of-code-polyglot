@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2025
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timedMs
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -20,6 +21,6 @@ internal class Day2Test {
     @Test
     fun solve2() {
         println(Day2.solve2(example))
-        println(Day2.solve2(puzzleInput))
+        println((timedMs { (Day2.solve2(puzzleInput)) }))
     }
 }
