@@ -25,8 +25,7 @@ object Day3 {
         val sortedByValue = bank.withIndex().sortedByDescending { it.value }
         var lastFound = -1
         repeat(n){ i ->
-            val inScope = sortedByValue.filter { it.index <=  length - n + i && it.index > lastFound }
-            val next = inScope.maxBy { it.value }
+            val next = sortedByValue.first { it.index <=  length - n + i && it.index > lastFound }
             lastFound = next.index
             batteries.add(next.value)
         }
