@@ -1,6 +1,7 @@
 package com.ctl.aoc.kotlin.y2025
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timedMs
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -9,7 +10,16 @@ internal class Day4Test {
 
     val puzzleInput = InputUtils.downloadAndGetLines(2025, 4)
 
-    val example = """foo""".lineSequence()
+    val example = """..@@.@@@@.
+@@@.@.@.@@
+@@@@@.@.@@
+@.@@@@..@.
+@@.@@@@.@@
+.@@@@@@@.@
+.@.@.@.@@@
+@.@@@.@@@@
+.@@@@@@@@.
+@.@.@@@.@.""".lineSequence()
 
     @Test
     fun solve1() {
@@ -20,6 +30,6 @@ internal class Day4Test {
     @Test
     fun solve2() {
         println(Day4.solve2(example))
-        println(Day4.solve2(puzzleInput))
+        println(timedMs { Day4.solve2(puzzleInput) })
     }
 }
