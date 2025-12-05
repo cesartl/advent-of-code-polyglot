@@ -31,5 +31,6 @@ internal class Day4Test {
     fun solve2() {
         println(Day4.solve2(example))
         println(timedMs { Day4.solve2(puzzleInput) })
+        println(timedMs { Day4.solve2Adjacency(puzzleInput) })
     }
 }
