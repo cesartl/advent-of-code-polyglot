@@ -44,6 +44,9 @@ data class Position(val x: Int, val y: Int) {
     }
 
     fun distance(other: Position): Int = Math.abs(other.x - x) + Math.abs(other.y - y)
+
+    fun area(other: Position): Long = (abs(other.x - x.toLong()) + 1) * (abs(other.y - y.toLong()) + 1)
+
     override fun toString(): String {
         return "(x=$x, y=$y)"
     }
