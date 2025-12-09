@@ -28,6 +28,6 @@ internal class Day9Test {
     @Test
     fun solve2() {
         println(Day9.solve2(example))
-//        println(Day9.solve2(puzzleInput))
+        println(Day9.solve2(puzzleInput))
     }
 }
