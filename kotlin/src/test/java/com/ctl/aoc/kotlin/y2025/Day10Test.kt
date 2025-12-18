@@ -1,6 +1,8 @@
 package com.ctl.aoc.kotlin.y2025
 
 import com.ctl.aoc.kotlin.utils.InputUtils
+import com.ctl.aoc.kotlin.utils.timed
+import com.ctl.aoc.kotlin.utils.timedMs
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -16,18 +18,13 @@ internal class Day10Test {
     @Test
     fun solve1() {
         println(Day10.solve1(example))
-        println(Day10.solve1(puzzleInput))
+        println(timedMs { Day10.solve1(puzzleInput) })
+        println(timedMs { Day10.solve1Bis(puzzleInput) })
     }
 
     @Test
     fun solve2() {
         println(Day10.solve2(example))
-        println(Day10.solve2(puzzleInput))
-    }
-
-    @Test
-    fun solve2Bis() {
-        println(Day10.solve2Bis(example))
-        println(Day10.solve2Bis(puzzleInput))
+        println(timedMs { Day10.solve2(puzzleInput) })
     }
 }

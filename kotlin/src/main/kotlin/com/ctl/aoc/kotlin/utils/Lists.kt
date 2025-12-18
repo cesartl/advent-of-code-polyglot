@@ -54,16 +54,16 @@ object Lists {
         return weave(first.tail, second, prefix + first.head) + weave(first, second.tail, prefix + second.head)
     }
 
-    fun <T> powerSet(list: List<T>): List<List<T>> {
+    fun <T> powerSet(list: List<T>): Sequence<List<T>> {
         if (list.size > Int.SIZE_BITS) {
             throw IllegalArgumentException("power set too big")
         }
         val total = 1 shl list.size // 2^ n
-        val powerSet = mutableListOf<List<T>>()
-        for (i in 0 until total) {
-            powerSet.add(intToSet(i, list))
+        return sequence {
+            for (i in 0 until total) {
+                yield(intToSet(i, list))
+            }
         }
-        return powerSet
     }
 
     private fun <T> intToSet(x: Int, list: List<T>): List<T> {
@@ -178,4 +178,8 @@ fun <T> List<T>.pairs(): Sequence<Pair<T, T>>{
             }
         }
     }
+}
+
+fun <T> List<T>.powerSet(): Sequence<List<T>> {
+    return Lists.powerSet(this)
 }

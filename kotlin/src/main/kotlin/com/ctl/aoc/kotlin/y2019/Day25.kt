@@ -44,7 +44,6 @@ object Day25 {
         val allOptions = Lists.powerSet(objects)
 //                .filter { (4..8).contains(it.size) }
                 .filter { it.size > 1 }
-                .asSequence()
                 .map { selected ->
                     println("Doing $selected")
                     val inputQueue = ArrayBlockingQueue<Int>(10000)

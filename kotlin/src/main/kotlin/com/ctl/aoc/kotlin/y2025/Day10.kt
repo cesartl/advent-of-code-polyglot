@@ -1,53 +1,52 @@
 package com.ctl.aoc.kotlin.y2025
 
 import com.ctl.aoc.kotlin.utils.Dijkstra
-import com.microsoft.z3.BoolExpr
-import com.microsoft.z3.Context
-import com.microsoft.z3.IntNum
-import com.microsoft.z3.Model
-import com.microsoft.z3.Status
+import com.ctl.aoc.kotlin.utils.powerSet
 
+
+private const val INFINITY = Int.MAX_VALUE.toLong()
 
 object Day10 {
 
+    data class Button(val wires: List<Int>) {
+        val asInt: Int = wires.sumOf { 1 shl it }
+
+        fun updateCounter(counter: List<Int>): List<Int> {
+            val newCounter = counter.toMutableList()
+            wires.forEach {
+                newCounter[it] = newCounter[it] - 1
+            }
+            return newCounter
+        }
+    }
+
     data class MachineReq(
         val onLights: Int,
-        val buttons: List<Int>,
-        val buttonsNormalised: List<List<Int>>,
-        val buttonsRaw: List<List<Int>>,
+        val buttons: List<Button>,
         val joltages: List<Int>
-    )
+    ) {
+        val patterns: Map<Int, List<List<Button>>> by lazy {
+            buttons.powerSet()
+                .groupBy {
+                    it.fold(0) { acc, i -> acc xor i.asInt }
+                }
+        }
+    }
 
     private val lightsRegex = """\[([.#]+)\]""".toRegex()
     private val buttonsRegex = """\(([\d,]+)\)""".toRegex()
     private val joltagesRegex = """\{([\d,]+)\}""".toRegex()
 
-    private fun parseReg(line: String): MachineReq {
+    private fun parseReq(line: String): MachineReq {
         val lights = lightsRegex.find(line)?.groupValues[1]?.let { parseDots(it) } ?: error("")
-        val buttonsRaw = buttonsRegex.findAll(line)
+        val buttons = buttonsRegex.findAll(line)
             .map { match -> match.groupValues[1].split(",").map { it.toInt() } }
+            .map { Button(it) }
             .toList()
-        val buttons = buttonsRaw
-            .map { parseButtons(it) }
         val joltages = joltagesRegex.find(line)
             ?.groupValues[1]?.split(",")?.map { it.toInt() }
             ?: error("No joltages found")
-
-        val buttonsNormalised = buttonsRaw
-            .asSequence()
-            .map { button ->
-                val set = button.toSet()
-                joltages.mapIndexed { i, _ ->
-                    if (set.contains(i)) {
-                        1
-                    } else {
-                        0
-                    }
-                }
-            }
-            .toList()
-
-        return MachineReq(lights, buttons, buttonsNormalised = buttonsNormalised, buttonsRaw = buttonsRaw, joltages)
+        return MachineReq(lights, buttons, joltages)
     }
 
     fun parseDots(dotString: String): Int {
@@ -61,26 +60,17 @@ object Day10 {
         }
     }
 
-    fun parseButtons(button: List<Int>): Int {
-        return button.fold(0) { acc, light ->
-            val diff = 1 shl light
-            diff + acc
-        }
-    }
-
-    fun parseJoltage(button: List<Int>): Int {
-        return button.foldIndexed(0) { i, acc, joltage ->
-            val diff = joltage * (1 shl i)
-            diff + acc
-        }
-    }
-
     fun solve1(input: Sequence<String>): Int {
-        val reqs = input.map { parseReg(it) }.toList()
+        val reqs = input.map { parseReq(it) }.toList()
         return reqs.sumOf {
-            val minButton = minButton(it)
-            println("minButton: $minButton")
-            minButton
+            minButton(it)
+        }
+    }
+
+    fun solve1Bis(input: Sequence<String>): Int {
+        val reqs = input.map { parseReq(it) }.toList()
+        return reqs.sumOf {
+            it.patterns[it.onLights]?.minOf { buttons -> buttons.size } ?: error("")
         }
     }
 
@@ -96,7 +86,7 @@ object Day10 {
             nodeGenerator = { state ->
                 machineReq.buttons.asSequence()
                     .map { button ->
-                        val newLights = state.lights xor button
+                        val newLights = state.lights xor button.asInt
                         State(newLights)
                     }
             },
@@ -106,100 +96,40 @@ object Day10 {
         return result.steps[last!!]!!
     }
 
-    data class CounterState(
-        val counters: List<Int>,
-    ) {
-        fun distance(machineReq: MachineReq): Int {
-            return machineReq.joltages.asSequence().zip(this.counters.asSequence()).sumOf { (j, s) -> j - s }
-        }
-
-        fun isValid(machineReq: MachineReq): Boolean {
-            return machineReq.joltages.asSequence().zip(this.counters.asSequence()).all { (j, s) -> j >= s }
-        }
-    }
-
-    private fun minLever(machineReq: MachineReq): Int {
-        val start = CounterState(machineReq.joltages.map { 0 })
-        val result = Dijkstra.traverseIntPredicate(
-            start = start,
-            end = {
-                it?.counters == machineReq.joltages
-            },
-            nodeGenerator = { state ->
-                machineReq.buttonsNormalised.asSequence()
-                    .map { button ->
-                        val newLights = addToCounter(state.counters, button)
-                        CounterState(newLights)
-                    }
-                    .filter { it.isValid(machineReq) }
-            },
-            distance = { _, _ -> 1 },
-            heuristic = { state ->
-                state.distance(machineReq)
+    fun solve2(input: Sequence<String>): Long {
+        /*
+            Solution from https://www.reddit.com/r/adventofcode/comments/1pk87hl/2025_day_10_part_2_bifurcate_your_way_to_victory/?share_id=K35zS7tyoR9WcaGDt7IZm&utm_content=1&utm_medium=ios_app&utm_name=ioscss&utm_source=share&utm_term=1
+            Originally implemented with Z3
+         */
+        return input
+            .map { parseReq(it) }
+            .map {
+                val cache = mutableMapOf<List<Int>, Long>()
+                val r = it.countMinButton(it.joltages, cache)
+                println("${it.joltages} -> $r")
+                r
             }
-        )
-        val last = result.lastNode
-        return result.steps[last!!]!!
+            .sum()
     }
 
-    private fun addToCounter(counter: List<Int>, button: List<Int>): List<Int> {
-        assert(counter.size == button.size)
-        return counter.asSequence().zip(button.asSequence()).map { (a, b) -> a + b }.toList()
-    }
-
-    fun solve2(input: Sequence<String>): Int {
-        val reqs = input.map { parseReg(it) }.toList()
-        return reqs.sumOf { solve(it) }
-    }
-
-    fun solve2Bis(input: Sequence<String>): Int {
-        val reqs = input.map { parseReg(it) }.toList()
-        return reqs.sumOf {
-            val minButton = minLever(it)
-            println("minButton: $minButton")
-            minButton
+    private fun MachineReq.countMinButton(counter: List<Int>, cache: MutableMap<List<Int>, Long>): Long {
+        cache[counter]?.let {
+            return it
         }
-    }
-
-    fun solve(req: MachineReq): Int {
-        val joltageToButtons: Map<Int, List<Int>> = req.joltages.withIndex().associate { (i, _) ->
-            i to req.buttonsRaw.asSequence()
-                .withIndex()
-                .filter { it.value.contains(i) }
-                .map { it.index }
-                .toList()
-        }
-        val cfg = hashMapOf("model" to "true")
-
-        Context(cfg).use { ctx ->
-            val opt = ctx.mkOptimize()
-            val variables = req.buttonsRaw.indices.map { ctx.mkIntConst("x$it") }
-            variables.forEach { v ->
-                val constraint = ctx.mkGt(v, ctx.mkInt(-1))
-                opt.Add(constraint)
-            }
-            val sum = ctx.mkAdd(*variables.toTypedArray())
-            opt.MkMinimize(sum)
-            joltageToButtons.forEach { (joltateIndex, buttons) ->
-                val eq = buttons.joinToString(" + ") { "x_$it" }
-                println("${req.joltages[joltateIndex]} = $eq")
-                val v = buttons.map { variables[it] }
-                val c1: BoolExpr = ctx.mkEq(
-                    ctx.mkReal(req.joltages[joltateIndex]),
-                    ctx.mkAdd(*v.toTypedArray())
-                )
-                opt.Add(c1)
-            }
-            if (opt.Check() === Status.SATISFIABLE) {
-                val model: Model = opt.model
-                println("Status: " + opt.Check())
-                println("Model:")
-                val result = model.evaluate(sum, false)
-                println("Sum = $result")
-                return (result as IntNum).int
-            } else {
-                error("Problem is UNSAT or UNKNOWN")
+        val result = if (counter.all { it == 0 }) {
+            0
+        } else if (counter.any { it < 0 }) {
+            INFINITY
+        } else {
+            val lightsPattern = counter.asSequence().map { if (it % 2 == 0) '.' else '#' }.joinToString("")
+            val pattern = parseDots(lightsPattern)
+            val patterns = this.patterns[pattern] ?: return INFINITY
+            patterns.minOf { buttons ->
+                val newCounter = buttons.fold(counter) { acc, button -> button.updateCounter(acc) }.map { it / 2 }
+                buttons.size + 2 * countMinButton(newCounter, cache)
             }
         }
+        cache[counter] = result
+        return result
     }
 }

@@ -12,7 +12,7 @@ internal class ListsTest{
 
     @Test
     internal fun powerSet() {
-        println(Lists.powerSet(listOf(1, 2, 3, 4)))
+        println(Lists.powerSet(listOf(1, 2, 3, 4)).toList())
     }
 
     @Test
